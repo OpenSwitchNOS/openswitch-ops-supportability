@@ -1,0 +1,31 @@
+---
+  feature:
+  -
+    feature_desc: "Show Tech Basic"
+    feature_name: basic
+    cli_cmds:
+      - "show version"
+      - "show system"
+      - "show vlan"
+  feature:
+  -
+    feature_desc: "Link Layer Discovery Protocol"
+    feature_name: lldp
+    sub_feature:
+      -
+        sub_feature_desc: "LLDP Configuration"
+        sub_feature_name: configuration
+        cli_cmds:
+          - "show lldp configuration"
+    sub_feature:
+      -
+        sub_feature_desc: "LLDP Statistics"
+        sub_feature_name: statistics
+        cli_cmds:
+          - "show lldp statistics"
+    sub_feature:
+      -
+        sub_feature_desc: "LLDP Neighbor Info"
+        sub_feature_name: neighbor-info
+        cli_cmds:
+          - "show lldp neighbor-info"

@@ -22,15 +22,19 @@ set (INCL_DIR include)
 
 # Rules to locate needed libraries
 include(FindPkgConfig)
+pkg_check_modules(OVSCOMMON REQUIRED libovscommon)
 
 # Source files to build ops-supportability library
-set (SOURCES ${SRC_DIR}/eventlog.c)
-include_directories (${PROJECT_SOURCE_DIR}/${INCL_DIR})
+set (SOURCES ${SRC_DIR}/eventlog.c ${SRC_DIR}/showtech/showtech.c)
+include_directories (${PROJECT_SOURCE_DIR}/${INCL_DIR} ${OVSCOMMON_INCLUDE_DIRS})
 
 # Rules to build ops-supportability library
 add_library (${SUPPORTABILITY_LIBS} SHARED ${SOURCES})
 
-target_link_libraries(${SUPPORTABILITY_LIBS})
+# Rules to build supportability cli library
+add_subdirectory(src/cli)
+
+target_link_libraries(${SUPPORTABILITY_LIBS} ${OVSCOMMON_LIBRARIES} -lyaml)
 
 # Define compile flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Werror")
@@ -49,7 +53,7 @@ install(TARGETS ${SUPPORTABILITY_LIBS}
         LIBRARY DESTINATION lib
 )
 
-install(FILES ${INCL_DIR}/eventlog.h
+install(FILES ${INCL_DIR}/eventlog.h ${INCL_DIR}/showtech.h
         DESTINATION include)
 
-    install(FILES ${CMAKE_BINARY_DIR}/${SRC_DIR}/opssupportability.pc DESTINATION lib/pkgconfig)
+install(FILES ${CMAKE_BINARY_DIR}/${SRC_DIR}/opssupportability.pc DESTINATION lib/pkgconfig)

@@ -35,15 +35,29 @@
 #ifndef __EVENTLOG_H_
 #define __EVENTLOG_H_
 
+#define TRUE 1
+#define FALSE 0
+#define MESSAGE_OPS_EVT "50c0fa81c2a545ec982a54293f1b1945"
+#define MAX_CATEGORIES_PER_DAEMON 255
+#define KEY_VALUE_SIZE 128
+#define MAX_LOG_STR 480
+#define MAX_EVENT_NAME_SIZE 64
+#define MAX_SEV_NAME_SIZE 10
+#define MAX_EVENT_TABLE_SIZE 500
+#define EVENT_NAME_DELIMITER_STR "EV_TBD_TBD"
+#define EVENT_YAML_FILE "/etc/openswitch/supportability/events.yaml"
+#define KV(...) key_value_string(__VA_ARGS__)
 
 
-/************************************************************************//**
- * Logs the Event in the Logging Infra
- *
- * @param[in] log_message   : Event Message to be Logged
- *
- * @return int status of log action
- ***************************************************************************/
-extern int event_log (const char *log_message);
+typedef struct {
+    int event_id;
+    char event_name[MAX_EVENT_NAME_SIZE];
+    char severity[MAX_SEV_NAME_SIZE];
+    int num_of_keys;
+    char event_description[MAX_LOG_STR];
+    } event;
 
+extern int event_log_init(char *event_name);
+extern int log_event(char *ev_name,...);
+extern char *key_value_string(char *s1, ...);
 #endif /* __EVENTLOG_H_ */

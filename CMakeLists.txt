@@ -53,6 +53,8 @@ install(TARGETS ${SUPPORTABILITY_LIBS}
         LIBRARY DESTINATION lib
 )
 
+add_subdirectory(src/cli)
+
 install(FILES ${INCL_DIR}/eventlog.h
         DESTINATION include)
 

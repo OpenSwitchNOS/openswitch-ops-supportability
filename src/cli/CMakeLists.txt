@@ -47,7 +47,7 @@ set (SOURCES_CLI ${PROJECT_SOURCE_DIR}/show_tech_vty.c
 add_library (${LIBSUPPORTABILITYCLI} SHARED ${SOURCES_CLI})
 
 
-target_link_libraries(${LIBSUPPORTABILITYCLI} ${OVSCOMMON_LIBRARIES} -lyaml)
+target_link_libraries(${LIBSUPPORTABILITYCLI} ${OVSCOMMON_LIBRARIES} -lyaml -lsystemd)
 
 
 

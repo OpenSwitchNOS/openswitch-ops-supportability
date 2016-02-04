@@ -32,6 +32,10 @@
 #include "jsonrpc.h"
 
 #define ARGC 2
+#define FREE(X)\
+        if(X) { free (X); X = NULL; }
+
+
 
 VLOG_DEFINE_THIS_MODULE(vtysh_diag);
 
@@ -499,6 +503,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
     char *cmd_result=NULL, *cmd_error=NULL;
     int rc=0;
     FILE *fp=NULL;
+    char  diag_cmd_str[100];
 
     client = vtysh_diag_connect_to_target(daemon);
     if (!client) {
@@ -506,7 +511,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         vty_out(vty,"failed to connect daemon %s %s",daemon,VTY_NEWLINE);
         return 1;
     }
-    char  diag_cmd_str[100];
+
     if ( !strcmp(*cmd_type,DIAG_BASIC)){
         strncpy(diag_cmd_str,DIAG_DUMP_BASIC_CMD ,  sizeof(diag_cmd_str) );
     }else{
@@ -516,9 +521,26 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
     rc = unixctl_client_transact(client, diag_cmd_str, 2 , cmd_type,
             &cmd_result, &cmd_error);
 
+   /*
+   * unixctl_client_transact() api failure case
+   *  check cmd_error and rc value.
+   */
 
-    if ( ( strlen(file_path) == 0)  && !strcmp(*cmd_type,DIAG_BASIC)) {
+
+    /* Nonzero rc failure case */
+    if (rc) {
+        VLOG_ERR("%s: transaction error:%s , rc =%d", daemon ,
+                (cmd_error?cmd_error:"error") , rc);
+        jsonrpc_close(client);
+        FREE(cmd_result);
+        FREE(cmd_error);
+        return 1;
+    }
+
+   /* rc == 0 and cmd_result contains string is success   */
+    else if ( ( strlen(file_path) == 0)  && !strcmp(*cmd_type,DIAG_BASIC)) {
         /* basic ,  file not specified  =>  print on console */
+        /* print if buffer contains output*/
         if (cmd_result) {
             vty_out(vty,"Diagnostic  dump for daemon %s %s",daemon,VTY_NEWLINE);
             vty_out(vty,"%s %s",cmd_result,VTY_NEWLINE );
@@ -529,7 +551,8 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
             fp = fopen(file_path ,"a");
             if (!fp) {
                 jsonrpc_close(client);
-                free(cmd_result);
+                FREE(cmd_result);
+                FREE(cmd_error);
                 VLOG_ERR("failed to open file :%s",file_path);
                 return 1;
             } else {
@@ -539,21 +562,20 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         }
     }
 
-    if (rc) {
-        jsonrpc_close(client);
-        VLOG_ERR("%s: transaction error:rc =%d", daemon , rc);
-    }
+    /* if cmd_error contains string then failure case */
 
     if (cmd_error) {
-        jsonrpc_close(client);
         VLOG_ERR("%s: server returned error:rc=%d,error str:%s",
                 daemon,rc,cmd_error);
+        jsonrpc_close(client);
+        FREE(cmd_result);
+        FREE(cmd_error);
+        return 1;
     }
 
 
     jsonrpc_close(client);
-    free(cmd_result);
-    free(cmd_error);
-
+    FREE(cmd_result);
+    FREE(cmd_error);
     return rc;
 }

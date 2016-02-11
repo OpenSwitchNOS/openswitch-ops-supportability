@@ -32,6 +32,8 @@
 #include "openvswitch/vlog.h"
 #include "dynamic-string.h"
 #include "showtech.h"
+#include "vtysh/buffer.h"
+#include <errno.h>
 
 VLOG_DEFINE_THIS_MODULE (vtysh_show_tech_cli);
 
@@ -386,8 +388,8 @@ cli_show_tech_list(void)
     {
       if(!iter_sub->is_dummy)
       {
-        vty_out(vty,"         %-18.17s%s%s\n", iter_sub->name, iter_sub->desc
-        ,VTY_NEWLINE);
+        vty_out(vty,"         %-18.17s%s%s%s", iter_sub->name, iter_sub->desc
+        ,VTY_NEWLINE,VTY_NEWLINE);
       }
       iter_sub = iter_sub->next;
     }
@@ -397,6 +399,94 @@ cli_show_tech_list(void)
   return CMD_SUCCESS;
 }
 
+#define CHARBUF 160
+
+
+/* Function       : cli_show_tech_file
+ * Resposibility  : Execute Show Tech and store them in the given file
+ * Return         : CMD_SUCCESS on success CMD_WARNING on failure
+ */
+
+int
+cli_show_tech_file(const char* fname,const char* feature)
+{
+    int fd = -1;
+    char filename[CHARBUF] = "/tmp/";
+    char errorbuf[CHARBUF];
+    //int bckup_fd = -1;
+    int bckup_type = 0;
+    char* outputbuf;
+
+    if(fname == NULL)
+    {
+      vty_out(vty, "Output file name not found%s",VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+    if(strlen(fname) >(CHARBUF-11))
+    {
+      vty_out(vty, "File name should be less then 150 characters%s",VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+    /* Add File Name to the /tmp/ path */
+    strcat(filename,fname);
+    fd = open(filename,O_CREAT|O_EXCL|O_WRONLY);
+    if( fd < 0)
+    {
+       switch(errno)
+       {
+         case EEXIST :
+         {
+            vty_out(vty,"%s already exists, please give different name%s"
+                  ,filename,VTY_NEWLINE);
+            break;
+         }
+         case ENOENT :
+         case EACCES :
+         {
+
+            vty_out(vty,"Permission denied: can't create file %s%s"
+                  ,filename,VTY_NEWLINE);
+            break;
+         }
+         default :
+         {
+            vty_out(vty, "File creation error(%d) : %s%s",
+               errno,strerror_r(errno,errorbuf,(CHARBUF-1)),VTY_NEWLINE);
+            break;
+         }
+       }
+       return CMD_SUCCESS;
+    }
+
+    bckup_type = vty->type;
+    vty->type = VTY_FILE;
+
+    cli_show_tech(feature,NULL);
+
+    if(vty->obuf == NULL)
+    {
+      vty_out(vty,"Show Tech execution failed%s",VTY_NEWLINE);
+      close(fd);
+      return CMD_SUCCESS;
+    }
+    outputbuf = buffer_getstr(vty->obuf);
+    vty->type = bckup_type;
+    /* Reset the Buffer */
+    buffer_reset(vty->obuf);
+    if(outputbuf)
+    {
+      write(fd, outputbuf,strlen(outputbuf));
+      free(outputbuf);
+      vty_out(vty,"Show Tech output stored in file %s%s",filename,VTY_NEWLINE);
+    }
+    else
+    {
+      vty_out(vty,"Show Tech execution failed%s",VTY_NEWLINE);
+    }
+
+    close(fd);
+    return CMD_SUCCESS;
+}
 
 /*
 * Action routines for Show Tech CLIs
@@ -422,6 +512,39 @@ DEFUN_NOLOCK (cli_platform_show_tech_list,
   SHOW_TECH_LIST_STR)
   {
     return cli_show_tech_list();
+  }
+
+
+
+/*
+* Action routines for Show Tech localfile
+*/
+DEFUN_NOLOCK (cli_platform_show_tech_file,
+  cli_platform_show_tech_file_cmd,
+  "show tech localfile FILENAME",
+  SHOW_STR
+  SHOW_TECH_STR
+  SHOW_TECH_FILE_STR
+  SHOW_TECH_FILENAME_STR)
+  {
+      return cli_show_tech_file(argv[0],NULL);
+
+  }
+
+
+/*
+* Action routines for Show Tech feature filename
+*/
+DEFUN_NOLOCK (cli_platform_show_tech_feature_file,
+  cli_platform_show_tech_feature_file_cmd,
+  "show tech FEATURE localfile FILENAME",
+  SHOW_STR
+  SHOW_TECH_STR
+  SHOW_TECH_FEATURE_STR
+  SHOW_TECH_FILE_STR
+  SHOW_TECH_FILENAME_STR)
+  {
+      return cli_show_tech_file(argv[1],argv[0]);
   }
 
 

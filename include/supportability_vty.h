@@ -30,6 +30,8 @@ extern struct cmd_element vtysh_diag_dump_cmd;
 extern struct cmd_element cli_platform_show_tech_cmd;
 extern struct cmd_element cli_platform_show_tech_list_cmd;
 extern struct cmd_element cli_platform_show_tech_feature_cmd;
+extern struct cmd_element cli_platform_show_tech_file_cmd;
+extern struct cmd_element cli_platform_show_tech_feature_file_cmd;
 extern struct cmd_element cli_platform_show_events_cmd;
 
 

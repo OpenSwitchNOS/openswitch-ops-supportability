@@ -15,6 +15,7 @@
 #
 
 import re
+import uuid
 from opstestfw import testEnviron, LogOutput
 
 
@@ -110,7 +111,7 @@ def checkShowTech(dut01Obj):
     overallBuffer.append(returnDevInt['buffer'])
     if finalReturnCode != 0:
         LogOutput('error',
-                  "Failed to run Show Tech List " +
+                  "Failed to run Show Tech" +
                   " on device " + str(dut01Obj.device))
         return False
     else:
@@ -147,8 +148,8 @@ def checkShowTechFeature(dut01Obj):
             LogOutput('info', str(curLine))
         return False
 
-    # Run Show Tech System Command
-    returnDevInt = dut01Obj.DeviceInteract(command="show tech system")
+    # Run Show Tech basic Command
+    returnDevInt = dut01Obj.DeviceInteract(command="show tech basic")
 
     # exit the vtysh shell
     returnStructure = dut01Obj.VtyshShell(enter=False)
@@ -164,7 +165,7 @@ def checkShowTechFeature(dut01Obj):
     overallBuffer.append(returnDevInt['buffer'])
     if finalReturnCode != 0:
         LogOutput('error',
-                  "Failed to run Show Tech List " +
+                  "Failed to run Show Tech Basic " +
                   " on device " + str(dut01Obj.device))
         return False
     else:
@@ -217,7 +218,7 @@ def checkShowTechSubFeature(dut01Obj):
     overallBuffer.append(returnDevInt['buffer'])
     if finalReturnCode != 0:
         LogOutput('error',
-                  "Failed to run Show Tech List " +
+                  "Failed to run Show Tech sub feature " +
                   " on device " + str(dut01Obj.device))
         return False
     else:
@@ -233,6 +234,64 @@ def checkShowTechSubFeature(dut01Obj):
                       " Show Tech SubFeature Ran Successfully on device " +
                       str(dut01Obj.device))
             return True
+
+
+def checkShowTechToFile(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "1.5 Running Show tech to File ")
+    LogOutput('info', "############################################\n")
+    # Variables
+    overallBuffer = []
+    finalReturnCode = 0
+    outputfile = str(uuid.uuid4())+".txt"
+
+    # Get into vtyshell
+    returnStructure = dut01Obj.VtyshShell(enter=True)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to get vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    # Run Show Tech Command and store output to file
+    returnDevInt = dut01Obj.DeviceInteract(
+            command="show tech localfile "+outputfile)
+
+    # exit the vtysh shell
+    returnStructure = dut01Obj.VtyshShell(enter=False)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to exit vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    finalReturnCode = returnDevInt['returnCode']
+    overallBuffer.append(returnDevInt['buffer'])
+    if finalReturnCode != 0:
+        LogOutput('error',
+                  "Failed to run Show Tech to localfile" +
+                  " on device " + str(dut01Obj.device))
+        return False
+    else:
+        # Read the file and check the output
+        returnDevInt = dut01Obj.DeviceInteract(command="cat /tmp/"+outputfile)
+        if ("Show Tech commands executed successfully"
+           not in returnDevInt['buffer']):
+            LogOutput('error',
+                      "Test Case Failure,refer output below")
+            for outputs in overallBuffer:
+                LogOutput('info', str(outputs))
+            return False
+        else:
+            LogOutput('info',
+                      " Show Tech Feature Ran Successfully on device " +
+                      str(dut01Obj.device))
+            return True
+
 
 
 def checkInvalidCommandFailure(dut01Obj):
@@ -290,7 +349,7 @@ def checkInvalidCommandFailure(dut01Obj):
 
     overallBuffer.append(returnDevInt['buffer'])
 
-    if ("show tech commands failed to execute"
+    if ("failed to execute"
                         not in returnDevInt['buffer']):
         LogOutput('error',
                   "Test Case Failure,refer output below")
@@ -605,7 +664,7 @@ def TestShowTechConfigDuplicateEntries(dut01Obj):
     dut01Obj.DeviceInteract(command=command)
 
     dut01Obj.VtyshShell(enter=True)
-    returnDevInt = dut01Obj.DeviceInteract(command="show tech system")
+    returnDevInt = dut01Obj.DeviceInteract(command="show tech basic")
 
     dut01Obj.VtyshShell(enter=False)
     dut01Obj.DeviceInteract(command="mv \
@@ -650,6 +709,9 @@ class Test_showtech:
 
     #def test_show_tech_subfeature(self):
     #    assert(checkShowTechSubFeature(dut01Obj))
+
+    def test_show_tech_to_file(self):
+        assert(checkShowTechToFile(dut01Obj))
 
     # Failure Test Cases
     def test_invalid_command_failure(self):

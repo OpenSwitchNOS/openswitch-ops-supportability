@@ -47,6 +47,7 @@ set (SOURCES_CLI ${PROJECT_SOURCE_DIR}/show_tech_vty.c
                  ${PROJECT_SOURCE_DIR}/core_dump.c
                  ${PROJECT_SOURCE_DIR}/diag_dump_vty.c
                  ${PROJECT_SOURCE_DIR}/supportability_vty.c
+                 ${PROJECT_SOURCE_DIR}/../supportability_utils.c
     )
 
 add_library (${LIBSUPPORTABILITYCLI} SHARED ${SOURCES_CLI})

@@ -32,7 +32,12 @@
 #include "diag_dump.h"
 
 #define DIAG_DUMP_CONF        "/etc/openswitch/supportability/ops_diagdump.yaml"
+#define DIAG_DUMP_DIR         "/tmp/ops-diag"
 #define FILE_PATH_LEN_MAX          256
+#define MAX_TIME_STR_LEN           256
+#define MAX_CLI_STR_LEN            256
+#define USER_FILE_LEN_MAX          50
+#define DIAG_CMD_LEN_MAX           50
 
 
 #define DIAG_DUMP_STR              "Show diagnostic information\n"
@@ -40,7 +45,7 @@
 
 #define DIAG_DUMP_FEATURE          "Feature name  \n"
 #define DIAG_DUMP_FEATURE_BASIC    "Basic information \n"
-#define DIAG_DUMP_FEATURE_FILE     "Absolute path of file\n"
+#define DIAG_DUMP_FEATURE_FILE     "Relative path of file\n"
 
 
 

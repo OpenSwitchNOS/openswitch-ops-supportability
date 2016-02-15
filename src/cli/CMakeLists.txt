@@ -44,6 +44,8 @@ set (SOURCES_CLI ${PROJECT_SOURCE_DIR}/show_tech_vty.c
                  ${PROJECT_SOURCE_DIR}/../showtech/showtech.c
                  ${PROJECT_SOURCE_DIR}/show_events_vty.c
                  ${PROJECT_SOURCE_DIR}/diag_dump_vty.c
+                 ${PROJECT_SOURCE_DIR}/show_vlog_vty.c
+                 ${PROJECT_SOURCE_DIR}/../featuremapping/feature_mapping.c
                  ${PROJECT_SOURCE_DIR}/supportability_vty.c
     )
 

@@ -1,5 +1,5 @@
 
-/* Supportability Command Declaration file
+/* Feature Mapping Header file
  * Copyright (C) 2016 Hewlett Packard Enterprise Development LP
  *
  * This program is free software; you can redistribute it and/or
@@ -16,23 +16,40 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * File: supportability_vty.h
+ * File: feature_mapping.h
  *
- * Purpose: header file for supportability command structs
+ * Purpose: header file for feature_mapping.c
  */
 
-#ifndef _SUPPORTABILITY_VTY_H_
+#ifndef __FEATURE_MAPPING_H
+#define __FEATURE_MAPPING_H
 
-#define _SUPPORTABILITY_VTY_H_
+#define FEATURE_MAPPING_CONF   "/etc/openswitch/supportability/ops_featuremapping.yaml"
 
-extern struct cmd_element vtysh_diag_dump_list_cmd;
-extern struct cmd_element vtysh_diag_dump_cmd;
-extern struct cmd_element cli_platform_show_tech_cmd;
-extern struct cmd_element cli_platform_show_tech_list_cmd;
-extern struct cmd_element cli_platform_show_tech_feature_cmd;
-extern struct cmd_element cli_platform_show_events_cmd;
-extern struct cmd_element cli_platform_show_vlog_cmd;
-extern struct cmd_element cli_platform_show_vlog_list_cmd;
-extern struct cmd_element cli_platform_showvlog_feature_cmd;
-extern struct cmd_element cli_config_vlog_set_cmd;
-#endif /* _SUPPORTABILITY_VTY_H_ */
+
+
+
+struct daemon {
+   char* name;
+   struct daemon* next;
+};
+
+struct feature {
+   char* name;
+   char* desc;
+   struct daemon*   p_daemon;
+   struct feature*   next;
+};
+
+enum  {
+   VALUE,
+   FEATURE_NAME,
+   FEATURE_DESC,
+   DAEMON,
+   MAX_NUM_KEYS
+} ;
+
+
+struct feature* get_feature_mapping(void);
+
+#endif  /* __FEATURE_MAPPING_H */

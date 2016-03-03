@@ -71,6 +71,8 @@ vtysh_diag_add_feature(struct feature* afternode,
 
 static int vtysh_diag_check_crete_dir( char *dir);
 
+static int vtysh_diag_read_pid_file (char *pidfile);
+
 const char* keystr[MAX_NUM_KEYS] = {
     "values",
     "feature_name",
@@ -80,6 +82,53 @@ const char* keystr[MAX_NUM_KEYS] = {
 
 static struct feature* feature_head;
 static char initialized=0; /* flag to check before parseing yaml file */
+
+
+
+/*
+ * Function       : vtysh_diag_read_pid_file
+ * Responsibility : read pid file
+ *
+ * Parameters
+ *                : pidfile
+ *
+ * Returns        : Negative integer value on failure
+ *                  Positive integer value on success
+ *
+ * Note : read_pidfile() API is does same thing but it opens a file in "r+"
+ *        mode. read_pidfile() API will success only if user has "rw" permission.
+ *        If user has "r" permission then read_pidfile() API fails.
+ */
+
+static int
+vtysh_diag_read_pid_file (char *pidfile)
+{
+    FILE *fp;
+    int pid;
+    int rc;
+
+    if(pidfile == NULL)
+        return -1;
+
+    fp=fopen(pidfile,"r");
+    if (fp == NULL)
+        return -1;
+
+    rc = fscanf(fp,"%d", &pid);
+    fclose(fp);
+
+    /*
+     * valid pid range : 1 to 65536
+     * digit count range of valid pid : 1 to 5
+     */
+
+    if ((( rc >= MIN_PID_LEN ) && ( rc <= MAX_PID_LEN )) &&
+            ((pid >= MIN_PID ) && ( pid <= MAX_PID ))) {
+        return pid;
+    }
+    else
+        return -1;
+}
 
 /*
  * Function       : vtysh_diag_add_feature
@@ -91,7 +140,7 @@ static char initialized=0; /* flag to check before parseing yaml file */
  *                : afternode - new nodes next pointer will point to this
  *
  * Returns        : NULL on failure
- *                  Pointer to new node on sucess
+ *                  Pointer to new node on success
  */
 
 static struct feature*
@@ -219,7 +268,7 @@ vtysh_diag_check_key(const char *data)
  * Responsibility : parse diagnostic feature to daemon mapping config file
  *                  and store in linkedlist
  * Parameters     : void
- * Returns        : 0 on sucess and nonzero on failure
+ * Returns        : 0 on success and nonzero on failure
  */
 
 static int
@@ -343,7 +392,7 @@ vtysh_diag_parse_diag_yml(void)
  *                  creates directory if directory is not present
  *
  * Parameters     : void
- * Returns        : 0 on sucess and nonzero on failure
+ * Returns        : 0 on success and nonzero on failure
  */
 
 static int
@@ -371,7 +420,11 @@ vtysh_diag_check_crete_dir( char *dir)
                 VLOG_ERR("unlink failed for %s",dir);
                 return 1;
             }
-            rc = mkdir (dir,DEFFILEMODE);
+
+            rc = mkdir (dir,ACCESSPERMS );
+            if (  rc == 0) {
+                rc = chmod (dir, ACCESSPERMS ) ;
+            }
             return rc;
         }
         else {
@@ -383,7 +436,11 @@ vtysh_diag_check_crete_dir( char *dir)
     else{
         if ( rc == -1){
             if (ENOENT == errno) {
-                rc = mkdir (dir,DEFFILEMODE);
+                rc = mkdir (dir,ACCESSPERMS);
+                if (  rc == 0 ) {
+                    rc = chmod (dir, ACCESSPERMS ) ;
+                }
+
                 return rc;
             }
         }
@@ -400,7 +457,7 @@ vtysh_diag_check_crete_dir( char *dir)
  * Responsibility : print current time to given string
  *
  * Parameters     : string and length of string
- * Returns        : 0 on sucess and nonzero on failure
+ * Returns        : 0 on success and nonzero on failure
  */
 
 static int
@@ -628,7 +685,7 @@ DEFUN (vtysh_diag_dump_show,
  * Function       : vtysh_diag_connect_to_target
  * Responsibility : populates jsonrpc client structure for a daemon
  * Parameters     : target  - daemon name
- * Returns        : jsonrpc client on sucess
+ * Returns        : jsonrpc client on success
  *                  NULL on failure
  *
  */
@@ -664,7 +721,7 @@ vtysh_diag_connect_to_target(const char *target)
             return NULL;
         }
 
-        pid = read_pidfile(pidfile_name);
+        pid = vtysh_diag_read_pid_file(pidfile_name);
         if (pid < 0) {
             VLOG_ERR("cannot read pidfile :%s", pidfile_name);
             free(pidfile_name);
@@ -709,7 +766,7 @@ vtysh_diag_connect_to_target(const char *target)
  *                : fd - file descriptor
  *                  prints on vtysh if fd is NULL
  *                  writes to file if  fd is valid
- * Returns        : 0 on sucess and nonzero on failure
+ * Returns        : 0 on success and nonzero on failure
  */
 
 static int

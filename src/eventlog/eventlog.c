@@ -223,6 +223,7 @@ parse_yaml_for_category(char *category)
                 if(found)
                 {
                     assign_parsed_values(key, &val_flag, &found, &index);
+                    asprintf(&ev_table[index].category, "%s", category);
                 }
                 if(!strcmp_with_nullcheck(key, "event_definitions"))
                 {
@@ -276,6 +277,8 @@ parse_yaml_for_category(char *category)
                 yaml_token_delete(&token);
             }
         }
+    yaml_parser_delete(&parser);
+    fclose(fh);
     return category_found;
 }
 
@@ -554,6 +557,30 @@ event_search(char *fmt)
     return i;
 }
 
+/* severity_level
+ * To convert severity string to severity value.
+ *
+ * Returns -1 on failure & severity value on success
+ */
+int
+severity_level(char *arg)
+{
+    const char *sev[] = {"LOG_EMERG","LOG_ALERT","LOG_CRIT","LOG_ERR",
+                         "LOG_WARN","LOG_NOTICE","LOG_INFO","LOG_DEBUG"};
+    int i, found = 0;
+    for(i = 0; i < 8; i++)
+    {
+        if(!strcmp(arg, sev[i])) {
+            found = TRUE;
+            break;
+        }
+    }
+    if(found) {
+        return i;
+    }
+    return -1;
+}
+
 /* log_event
  * API used to log the event logs.
  *
@@ -570,6 +597,7 @@ log_event(char *ev_name,...)
     char *tmp = NULL;
     char *message = NULL;
     char evt_msg[MAX_LOG_STR] = {0,};
+    int level = 0;
     if(ev_name == NULL) {
         return -1;
     }
@@ -630,15 +658,19 @@ log_event(char *ev_name,...)
     }
     asprintf(&message, "MESSAGE=ops-evt|%d|%s|%s",
             ev_table[index].event_id, ev_table[index].severity, evt_msg);
-
+    /* Convert severity string to corresponding severity value */
+    level = severity_level(ev_table[index].severity);
     if(key_value_none) {
-        ret = sd_journal_send(message, "PRIORITY=%i", LOG_INFO,
-                "MESSAGE_ID=%s", MESSAGE_OPS_EVT,
-                 NULL);
+        ret = sd_journal_send(message, "PRIORITY=%d", level,
+                "MESSAGE_ID=%s", MESSAGE_OPS_EVT,"OPS_EVENT_ID=%d",
+                ev_table[index].event_id,"OPS_EVENT_CATEGORY=%s",
+                 ev_table[index].category, NULL);
     }
     else {
-        ret = sd_journal_send(message, "PRIORITY=%i", LOG_INFO,
-                "MESSAGE_ID=%s", MESSAGE_OPS_EVT,
+        ret = sd_journal_send(message, "PRIORITY=%d", level,
+                "MESSAGE_ID=%s", MESSAGE_OPS_EVT,"OPS_EVENT_ID=%d",
+                ev_table[index].event_id, "OPS_EVENT_CATEGORY=%s",
+                ev_table[index].category,
                 all_key_value_pairs,
                 NULL);
     }

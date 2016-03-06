@@ -50,6 +50,7 @@
 
 
 typedef struct {
+    char *category;
     int event_id;
     char event_name[MAX_EVENT_NAME_SIZE];
     char severity[MAX_SEV_NAME_SIZE];

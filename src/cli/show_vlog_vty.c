@@ -34,6 +34,8 @@
 #include "feature_mapping.h"
 #include <string.h>
 #include "show_vlog_vty.h"
+#include "systemd/sd-journal.h"
+#include "dynamic-string.h"
 
 #define LIST_ARGC                0
 #define ADD_TOK                  2
@@ -50,8 +52,9 @@
 #define SHOW_VLOG_CONFIG_REQUEST 3
 #define SET_REQUEST              4
 #define FREE(X)                  if(X) { free(X); X=NULL;}
+#define MESSAGE_OVS_MATCH        "_TRANSPORT=syslog"
 
-VLOG_DEFINE_THIS_MODULE(vtysh_vloglist_cli);
+VLOG_DEFINE_THIS_MODULE(vtysh_show_vlog_cli);
 
 static int
 vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type ,
@@ -60,8 +63,14 @@ vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type ,
 static struct jsonrpc *
 vtysh_vlog_connect_to_target(const char *target);
 
-int
+extern int
 strcmp_with_nullcheck( const char *, const char *);
+
+extern const char*
+get_value(const char *);
+
+extern int
+sev_level(char *arg);
 
 static struct feature *feature_head =NULL;
 
@@ -69,6 +78,7 @@ static struct feature *feature_head =NULL;
 static int initialized =0;
 
 static int flag = 0;
+
 
 /*
  * Function       : vtysh_vlog_connect_to_target
@@ -80,7 +90,7 @@ static int flag = 0;
 
  static struct jsonrpc *
  vtysh_vlog_connect_to_target(const char *target)
- {
+{
    struct jsonrpc *client=NULL;
    char *socket_name=NULL;
    int error=0;
@@ -88,54 +98,54 @@ static int flag = 0;
    char *pidfile_name = NULL;
    pid_t pid = -1;
 
-    if (!target) {
-        VLOG_ERR("target is null");
-        return NULL;
-    }
+   if (!target) {
+      VLOG_ERR("target is null");
+      return NULL;
+   }
 
-    rundir = (char*)ovs_rundir();
+   rundir = (char*)ovs_rundir();
 
-    if(!rundir) {
-         VLOG_ERR("rundir is null");
+   if(!rundir) {
+      VLOG_ERR("rundir is null");
+      return NULL;
+   }
+
+   if (target[0] != '/') {
+      pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
+      if (!pidfile_name) {
+         VLOG_ERR("pidfile_name is null");
          return NULL;
-    }
-
-    if (target[0] != '/') {
-         pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
-         if (!pidfile_name) {
-            VLOG_ERR("pidfile_name is null");
-            return NULL;
-         }
+      }
          /*read the pid*/
-         pid = read_pidfile(pidfile_name);
-         if (pid < 0) {
-            free(pidfile_name);
-            return NULL;
-         }
-
+      pid = read_pidfile(pidfile_name);
+      if (pid < 0) {
          free(pidfile_name);
-         socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
+         return NULL;
+      }
+
+      free(pidfile_name);
+      socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
               (long int) pid);
-         if (!socket_name) {
-            VLOG_ERR("socket_name is null");
-            return NULL;
-         }
-    }
-    else {
-         socket_name = xstrdup(target);
-         if (!socket_name) {
-            VLOG_ERR("socket_name is null, target:%s",target);
-             return NULL;
-         }
-    }
+      if (!socket_name) {
+         VLOG_ERR("socket_name is null");
+         return NULL;
+      }
+   }
+   else {
+      socket_name = xstrdup(target);
+      if (!socket_name) {
+         VLOG_ERR("socket_name is null, target:%s",target);
+         return NULL;
+      }
+   }
         /*connects to a unixctl server socket*/
-    error = unixctl_client_create(socket_name, &client);
-    if (error) {
-       VLOG_ERR("cannot connect to %s,error=%d", socket_name,error);
-    }
-    free(socket_name);
-    return client;
- }
+   error = unixctl_client_create(socket_name, &client);
+   if (error) {
+      VLOG_ERR("cannot connect to %s,error=%d", socket_name,error);
+   }
+   free(socket_name);
+   return client;
+}
 
 /*
  * Function       : vtysh_vlog_interface_daemon
@@ -265,13 +275,13 @@ vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type,
 }
 
 
-/* Function       :  cli_showvlog_feature
+/* Function       :  cli_show_vlog_feature
  * Responsibility :  Displays show vlog feature
  * Return         :  0 on Success 1 otherwise
  */
 
 int
-cli_showvlog_feature(const char *argv0, const char *argv1)
+cli_show_vlog_feature(const char *argv0, const char *argv1)
 {
 
    static int rc = 0;
@@ -534,13 +544,72 @@ DEFUN_NOLOCK (cli_platform_show_vlog_list,
    return cli_show_vlog_config_list();
 }
 
-/* Function       :  cli_showvlog_config
+
+
+/* Function       :  cli_show_vlog
+ * Responsibility :  Display vlogs
+ * Return         :  0 on Success 1 otherwise
+ */
+int
+cli_show_vlog(sd_journal *journal_handle)
+{
+   int return_value = 0;
+
+      /* Success, Now print the Header */
+   vty_out(vty,"%s---------------------------------------------------%s",
+             VTY_NEWLINE,VTY_NEWLINE);
+   vty_out(vty,"%s%s","show vlog",VTY_NEWLINE);
+   vty_out(vty,"-----------------------------------------------------%s",
+          VTY_NEWLINE);
+
+       /* For Each Log Message  */
+   SD_JOURNAL_FOREACH(journal_handle)
+   {
+      const char *message_data = NULL;
+      const char *ch = "|";
+      const char *msg = NULL;
+      char *msg_str = NULL;
+      char *message = NULL;
+      size_t data_length = 0;
+
+
+      return_value = sd_journal_get_data(journal_handle
+                                       , "MESSAGE"
+                                       ,(const void **)&message_data
+                                       , &data_length);
+      if (return_value < 0) {
+         VLOG_ERR("Failed to read message field: %s\n", strerror(-return_value));
+         continue;
+      }
+
+      /*read the log message from journal*/
+      msg = get_value(message_data);
+      if(msg == NULL) {
+         VLOG_ERR("failed to read msg from message field");
+      }
+
+      /*duplicate the log message and search for ovs logs*/
+      msg_str = xstrdup(msg);
+      if(msg_str != NULL) {
+            message = strtok(msg_str,ch);
+            if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
+                  vty_out(vty,"%-264.264s%s",msg,VTY_NEWLINE);
+            }
+      }else {
+         VLOG_ERR("failed to duplicate message-str from message value");
+      }
+      free(msg_str);
+   }
+   return CMD_SUCCESS;
+}
+
+/* Function       :  cli_show_vlog_config
  * Responsibility :  Display all features loglevels of
  *                   file & console destinations
  * Return         :  0 on Success 1 otherwise
  */
 int
-cli_showvlog_config()
+cli_show_vlog_config(void)
 {
    static int rc = 0;
    int fun_argc = LIST_ARGC;
@@ -598,19 +667,50 @@ cli_showvlog_config()
    return CMD_SUCCESS;
 }
 
-/*Action routine for show vlog features,log levels */
 
-DEFUN_NOLOCK (cli_platform_show_vlog,
+/* Function       :  vlog_filter
+ * Responsibility :  Filter to display log messages by daemon or
+ *                :  severity
+ * Return         :  0 on Success -1 otherwise
+ */
+
+int
+vlog_filter(char *arg, int index, sd_journal *journal_handle)
+{
+    char buf[264] = {0,};
+    int level = 0, return_value = 0;
+    if(index == 0) {
+         /*filter for daemon*/
+        sprintf(buf,"SYSLOG_IDENTIFIER=%s",arg);
+    }
+    else if(index == 1) {
+        level = sev_level((char*)arg);
+        if(level >= 0) {
+           /*filter for severity*/
+            sprintf(buf, "PRIORITY=%d",level);
+        }
+    }
+         /*Filter by daemon name or severity*/
+    return_value = sd_journal_add_match(journal_handle,buf,0);
+    if(return_value < 0) {
+        VLOG_ERR("Failed to log the messages");
+        return -1;
+    }
+    return 0;
+}
+/*Action routine for show vlog config features,log levels */
+
+DEFUN_NOLOCK (cli_platform_show_vlog_config,
    cli_platform_show_vlog_config_cmd,
    "show vlog config",
    SHOW_STR
    SHOW_VLOG_STR
    SHOW_VLOG_CONFIG_STR)
 {
-    return cli_showvlog_config();
+    return cli_show_vlog_config();
 }
 
-/*Action routine for show vlog feature*/
+/*Action routine for show vlog config feature*/
 
 DEFUN_NOLOCK (cli_platform_showvlog_feature_list,
    cli_platform_show_vlog_feature_cmd,
@@ -622,5 +722,49 @@ DEFUN_NOLOCK (cli_platform_showvlog_feature_list,
    SHOW_VLOG_DAEMON
    SHOW_VLOG_NAME)
 {
-   return cli_showvlog_feature(argv[0],argv[1]);
+   return cli_show_vlog_feature(argv[0],argv[1]);
+}
+
+/*Action routine for show vlog*/
+DEFUN_NOLOCK (cli_platform_show_vlog,
+   cli_platform_show_vlog_cmd,
+   "show vlog "
+   "{daemon WORD |severity WORD}",
+   SHOW_STR
+   SHOW_VLOG_STR
+   SHOW_VLOG_FILTER_DAEMON
+   SHOW_VLOG_FILTER_WORD
+   SHOW_VLOG_FILTER_SEV
+   SHOW_VLOG_SEV_LEVELS)
+{
+    sd_journal *journal_handle = NULL;
+    int i = 0, return_value = 0;
+
+    /* Open Journal File to read Logs */
+    return_value = sd_journal_open(&journal_handle,SD_JOURNAL_LOCAL_ONLY);
+
+    if(return_value < 0) {
+        VLOG_ERR("Failed to open journal");
+        return CMD_WARNING;
+    }
+    /* Filter Vlogs from other Journal Logs */
+    return_value = sd_journal_add_match(journal_handle,MESSAGE_OVS_MATCH,0) ;
+    if(return_value < 0) {
+        VLOG_ERR("Failed to log");
+        return CMD_WARNING;
+    }
+
+   while(i < 2)
+   {
+       if(argv[i] != NULL) {
+               /*Filter vlog by daemon or severity*/
+           return_value = vlog_filter((char*)argv[i], i, journal_handle);
+            if(return_value < 0) {
+               VLOG_ERR("Failed to Filter log messages");
+               return CMD_WARNING;
+            }
+       }
+       i++;
+   }
+   return cli_show_vlog(journal_handle);
 }

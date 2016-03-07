@@ -42,6 +42,29 @@ VLOG_DEFINE_THIS_MODULE (vtysh_show_events_cli);
  * return         : return value
  */
 
+int
+sev_level(char *arg)
+{
+    const char *sev[] = {"emer","alert","crit","err","warn","notice","info","debug"};
+    int i = 0, found = 0;
+    for(i = 0; i < 8; i++)
+    {
+        if(!strcmp(arg, sev[i])) {
+            found = TRUE;
+            break;
+        }
+    }
+    if(found) {
+        return i;
+    }
+    return -1;
+}
+
+/* Function       : get_values
+ * Responsibility : read only values from keys
+ * return         : return value
+ */
+
 const char*
 get_value(const char *str)
 {
@@ -104,32 +127,49 @@ convert_to_datetime(char *buf,int buf_size,const char *str)
      }
 }
 
+/* Function       : journal_filter
+ * Resposibility  : Filter logs based on journal fields
+ * Return         : 0 on success -1 otherwise
+ */
+int
+journal_filter(const char *arg, int index, sd_journal *journal_handle)
+{
+    char buf[BUF_SIZE];
+    int id = 0, return_value = 0, level = 0;
+    if(index == EVENT_ID_INDEX) {
+        id = atoi(arg);
+        snprintf(buf, BUF_SIZE, "OPS_EVENT_ID=%d", id);
+    }
+    else if(index == EVENT_SEVERITY_INDEX) {
+        level = sev_level((char*)arg);
+        if(level >= 0) {
+            snprintf(buf, BUF_SIZE, "PRIORITY=%d", level);
+        }
+        else {
+            return -1;
+        }
+    }
+    else if(index == EVENT_CATEGORY_INDEX) {
+        snprintf(buf, BUF_SIZE, "OPS_EVENT_CATEGORY=%s", arg);
+    }
+    return_value = sd_journal_add_match(journal_handle,buf,0);
+    if(return_value < 0) {
+      VLOG_ERR("Failed to log the events");
+      return -1;
+  }
+  return 0;
+}
+
 /* Function       : cli_show_events
  * Resposibility  : Display Event Logs
  * Return         : 0 on success 1 otherwise
  */
 int
-cli_show_events(void)
+cli_show_events(sd_journal *journal_handle,int reverse, int filter)
 {
   int return_value = 0;
   int events_display_count = 0;
-  sd_journal *journal_handle = NULL;
-
-  /* Open Journal File to read Event Logs */
-  return_value = sd_journal_open(&journal_handle,SD_JOURNAL_LOCAL_ONLY);
-
-  if(return_value < 0) {
-    VLOG_ERR("Failed to open journal");
-    return CMD_WARNING;
-  }
-
-  /* Filter Event Logs from other Journal Logs */
-  return_value = sd_journal_add_match(journal_handle,MESSAGE_OPS_EVT_MATCH,0) ;
-  if(return_value < 0) {
-    VLOG_ERR("Failed to log the events");
-    return CMD_WARNING;
-  }
-
+  int eof = 1;
   /* Success, Now print the Header */
   vty_out(vty,"%s---------------------------------------------------%s",
           VTY_NEWLINE,VTY_NEWLINE);
@@ -137,97 +177,156 @@ cli_show_events(void)
   vty_out(vty,"---------------------------------------------------%s",
           VTY_NEWLINE);
 
+  if(reverse) {
+      eof = sd_journal_previous(journal_handle);
+  }
+  else {
+      eof = sd_journal_next(journal_handle);
+  }
   /* For Each Event Log Message  */
-  SD_JOURNAL_FOREACH(journal_handle)
+  while(eof)
   {
-    const char *message_data = NULL;
-    const char *timestamp = NULL;
-    const char *module_name = NULL;
-    const char ch = '|';
-    char  tm_buf[BUF_SIZE] = {0,};
-    const char *tm = NULL;
-    const char *msg = NULL;
-    const char *message = NULL;
-    const char *module = NULL;
-    size_t data_length = 0;
-    size_t timestamp_length = 0;
-    size_t module_length = 0;
+      const char *message_data = NULL;
+      const char *timestamp = NULL;
+      const char *module_name = NULL;
+      const char ch = '|';
+      char  tm_buf[BUF_SIZE] = {0,};
+      const char *tm = NULL;
+      const char *msg = NULL;
+      const char *message = NULL;
+      const char *module = NULL;
+      size_t data_length = 0;
+      size_t timestamp_length = 0;
+      size_t module_length = 0;
 
-    return_value = sd_journal_get_data(journal_handle
-                                       , "MESSAGE"
-                                       ,(const void **)&message_data
-                                       , &data_length);
-    if (return_value < 0) {
-      VLOG_ERR("Failed to read message field: %s\n", strerror(-return_value));
-      continue;
-    }
+      return_value = sd_journal_get_data(journal_handle
+              , "MESSAGE"
+              ,(const void **)&message_data
+              , &data_length);
+      if (return_value < 0) {
+          VLOG_ERR("Failed to read message field: %s\n", strerror(-return_value));
+          continue;
+      }
 
-    return_value = sd_journal_get_data(journal_handle
-                                       , "SYSLOG_IDENTIFIER"
-                                       ,(const void **)&module_name
-                                       , &module_length);
-    if (return_value < 0) {
-      VLOG_ERR("Failed to read module name field: %s\n", strerror(-return_value));
-      continue;
-    }
+      return_value = sd_journal_get_data(journal_handle
+              , "SYSLOG_IDENTIFIER"
+              ,(const void **)&module_name
+              , &module_length);
+      if (return_value < 0) {
+          VLOG_ERR("Failed to read module name field: %s\n", strerror(-return_value));
+          continue;
+      }
 
-    return_value = sd_journal_get_data(journal_handle
-                                      ,"_SOURCE_REALTIME_TIMESTAMP"
-                                      ,(const void **)&timestamp
-                                      , &timestamp_length);
-    if (return_value < 0) {
-      VLOG_ERR("Failed to read timestamp field: %s\n", strerror(-return_value));
-      continue;
-    }
+      return_value = sd_journal_get_data(journal_handle
+              ,"_SOURCE_REALTIME_TIMESTAMP"
+              ,(const void **)&timestamp
+              , &timestamp_length);
+      if (return_value < 0) {
+          VLOG_ERR("Failed to read timestamp field: %s\n", strerror(-return_value));
+          continue;
+      }
 
-    ++events_display_count;
+      ++events_display_count;
 
-    /*to get the values from fields using get_value() API*/
+      /*to get the values from fields using get_value() API*/
 
-    msg = get_value(message_data);
+      msg = get_value(message_data);
 
-    if(msg!=NULL) {
-         message = strchr(msg,ch);
-    }
-    else {
-        VLOG_ERR("failed to read message-value from message field");
-        message =NULL;
-    }
+      if(msg!=NULL) {
+          message = strchr(msg,ch);
+      }
+      else {
+          VLOG_ERR("failed to read message-value from message field");
+          message =NULL;
+      }
 
-    module = get_value(module_name);
+      module = get_value(module_name);
 
-    if(module==NULL) {
-      VLOG_ERR("failed to read module-value from module field");
-    }
+      if(module==NULL) {
+          VLOG_ERR("failed to read module-value from module field");
+      }
 
-    tm = get_value(timestamp);
+      tm = get_value(timestamp);
 
-    if(tm!=NULL) {
-      /*convert real timestamp to unix timestamp */
-       convert_to_datetime(tm_buf,BUF_SIZE,tm);
-    }
-    else {
-       VLOG_ERR("failed to read time-value from time field");
-    }
+      if(tm!=NULL) {
+          /*convert real timestamp to unix timestamp */
+          convert_to_datetime(tm_buf,BUF_SIZE,tm);
+      }
+      else {
+          VLOG_ERR("failed to read time-value from time field");
+      }
 
-    vty_out(vty,"%s|%s%s%s",tm_buf,module,message,VTY_NEWLINE);
+      vty_out(vty,"%s|%s%s%s",tm_buf,module,message,VTY_NEWLINE);
+      if(reverse) {
+          eof = sd_journal_previous(journal_handle);
+      }
+      else {
+          eof = sd_journal_next(journal_handle);
+      }
   }
 
   if(!events_display_count) {
-    vty_out(vty,"No event has been logged in the system%s",VTY_NEWLINE);
+      if(filter) {
+          vty_out(vty,"No event match the filter provided%s",VTY_NEWLINE);
+      }
+      else {
+          vty_out(vty,"No event has been logged in the system%s",VTY_NEWLINE);
+      }
   }
   return CMD_SUCCESS;
 }
 
 
 /*
-* Action routine for show events
-*/
+ * Action routine for show events
+ */
 DEFUN_NOLOCK (cli_platform_show_events,
-  cli_platform_show_events_cmd,
-  "show events",
-  SHOW_STR
-  SHOW_EVENTS_STR)
-  {
-    return cli_show_events();
-  }
+        cli_platform_show_events_cmd,
+        "show events "
+        "{event-id <1001-999999>|severity WORD|category WORD|reverse}",
+        SHOW_STR
+        SHOW_EVENTS_STR
+        SHOW_EVENTS_FILTER_EV_ID
+        SHOW_EVENTS_EV_ID
+        SHOW_EVENTS_SEVERITY
+        SHOW_EVENTS_SEV_LEVELS
+        SHOW_EVENTS_CATEGORY
+        SHOW_EVENTS_FILTER_CAT
+        SHOW_EVENTS_REVERSE)
+{
+    int i = 0, return_value = 0, reverse = 0, filter = 0;
+    sd_journal *journal_handle = NULL;
+
+    /* Open Journal File to read Event Logs */
+    return_value = sd_journal_open(&journal_handle, SD_JOURNAL_LOCAL_ONLY);
+
+    if(return_value < 0) {
+        VLOG_ERR("Failed to open journal");
+        return CMD_WARNING;
+    }
+    /* Lets find OPS Event Logs out of journal */
+    return_value = sd_journal_add_match(journal_handle, MESSAGE_OPS_EVT_MATCH, 0);
+    if(return_value < 0) {
+        VLOG_ERR("Failed to log the events");
+        return CMD_WARNING;
+    }
+
+    if(argv[3] != NULL) {
+        /* Reverse list option */
+        sd_journal_seek_tail(journal_handle);
+        reverse = TRUE;
+    }
+    /* Filter Event Logs based on given filters in CLI */
+    while(i < MAX_FILTER_ARGS)
+    {
+        if(argv[i] != NULL) {
+            return_value = journal_filter(argv[i], i, journal_handle);
+            filter = TRUE;
+            if(return_value < 0) {
+                return CMD_WARNING;
+            }
+        }
+        i++;
+    }
+    return cli_show_events(journal_handle, reverse, filter);
+}

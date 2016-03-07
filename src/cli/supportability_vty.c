@@ -29,7 +29,8 @@
 #include "vtysh/memory.h"
 #include "dynamic-string.h"
 #include "supportability_vty.h"
-
+#include "vtysh_ovsdb_syslog_context.h"
+#include "vtysh/vtysh_ovsdb_config.h"
 /*
  * Function           : cli_pre_init
  * Responsibility     : Install the cli nodes
@@ -39,7 +40,7 @@ void
 cli_pre_init(void)
 {
    /* Supportability Doesnt have any new node */
-
+    syslog_ovsdb_init();
 }
 
 /*
@@ -51,6 +52,7 @@ cli_pre_init(void)
 void
 cli_post_init()
 {
+  vtysh_ret_val retval = e_vtysh_error;
   install_element (ENABLE_NODE, &cli_platform_show_tech_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_tech_list_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_tech_file_cmd);
@@ -68,4 +70,32 @@ cli_post_init()
   install_element (ENABLE_NODE, &cli_platform_show_vlog_config_list_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_vlog_feature_cmd);
   install_element (CONFIG_NODE, &cli_config_vlog_set_cmd);
+
+  /* syslog commands */
+  install_element (CONFIG_NODE, &vtysh_config_syslog_basic_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_udp_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_tcp_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_svrt_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_prot_svrt_noport_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_udp_svrt_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_syslog_tcp_svrt_cmd);
+
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_basic_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_udp_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_tcp_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_svrt_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_prot_svrt_noport_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_udp_svrt_cmd);
+  install_element (CONFIG_NODE, &no_vtysh_config_syslog_tcp_svrt_cmd);
+  install_element (CONFIG_NODE, &vtysh_config_no_syslog_cmd);
+  retval = install_show_run_config_subcontext(e_vtysh_config_context,
+                        e_vtysh_config_context_syslog,
+                        &vtysh_config_context_syslog_clientcallback,
+                        NULL,NULL);
+  if(e_vtysh_ok != retval)
+  {
+    vtysh_ovsdb_config_logmsg(VTYSH_OVSDB_CONFIG_ERR,
+           "config context unable to add syslog client callback");
+    assert(0);
+  }
 }

@@ -214,6 +214,7 @@ parse_feature_mapping_yaml(void)
   if (!yaml_parser_parse(&parser, &event)) {
     VLOG_ERR("Parser error %d", parser.error);
     yaml_parser_delete(&parser);
+    yaml_event_delete(&event);
     fclose(fh);
     return 1;
   }
@@ -280,7 +281,9 @@ parse_feature_mapping_yaml(void)
     if (!yaml_parser_parse(&parser, &event)) {
         VLOG_ERR("Parser error %d\n", parser.error);
         yaml_parser_delete(&parser);
+        yaml_event_delete(&event);
         fclose(fh);
+        return 1;
     }
   }
   yaml_event_delete(&event);

@@ -6,6 +6,46 @@ categories:
   description: 'Events related to LLDP'
   category_rank: 1
 
+- event_category: FAN
+  description: 'Events related to FAN'
+  category_rank: 2
+
+- event_category: POWER
+  description: 'Events related to POWER'
+  category_rank: 3
+
+- event_category: INTERFACE
+  description: 'Events related to INTERFACE'
+  category_rank: 4
+
+- event_category: CFG
+  description: 'Events related to CFG'
+  category_rank: 5
+
+- event_category: LED
+  description: 'Events related to LED'
+  category_rank: 6
+
+- event_category: PM
+  description: 'Events related to PM'
+  category_rank: 7
+
+- event_category: PORT
+  description: 'Events related to PORT'
+  category_rank: 8
+
+- event_category: SWITCH
+  description: 'Events related to SWITCH'
+  category_rank: 9
+
+- event_category: SYS
+  description: 'Events related to SYS'
+  category_rank: 10
+
+- event_category: TEMPERATURE
+  description: 'Events related to TEMPERATURE'
+  category_rank: 11
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -78,3 +118,83 @@ event_definitions:
   keys: hold
   event_description_template:
       'Configured LLDP tx-hold with {hold}'
+
+- event_name: FAN_EVENT
+  event_category: FAN
+  event_ID : 2001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured  fan'
+
+- event_name: POWER_EVENT
+  event_category: POWER
+  event_ID : 3001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured POWER'
+
+- event_name: INTF_EVENT
+  event_category: INTERFACE
+  event_ID : 4001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured Interface'
+
+- event_name: CFG_EVENT
+  event_category: CFG
+  event_ID : 5001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured cfg'
+
+- event_name: LED_EVENT
+  event_category: LED
+  event_ID : 6001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured LED'
+
+- event_name: PM_EVENT
+  event_category: PM
+  event_ID : 7001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured PM'
+
+- event_name: PORT_EVENT
+  event_category: PORT
+  event_ID : 8001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured Port'
+
+- event_name: SWITCH_EVENT
+  event_category: SWITCH
+  event_ID : 9001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured Switch'
+
+- event_name: SYS_EVENT
+  event_category: SYS
+  event_ID : 10001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured sys'
+
+- event_name: TEMP_EVENT
+  event_category: TEMPERATURE
+  event_ID : 11001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Configured temp'

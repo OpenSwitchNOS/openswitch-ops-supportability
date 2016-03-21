@@ -78,3 +78,59 @@ event_definitions:
   keys: hold
   event_description_template:
       'Configured LLDP tx-hold with {hold}'
+
+- event_name: PORT_CREATE
+  event_category: PORT
+  event_ID : 1009
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Interface {interface}, created'
+
+- event_name: PORT_DELETE
+  event_category: PORT
+  event_ID : 1010
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Interface {interface}, deleted'
+
+- event_name: PORT_IP_UPDATE
+  event_category: PORT
+  event_ID : 1011
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Interface {interface}, configured with ip address {value}'
+
+- event_name: PORT_IPV4_DELETE
+  event_category: PORT
+  event_ID : 1012
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Interface {interface}, ipv4 address deleted'
+
+- event_name: PORT_IPV6_DELETE
+  event_category: PORT
+  event_ID : 1013
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Interface {interface}, ipv6 address deleted'
+
+- event_name: PORT_ENC_UPDATE
+  event_category: PORT
+  event_ID : 1014
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Interface {interface}, configured with dot encapsulation {value}'
+
+- event_name: PORT_ADMIN_STATE
+  event_category: PORT
+  event_ID : 1015
+  severity: LOG_INFO
+  keys: interface, state
+  event_description_template:
+      'Interface {interface}, configured administratively {state}'

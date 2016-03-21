@@ -28,6 +28,9 @@
 #include <regex.h>
 #include <ctype.h>
 
+#define  STR_SAFE(X)\
+        if (sizeof(X) >=  1 )   X[ sizeof(X) - 1 ] =  '\0' ;
+
 /* compile the regular expression for the given pattern */
 int
 compile_corefile_pattern (regex_t * regexst, const char * pattern);

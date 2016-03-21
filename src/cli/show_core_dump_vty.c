@@ -39,6 +39,35 @@
 
 VLOG_DEFINE_THIS_MODULE (vtysh_show_core_dump_cli);
 
+/*
+ * Function       : signal_desc
+ * Responsibility : Provides description of signal
+ * Parameters
+ *                : sig_char - signal number in string format
+ *                : sig_str  - output buffer to write description
+ *                : size     - size of output buffer
+ *
+ * Returns        : 0 on success
+ */
+static int
+signal_desc(const char *sig_char , char *sig_str , unsigned int size)
+{
+    int sig_int = 0;
+    char *sig_desc = NULL;
+    if (!( sig_char && sig_str ))
+        return 1;
+
+    sig_int = atoi( sig_char );
+    if (( sig_int  < SIGHUP  ) &&  ( sig_int > SIGRTMAX ))
+        return 2;
+
+    sig_desc = strsignal(sig_int);
+    strncpy (sig_str ,sig_desc ? sig_desc : " " , size);
+    if ( size > 0 )
+        sig_str[size-1] = '\0' ;
+    return 0;
+}
+
 int
 cli_show_core_dump(void)
 {
@@ -49,6 +78,7 @@ cli_show_core_dump(void)
    regex_t regexst_daemon;
    regex_t regexst_kern;
    struct core_dump_data cd = {{0}};
+   char sig_desc[SIGNAL_DESC_STR_LEN]={0};
 
    int header_p = 0;
    int num_of_core =0;
@@ -78,7 +108,8 @@ cli_show_core_dump(void)
       globbuf_daemon.gl_pathv will contain the core dump file names
       */
    if(0 !=
-         get_file_list(CORE_DUMP_CONFIG,TYPE_DAEMON,&globbuf_daemon,GB_PATTERN)
+         get_file_list(CORE_DUMP_CONFIG,TYPE_DAEMON,&globbuf_daemon,GB_PATTERN,
+             NULL)
      )
    {
       /* Failed to locate Core Dump Files */
@@ -101,15 +132,17 @@ cli_show_core_dump(void)
             vty_out(vty
                   ,"===========================================================%s"
                   ,VTY_NEWLINE);
-            vty_out(vty,"TimeStamp           | Daemon Name%s",VTY_NEWLINE);
+            vty_out(vty,"%-20.20s | %-17.17s | %-20.20s%s","TimeStamp",
+                    "Daemon Name","Message",VTY_NEWLINE);
             vty_out(vty
                   ,"===========================================================%s"
                   ,VTY_NEWLINE);
             header_p = 1;
          }
          num_of_core++;
-         vty_out(vty,"%s %s   %s\n"
-               ,cd.crash_date,cd.crash_time,cd.daemon_name);
+         signal_desc(cd.crash_signal ,sig_desc,sizeof(sig_desc));
+         vty_out(vty,"%-11.11s %-8.8s  %-19.19s %-20.20s\n"
+               ,cd.crash_date,cd.crash_time,cd.daemon_name,sig_desc);
       }
    }
 
@@ -120,7 +153,7 @@ cli_show_core_dump(void)
       globbuf_daemon.gl_pathv will contain the kernel core dump file names
       */
    if(get_file_list(KERNEL_DUMP_CONFIG,TYPE_KERNEL,
-            &globbuf_kernel,KERN_GB_PATTERN)  != 0)
+            &globbuf_kernel,KERN_GB_PATTERN, NULL)  != 0)
    {
       /* Failed to locate Core Dump Files */
 

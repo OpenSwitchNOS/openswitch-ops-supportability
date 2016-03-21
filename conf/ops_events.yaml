@@ -6,6 +6,14 @@ categories:
   description: 'Events related to LLDP'
   category_rank: 1
 
+- event_category: LOOPBACK
+  description: 'Events related to LOOPBACK'
+  category_rank: 2
+
+- event_category: SUBINTERFACE
+  description: 'Events related to Sub-Interface'
+  category_rank: 3
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -78,3 +86,107 @@ event_definitions:
   keys: hold
   event_description_template:
       'Configured LLDP tx-hold with {hold}'
+
+- event_name: LOOPBACK_CREATE
+  event_category: LOOPBACK
+  event_ID : 2001
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Loopback Interface {interface}, created'
+
+- event_name: LOOPBACK_DELETE
+  event_category: LOOPBACK
+  event_ID : 2002
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Loopback Interface {interface}, deleted'
+
+- event_name: LOOPBACK_IP_UPDATE
+  event_category: LOOPBACK
+  event_ID : 2003
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Loopback Interface {interface}, configured with ip address {value}'
+
+- event_name: LOOPBACK_IPV4_DELETE
+  event_category: LOOPBACK
+  event_ID : 2004
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Loopback Interface {interface}, ipv4 address deleted'
+
+- event_name: LOOPBACK_IPV6_DELETE
+  event_category: LOOPBACK
+  event_ID : 2005
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Loopback Interface {interface}, ipv6 address deleted'
+
+- event_name: LOOPBACK_ADMIN_STATE
+  event_category: LOOPBACK
+  event_ID : 2006
+  severity: LOG_INFO
+  keys: interface, state
+  event_description_template:
+      'Loopback Interface {interface}, configured administratively {state}'
+
+- event_name: SUBINTERFACE_CREATE
+  event_category: SUBINTERFACE
+  event_ID : 3001
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Sub-Interface {interface}, created'
+
+- event_name: SUBINTERFACE_DELETE
+  event_category: SUBINTERFACE
+  event_ID : 3002
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Sub-Interface {interface}, deleted'
+
+- event_name: SUBINTERFACE_IP_UPDATE
+  event_category: SUBINTERFACE
+  event_ID : 3003
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Sub-Interface {interface}, configured with ip address {value}'
+
+- event_name: SUBINTERFACE_IPV4_DELETE
+  event_category: SUBINTERFACE
+  event_ID : 3004
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Sub-Interface {interface}, ipv4 address deleted'
+
+- event_name: SUBINTERFACE_IPV6_DELETE
+  event_category: SUBINTERFACE
+  event_ID : 3005
+  severity: LOG_INFO
+  keys: interface
+  event_description_template:
+      'Sub-Interface {interface}, ipv6 address deleted'
+
+- event_name: SUBINTERFACE_ENC_UPDATE
+  event_category: SUBINTERFACE
+  event_ID : 3006
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Sub-Interface {interface}, configured with dot encapsulation {value}'
+
+- event_name: SUBINTERFACE_ADMIN_STATE
+  event_category: SUBINTERFACE
+  event_ID : 3007
+  severity: LOG_INFO
+  keys: interface, state
+  event_description_template:
+      'Sub-Interface {interface}, configured administratively {state}'

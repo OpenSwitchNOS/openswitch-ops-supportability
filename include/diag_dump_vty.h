@@ -31,6 +31,7 @@
 #include "unixctl.h"
 #include "diag_dump.h"
 #include "feature_mapping.h"
+#include "supportability_utils.h"
 
 #define DIAG_DUMP_DIR         "/tmp/ops-diag"
 #define FILE_PATH_LEN_MAX          256
@@ -64,8 +65,6 @@
 #define VALID_FD_CHECK(X)\
         ( ( (X) < 0) ? 0 : 1 )
 
-#define  STR_SAFE(X)\
-        if (sizeof(X) >=  1 )   X[ sizeof(X) - 1 ] =  '\0' ;
 
 #define CLI_STR_EQUAL \
                     "==========================================================\

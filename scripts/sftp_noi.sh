@@ -19,18 +19,15 @@
 # This script send file to tftp server
 
 # Usage
-# tftp_noi.sh  <tftp server ip> <absolute path of local file to send>
+# sftp_noi.sh  <user name>  <tftp server ip> <absolute path of local file to send>
 #                               <destination file name>
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 4 ]; then
     exit 1;
 fi
 
-tftp $1 <<EOF
-verbose
-bin
-put $2 $3
-quit
+sftp ${1}@${2} -b <<EOF
+put ${3} ${4}
 EOF
 
 exit $?

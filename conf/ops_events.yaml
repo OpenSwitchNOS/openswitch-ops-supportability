@@ -42,6 +42,10 @@ categories:
   description: 'Events related to Sub-Interface'
   category_rank: 10
 
+- event_category: OSPF
+  description: 'Events related to OSPF'
+  category_rank: 11
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -378,3 +382,27 @@ event_definitions:
   keys: interface, state
   event_description_template:
       'Sub-Interface {interface}, configured administratively {state}'
+
+- event_name: OSPF_OVSDB_INIT
+  event_category: OSPF
+  event_ID : 11001
+  severity: LOG_INFO
+  keys: pid
+  event_description_template:
+      'OSPF is up with PID:{pid}'
+
+- event_name: OSPF_OVSDB_ZEBRA
+  event_category: OSPF
+  event_ID : 11002
+  severity: LOG_INFO
+  keys: event, prefix, route
+  event_description_template:
+      'Zebra {event} with PREFIX: {prefix} OSPF_ROUTE: {route} '
+
+- event_name: OSPF_OVSDB_NSM_STATE
+  event_category: OSPF
+  event_ID : 11003
+  severity: LOG_INFO
+  keys: routerid, oi, state, next_state, event
+  event_description_template:
+      'AdjChg: Nbr {routerid} on {oi}: {state} -> {next_state} ({event})'

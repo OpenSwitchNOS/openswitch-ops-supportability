@@ -108,6 +108,19 @@ extract_info (
       {
          return -1;
       }
+
+      /* Extract Signal Number*/
+      if (match_found[5].rm_so == -1)
+      {
+         return -1;
+      }
+      strsize = match_found[5].rm_eo - match_found[5].rm_so;
+      strncpy (cd->crash_signal,(filename+match_found[5].rm_so),strsize);
+      if(strsize != SRC_SIGNAL_STR_LEN)
+      {
+         return -1;
+      }
+      cd->crash_signal[SRC_SIGNAL_STR_LEN] = 0;
    }
    else if (type == TYPE_KERNEL)
    {
@@ -156,15 +169,30 @@ extract_info (
    return 0;
 }
 
+/*
+ * Function       : get_file_list
+ * Responsibility : Generates lists of core files present for daemon and kernel
+ * Parameters
+ *                : filepath
+ *                : type
+ *                : globbuf
+ *                : globpattern
+ *                : daemon
+ *
+ * Returns        : 0 on success
+ */
+
 int
 get_file_list(const char* filepath,int type,
-   glob_t* globbuf, const char* globpattern )
+   glob_t* globbuf, const char* globpattern ,const char* daemon)
 {
    char* config_token  = NULL;
    FILE *config_fp = NULL;
    char config_line[CORE_LOC_CONFIG];
    char* corelocation = NULL;
    char location_buf[CORE_FILE_NAME];
+   int rc=0;
+   int locsize = 0;
 
    if( type != TYPE_DAEMON && type != TYPE_KERNEL)
    {
@@ -282,8 +310,17 @@ get_file_list(const char* filepath,int type,
 
 
    /* Form the GLOB pattern using the core dump location */
-   int locsize = 0;
-   locsize = snprintf(location_buf,CORE_FILE_NAME,globpattern,corelocation);
+   if ( type == TYPE_KERNEL )
+       locsize = snprintf(location_buf ,CORE_FILE_NAME ,"%s/%s/%s",
+               corelocation ,"kernel-core",globpattern);
+   else
+       if (( type == TYPE_DAEMON ) &&  daemon )
+           locsize = snprintf(location_buf,CORE_FILE_NAME,"%s/%s/%s%s",
+                   corelocation, daemon,daemon, globpattern);
+       else
+           locsize = snprintf(location_buf,CORE_FILE_NAME,
+                   globpattern,corelocation);
+
    if(locsize > CORE_FILE_NAME)
    {
       if(type == TYPE_DAEMON)
@@ -307,8 +344,45 @@ get_file_list(const char* filepath,int type,
       globbuf.gl_pathc will contain the number of core dumps found
       globbuf.gl_pathv will contain the core dump file names
       */
-   glob(location_buf,GLOB_BRACE,NULL,globbuf);
+   rc = glob(location_buf,GLOB_BRACE,NULL,globbuf);
    fclose(config_fp);
    config_fp = NULL;
-   return 0;
+
+   /* globe returns error for nomatch . So ignore nomatch error */
+   if ( rc == GLOB_NOMATCH )
+       return 0;
+
+   return rc;
+}
+
+/*
+ * Function       : validate_cli_args
+ * Responsibility : validates given cli argument with regular expression.
+ * Parameters
+ *                : arg - argument passed in cli
+ *                : regex - regular expression to validate user input
+ *
+ * Returns        : 0 on success
+ */
+
+int
+validate_cli_args(const char * arg , const char * regex)
+{
+    regex_t r;
+    int rc = 0;
+    const int n_matches = 10;
+    regmatch_t m[n_matches];
+
+    if (!( arg && regex ) )
+        return 1;
+
+    rc = regcomp(&r, regex , REG_EXTENDED|REG_NEWLINE);
+    if ( rc )  {
+        regfree (&r);
+        return rc;
+    }
+
+    rc = regexec (&r,arg,n_matches, m, 0);
+    regfree (&r);
+    return rc;
 }

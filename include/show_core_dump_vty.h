@@ -28,5 +28,6 @@
 
 #define SHOW_CORE_DUMP_STR              "Show list of core dumps present in the switch\n"
 
+#define SIGNAL_DESC_STR_LEN         128
 
 #endif //_SHOW_CORE_DUMP_VTY_H

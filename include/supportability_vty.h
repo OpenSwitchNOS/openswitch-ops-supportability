@@ -51,4 +51,6 @@ extern struct cmd_element cli_platform_show_vlog_cmd;
 extern struct cmd_element cli_platform_show_vlog_config_list_cmd;
 extern struct cmd_element cli_platform_show_vlog_feature_cmd;
 extern struct cmd_element cli_config_vlog_set_cmd;
+extern struct cmd_element cli_platform_copy_core_dump_tftp_cmd;
+extern struct cmd_element cli_platform_copy_core_dump_sftp_cmd;
 #endif /* _SUPPORTABILITY_VTY_H_ */

@@ -68,4 +68,6 @@ cli_post_init()
   install_element (ENABLE_NODE, &cli_platform_show_vlog_config_list_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_vlog_feature_cmd);
   install_element (CONFIG_NODE, &cli_config_vlog_set_cmd);
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_tftp_cmd);
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_sftp_cmd);
 }

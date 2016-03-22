@@ -157,6 +157,64 @@ def checkShowVlog(dut01Obj):
     return True
 
 
+def filterbyDaemonname(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "1.6 Running Filter by daemon-name             ")
+    LogOutput('info', "############################################\n")
+
+    # Get Into VtyshShell
+    assert (getIntoVtysh(dut01Obj))
+
+    returnDevInt = dut01Obj.DeviceInteract(command="show vlog daemon ops-lldpd")
+
+    # Clean Up
+    assert (getOutOfVtysh(dut01Obj))
+
+    finalReturnCode = returnDevInt['returnCode']
+    LogOutput('info', returnDevInt['buffer'])
+
+    if finalReturnCode != 0:
+        LogOutput('error', "filter by daemon failed")
+        return False
+    else:
+        if "ops-lldpd" not in returnDevInt['buffer']:
+            LogOutput('error', "filter by daemon failed")
+            return False
+        if "OPENSWITCH LLDPD Daemon" not in returnDevInt['buffer']:
+            LogOutput('error', "filter by daemon failed")
+            return False
+    return True
+
+def filterbySeveritylevel(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "1.7 Running Filter by Severity-level          ")
+    LogOutput('info', "############################################\n")
+
+
+    # Get Into VtyshShell
+    assert (getIntoVtysh(dut01Obj))
+
+    returnDevInt = dut01Obj.DeviceInteract(command="show vlog severity warn")
+
+    # Clean Up
+    assert (getOutOfVtysh(dut01Obj))
+
+    finalReturnCode = returnDevInt['returnCode']
+    LogOutput('info', returnDevInt['buffer'])
+
+    if finalReturnCode != 0:
+        LogOutput('error', "filter by severity failed")
+        return False
+    else:
+        if "ERR" not in  returnDevInt['buffer']:
+            LogOutput('error', "filter by severity failed")
+            return False
+        if "WARN" not in returnDevInt['buffer']:
+            LogOutput('error', "filter by severity failed")
+            return False
+    return True
+
+
 def checkVlogConfigFeature(dut01Obj):
     LogOutput('info', "\n############################################")
     LogOutput('info', "1.4 Check basic Vlog Configuration Feature    ")
@@ -452,6 +510,45 @@ def checkVlogConfigInvalidLogLevel(dut01Obj):
     return True
 
 
+def checkfilterInvalidDaemon(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "2.8 Check filter for Invaild Daemon-name      ")
+    LogOutput('info', "############################################\n")
+
+    # Get Into VtyshShell
+    assert (getIntoVtysh(dut01Obj))
+
+    returnDevInt = dut01Obj.DeviceInteract(
+            command="show vlog daemon ghasgashgash")
+
+    # Clean Up
+    assert (getOutOfVtysh(dut01Obj))
+
+    if ("No match the filter provided" not in returnDevInt['buffer']):
+        LogOutput('error', " filter for invalid daemon name failed")
+        return False
+    return True
+
+
+def checkfilterInvalidSeveritylevel(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "2.9 Check filter for Invaild Severity level   ")
+    LogOutput('info', "############################################\n")
+
+    # Get Into VtyshShell
+    assert (getIntoVtysh(dut01Obj))
+
+    returnDevInt = dut01Obj.DeviceInteract(command="show vlog severity ashsaskaska")
+
+    # Clean Up
+    assert (getOutOfVtysh(dut01Obj))
+
+    if ("Unknown command" not in returnDevInt['buffer']):
+        LogOutput('error', " filter for invalid Severity level failed")
+        return False
+    return True
+
+
 class Test_show_vlog:
 
     # Global variables
@@ -483,6 +580,12 @@ class Test_show_vlog:
     def test_checkVlogConfigDaemon(self):
         assert(checkVlogConfigDaemon(dut01Obj))
 
+    def test_filterbyDaemonname(self):
+        assert(filterbyDaemonname(dut01Obj))
+
+    def test_filterbySeveritylevel(self):
+        assert(filterbySeveritylevel(dut01Obj))
+
     # Negative Test Cases
     def test_checkInvalidDaemon(self):
         assert(checkInvalidDaemon(dut01Obj))
@@ -504,6 +607,12 @@ class Test_show_vlog:
 
     def test_checkVlogConfigInvalidFeature(self):
         assert(checkVlogConfigInvalidFeature(dut01Obj))
+
+    def test_checkfilterInvalidDaemon(self):
+        assert(checkfilterInvalidDaemon(dut01Obj))
+
+    def test_checkfilterInvalidSeveritylevel(self):
+        assert(checkfilterInvalidSeveritylevel(dut01Obj))
 
     # Teardown Class
     def teardown_class(cls):

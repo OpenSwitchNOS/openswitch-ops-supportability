@@ -45,11 +45,11 @@
 #define MIN_PID_LEN  1
 
 #define DIAG_DUMP_STR              "Show diagnostic information\n"
-#define DIAG_DUMP_LIST_STR         "Show supported features with description\n"
+#define DIAG_DUMP_LIST_STR         "List of supported features and descriptions\n"
 
-#define DIAG_DUMP_FEATURE          "Feature name  \n"
-#define DIAG_DUMP_FEATURE_BASIC    "Basic information \n"
-#define DIAG_DUMP_FEATURE_FILE     "Relative path of file\n"
+#define DIAG_DUMP_FEATURE          "Enter feature name\n"
+#define DIAG_DUMP_FEATURE_BASIC    "Basic diagnostic dump for the feature\n"
+#define DIAG_DUMP_FEATURE_FILE     "Enter file-name to capture diagnostic dump\n"
 
 
 #define FREE(X)\

@@ -26,14 +26,14 @@
 #define _SUPPORTABILITY_VTY_H_
 
 #define MAX_SEVS  8
-#define SEVERITY_LEVEL_EMER   "Display logs with LOG_EMER severity\n"
-#define SEVERITY_LEVEL_ALERT  "Display logs with LOG_ALERT severity\n"
-#define SEVERITY_LEVEL_CRIT   "Display logs with LOG_CRIT severity\n"
-#define SEVERITY_LEVEL_ERR    "Display logs with LOG_ERR severity\n"
-#define SEVERITY_LEVEL_WARN   "Display logs with LOG_WARN severity\n"
-#define SEVERITY_LEVEL_NOTICE "Display logs with LOG_NOTICE severity\n"
-#define SEVERITY_LEVEL_INFO   "Display logs with LOG_INFO severity\n"
-#define SEVERITY_LEVEL_DBG    "Display logs with LOG_DEBUG severity\n"
+#define SEVERITY_LEVEL_EMER   "Display logs with severity emer\n"
+#define SEVERITY_LEVEL_ALERT  "Display logs with severity alert and above\n"
+#define SEVERITY_LEVEL_CRIT   "Display logs with severity crit and above\n"
+#define SEVERITY_LEVEL_ERR    "Display logs with severity err and above\n"
+#define SEVERITY_LEVEL_WARN   "Display logs with severity warn and above\n"
+#define SEVERITY_LEVEL_NOTICE "Display logs with severity notice and above\n"
+#define SEVERITY_LEVEL_INFO   "Display logs with severity info and above\n"
+#define SEVERITY_LEVEL_DBG    "Display logs with severity debug and above\n"
 
 extern struct cmd_element vtysh_diag_dump_list_cmd;
 extern struct cmd_element vtysh_diag_dump_cmd;

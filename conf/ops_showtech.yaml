@@ -25,7 +25,7 @@
   feature:
   -
     feature_desc: "Link Aggregation Protocol"
-    feature_name: LAG
+    feature_name: lag
     cli_cmds:
       - "show lacp configuration"
       - "show lacp aggregates"

@@ -380,7 +380,7 @@ def checkUnknownDaemon(dut01Obj):
     # Variables
     overallBuffer = []
     finalReturnCode = 0
-    str_check = 'failed to connect'
+    str_check = 'Unknown command.'
     vtysh_cmd = 'diag-dump garbage basic'
     tc_desc = vtysh_cmd + ' test '
 

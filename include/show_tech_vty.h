@@ -34,6 +34,7 @@ void cli_post_init(void);
 #define SHOW_TECH_FILENAME_STR     "Name of output file, will be saved in /tmp folder\n"
 #define SHOW_TECH_FEATURE_STR      "Run show tech for the feature specified\n"
 #define SHOW_TECH_SUB_FEATURE_STR  "Run show tech for the sub feature specified\n"
+#define MAX_SHOWTECH_FEATURES  500
 void show_tech_vty_init();
 
 #endif //_SHOW_TECH_VTY_H

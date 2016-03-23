@@ -173,3 +173,29 @@ get_value(const char *str)
    }
 return NULL;
 }
+
+char * get_yaml_tokens(yaml_parser_t *parser,  yaml_token_t *tok, FILE *fh)
+{
+    char *key;
+
+    while(tok->type!= YAML_STREAM_END_TOKEN)
+    {
+        yaml_parser_scan(parser, tok);
+
+        switch(tok->type)
+        {
+            case YAML_KEY_TOKEN:
+                break;
+            case YAML_VALUE_TOKEN:
+                break;
+            case YAML_SCALAR_TOKEN:
+                key = (char*)tok->data.scalar.value;
+                return key;
+
+            default: break;
+        };
+        if (tok->type != YAML_STREAM_END_TOKEN)
+            yaml_token_delete(tok);
+    }
+    return NULL;
+}

@@ -24,6 +24,7 @@
 #ifndef _SUPPORTABILITY_VTY_H_
 
 #define _SUPPORTABILITY_VTY_H_
+#include <yaml.h>
 
 #define MAX_SEVS  8
 #define SEVERITY_LEVEL_EMER   "Display logs with LOG_EMER severity\n"
@@ -34,7 +35,12 @@
 #define SEVERITY_LEVEL_NOTICE "Display logs with LOG_NOTICE severity\n"
 #define SEVERITY_LEVEL_INFO   "Display logs with LOG_INFO severity\n"
 #define SEVERITY_LEVEL_DBG    "Display logs with LOG_DEBUG severity\n"
+#define MAX_CMD_SIZE           264
+#define MAX_HELP_SIZE          256
+#define MAX_DIAG_FEATURES      500
+#define MAX_EV_CATEGORIES      999
 
+extern char * get_yaml_tokens(yaml_parser_t *parser,  yaml_token_t *tok, FILE *fh);
 extern struct cmd_element vtysh_diag_dump_list_cmd;
 extern struct cmd_element vtysh_diag_dump_cmd;
 extern struct cmd_element cli_platform_show_tech_cmd;

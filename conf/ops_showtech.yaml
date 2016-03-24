@@ -30,3 +30,11 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech LOOPBACK Feature Definition
+  feature:
+  -
+    feature_desc: "Loopback"
+    feature_name: loopback
+    cli_cmds:
+      - "show interface loopback"

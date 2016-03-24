@@ -44,6 +44,7 @@
 #define ADD_TOK                  2
 #define SET_ARGC                 3
 #define MAX_SIZE                 100
+#define TRUE                     1
 #define BUF_SIZE                 264
 #define POSITION                 MAX_SIZE+15
 #define LIST_SIZE                20
@@ -560,16 +561,17 @@ DEFUN_NOLOCK (cli_platform_show_vlog_list,
  * Return         :  0 on Success 1 otherwise
  */
 int
-cli_show_vlog(sd_journal *journal_handle)
+cli_show_vlog(sd_journal *journal_handle,const char *argv0,int filter)
 {
    int return_value = 0;
+   int vlog_count = 0;
 
       /* Success, Now print the Header */
    vty_out(vty,"%s---------------------------------------------------%s",
              VTY_NEWLINE,VTY_NEWLINE);
    vty_out(vty,"%s%s","show vlog",VTY_NEWLINE);
    vty_out(vty,"-----------------------------------------------------%s",
-          VTY_NEWLINE);
+             VTY_NEWLINE);
 
        /* For Each Log Message  */
    SD_JOURNAL_FOREACH(journal_handle)
@@ -578,33 +580,78 @@ cli_show_vlog(sd_journal *journal_handle)
       const char *ch = "|";
       const char *msg = NULL;
       char *msg_str = NULL;
+      char *check_daemon = NULL;
       char *message = NULL;
       size_t data_length = 0;
+      const char *module_name = NULL;
+      const char *module = NULL;
+      size_t module_length = 0;
+
+      return_value = sd_journal_get_data(journal_handle
+                                 , "SYSLOG_IDENTIFIER"
+                                 ,(const void **)&module_name
+                                 , &module_length);
+      if (return_value < 0) {
+         VLOG_ERR("Failed to read module name field: %s\n", strerror(-return_value));
+         continue;
+      }
+
+      module = get_value(module_name);
+      if(module==NULL) {
+         VLOG_ERR("failed to read module-value from module field");
+      }
+
       return_value = sd_journal_get_data(journal_handle
                                        , "MESSAGE"
                                        ,(const void **)&message_data
                                        , &data_length);
-      /*message_data is local for iter loop , no need to free it*/
+         /*message_data is local for iter loop , no need to free it*/
       if (return_value < 0) {
          VLOG_ERR("Failed to read message field: %s\n", strerror(-return_value));
          continue;
       }
-      /*read the log message from journal*/
+
+      ++vlog_count;
+         /*read the log message from journal*/
       msg = get_value(message_data);
       if(msg == NULL) {
-         VLOG_ERR("failed to read msg from message field");
+         VLOG_ERR("Failed to read msg from message field");
          continue;
       }
-      /*duplicate the log message and search for ovs logs*/
+         /*duplicate the log message and search for ovs logs*/
       msg_str = xstrdup(msg);
-      if(msg_str != NULL) {
-         message = strtok(msg_str,ch);
-         if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
+      if(msg_str == NULL) {
+         VLOG_ERR("Failed to duplicate the message");
+         continue;
+      }
+      /*show vlog daemon*/
+      if(argv0 != NULL){
+         check_daemon = strstr(msg_str,argv0);
+         if(check_daemon != NULL) {
+            message = strtok(msg_str,ch);
+            if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
                   vty_out(vty,"%-200.200s%s",msg,VTY_NEWLINE);
+            }
+            FREE(msg_str);
          }
-         FREE(msg_str);
-      }else {
-         VLOG_ERR("failed to duplicate message-str from message value");
+      }
+      else{
+         /*show vlog and show vlog severity*/
+            if(msg_str != NULL) {
+               message = strtok(msg_str,ch);
+               if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
+                  vty_out(vty,"%s|%-200.200s%s",module,msg,VTY_NEWLINE);
+               }
+               FREE(msg_str);
+            }
+      }
+   }
+   if(!vlog_count){
+      if(filter){
+         vty_out(vty,"No match for the filter provided%s",VTY_NEWLINE);
+      }
+      else {
+         vty_out(vty,"No vlog messages logged in the system%s",VTY_NEWLINE);
       }
    }
    sd_journal_close(journal_handle);
@@ -696,20 +743,30 @@ vlog_filter(char *arg, int index, sd_journal *journal_handle)
     else if(index == SEVERITY_INDEX) {
         level = sev_level((char*)arg);
         if(level >= 0 && level < MAX_SEVS) {
+          for(;level>=0;level--){
            /*filter for severity*/
             snprintf(buf, BUF_SIZE, "PRIORITY=%d", level);
+            return_value = sd_journal_add_match(journal_handle,buf,0);
+            if(return_value < 0) {
+               VLOG_ERR("Failed to log the message at severity:%d",level);
+               return -1;
+            }
+            memset(buf,0,BUF_SIZE);
+          }
+          return 0;
         }
         else {
            return -1;
         }
     }
     else {
+       VLOG_ERR("Invalid index value");
        return -1;
     }
          /*Filter by daemon name or severity*/
     return_value = sd_journal_add_match(journal_handle,buf,0);
     if(return_value < 0) {
-        VLOG_ERR("Failed to log the messages");
+        VLOG_ERR("Failed to log the message at daemon:%s",arg);
         return -1;
     }
     return 0;
@@ -761,7 +818,7 @@ DEFUN_NOLOCK (cli_platform_show_vlog,
    SEVERITY_LEVEL_DBG)
 {
     sd_journal *journal_handle = NULL;
-    int i = 0, return_value = 0;
+    int i = 0, return_value = 0, filter = 0;
 
     /* Open Journal File to read Logs */
     return_value = sd_journal_open(&journal_handle,SD_JOURNAL_LOCAL_ONLY);
@@ -791,8 +848,9 @@ DEFUN_NOLOCK (cli_platform_show_vlog,
                sd_journal_close(journal_handle);
                return CMD_WARNING;
             }
+            filter = TRUE;
        }
        i++;
    }
-   return cli_show_vlog(journal_handle);
+   return cli_show_vlog(journal_handle,argv[0],filter);
 }

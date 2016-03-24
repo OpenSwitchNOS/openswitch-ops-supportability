@@ -15,3 +15,13 @@
     feature_desc: "System Fan"
     daemon:
        - "ops-fand"
+  -
+    feature_name: "sub-interface"
+    feature_desc: "Sub Interface"
+    daemon:
+       - "ops-portd"
+  -
+    feature_name: "loopback"
+    feature_desc: "Loopback"
+    daemon:
+       - "ops-portd"

@@ -34,6 +34,8 @@
 #include "openvswitch/vlog.h"
 #include "diag_dump_vty.h"
 #include "jsonrpc.h"
+#include <pthread.h>
+#include <signal.h>
 
 #define ARGC 2
 #define  ERR_STR\
@@ -41,10 +43,28 @@
 
 VLOG_DEFINE_THIS_MODULE(vtysh_diag);
 
+typedef struct
+{
+    char* daemon ;
+    char **cmd_type ;
+    int cmd_argc ;
+    struct vty *vty ;
+    int fd ;
+}thread_arg;
+
+struct jsonrpc *client=NULL;
+struct vty *gVty = NULL;
 
 static int
 vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         int cmd_argc , struct vty *vty , int fd );
+
+static int
+vtysh_diag_dump_create_thread( char* daemon , char **cmd_type ,
+        int cmd_argc , struct vty *vty , int fd );
+
+void *
+vtysh_diag_dump_thread( void* arg);
 
 static struct jsonrpc *
 vtysh_diag_connect_to_target(const char *target);
@@ -59,6 +79,211 @@ static int vtysh_diag_check_crete_dir( char *dir);
 static struct feature* feature_head;
 static char initialized=0; /* flag to check before parseing yaml file */
 
+#define     FUN_MAX_TIME      60       //in secs
+#define     USER_INT_ALARM    10       //in secs
+
+#ifndef FALSE
+#define     FALSE             0
+#endif
+
+#ifndef TRUE
+#define     TRUE              1
+#endif
+
+void diagdump_user_interrupt_handler(int );
+
+/* show tech global var should be intialized to zero */
+bool gDiagDumpUserInterrupt        = FALSE ;
+bool gDiagDumpUserInterruptAlarm   = FALSE ;
+bool gDiagDumpCommandFailed        = FALSE ;
+bool gDiagDumpThreadCancelled      = FALSE ;
+
+pthread_mutex_t gDiagDumpwaitMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t gDiagDumpWaitCond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t gDiagDumpCleanupMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t diagDumpAlarmMutex = PTHREAD_MUTEX_INITIALIZER;
+
+
+extern pthread_mutex_t vtysh_ovsdb_mutex;
+/* Function       : diagdump_thread_cleanup_handler
+ * Resposibility  : to clean the cmd thread , currently it will close the connection
+ * Return         : NULL
+ */
+void diagdump_thread_cleanup_handler(void *arg )
+{
+   jsonrpc_close(client);
+   client = NULL;
+   pthread_mutex_unlock( &gDiagDumpCleanupMutex );
+}
+
+/* Function       : vtysh_diag_dump_thread
+ * Resposibility  : call the function which execute the diag dump
+ * Return         : 0 on success and nonzero on failure
+ */
+void *
+vtysh_diag_dump_thread(void * argc)
+{
+  thread_arg arg = *(thread_arg *) argc;
+  char *daemon;
+  char ** cmd_type;
+  int cmd_argc;
+  struct vty * vty;
+  int fd ;
+  daemon = arg.daemon;
+  cmd_type = arg.cmd_type;
+  cmd_argc = arg.cmd_argc;
+  vty = arg.vty;
+  fd = arg.fd;
+  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  pthread_cleanup_push(diagdump_thread_cleanup_handler, NULL);
+
+  pthread_mutex_lock( &gDiagDumpCleanupMutex );
+
+  if(vtysh_diag_dump_daemon( daemon , cmd_type ,cmd_argc ,vty ,fd ))
+    gDiagDumpCommandFailed = TRUE ;
+
+  pthread_mutex_lock( &gDiagDumpwaitMutex );
+  pthread_cond_signal( &gDiagDumpWaitCond );
+  pthread_mutex_unlock( &gDiagDumpwaitMutex );
+  pthread_cleanup_pop(0);
+  pthread_mutex_unlock( &gDiagDumpCleanupMutex );
+  return (void *) 0;
+}
+
+/*
+ * Function       : vtysh_diag_dump_create_thread
+ * Responsibility : create new thread and run one diag dump function
+ *
+ * Parameters
+ *                : daemon
+ *                : cmd_type - basic  or advanced
+ *                : cmd_argc
+ *                : vty
+ *                : fd - file descriptor
+ *
+ * Returns        : 0 on success and nonzero on failure
+ *
+ */
+static int
+vtysh_diag_dump_create_thread(char* daemon , char **cmd_type ,
+        int cmd_argc , struct vty *vty , int fd )
+{
+  pthread_t tid;
+  thread_arg arg;
+  struct timespec   ts;
+  int error;
+  int threadCancelled = TRUE;
+
+  gDiagDumpCommandFailed = FALSE;
+  arg.daemon = daemon ;
+  arg.cmd_type = cmd_type ;
+  arg.cmd_argc = cmd_argc ;
+  arg.vty = vty;
+  arg.fd = fd ;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  ts.tv_sec += FUN_MAX_TIME;
+  pthread_create(&tid,NULL,vtysh_diag_dump_thread,(void *)&arg);
+  pthread_mutex_lock(&gDiagDumpwaitMutex);
+  error = pthread_cond_timedwait(&gDiagDumpWaitCond, &gDiagDumpwaitMutex,&ts);
+  pthread_mutex_unlock(&gDiagDumpwaitMutex);
+
+  pthread_mutex_lock(&diagDumpAlarmMutex);
+  if(gDiagDumpUserInterruptAlarm == TRUE)
+  {
+    alarm(0);
+    threadCancelled = FALSE ;
+    gDiagDumpUserInterruptAlarm = FALSE;
+  }
+  pthread_mutex_unlock(&diagDumpAlarmMutex);
+
+  if(error == ETIMEDOUT)
+  {
+    error = pthread_cancel(tid);
+    if(error != 0)
+    {
+       VLOG_ERR("unable to cancel show tech command thread");
+       // we should be able to cancel the thread
+    }
+
+    /*wait for the cleanup function to complete */
+    pthread_mutex_lock( &gDiagDumpCleanupMutex );
+    pthread_mutex_unlock( &gDiagDumpCleanupMutex );
+
+    vty_out(vty,"%s---------------------------------%s"
+            ,VTY_NEWLINE,VTY_NEWLINE);
+    vty_out(vty,"Deamon %s Timed Out%s",daemon,VTY_NEWLINE);
+    VLOG_ERR("Daemon :%s Timed Out ",
+                        daemon);
+    vty_out(vty,"---------------------------------%s"
+            ,VTY_NEWLINE);
+    gDiagDumpThreadCancelled = TRUE;
+    gDiagDumpCommandFailed = TRUE ;
+  }
+  else if(gDiagDumpUserInterrupt)
+  {
+    if(threadCancelled)
+    {
+        pthread_cancel(tid);
+
+        /*wait for the cleanup function to complete */
+        pthread_mutex_lock( &gDiagDumpCleanupMutex );
+        pthread_mutex_unlock( &gDiagDumpCleanupMutex );
+
+    }
+
+    if(threadCancelled)
+    {
+        vty_out(vty,"%s---------------------------------%s"
+            ,VTY_NEWLINE,VTY_NEWLINE);
+        vty_out(vty,"Daemon %s terminated due to user interrupt CTRL+ C %s",
+                daemon,VTY_NEWLINE);
+        vty_out(vty,"---------------------------------%s"
+            ,VTY_NEWLINE);
+        gDiagDumpThreadCancelled = TRUE;
+     }
+  }
+  /* Need to join the thread so, that thread resources will be freed*/
+  pthread_join(tid, NULL);
+  if(gDiagDumpCommandFailed || (gDiagDumpUserInterrupt && threadCancelled))
+  {
+    return 1;
+  }
+  return 0;
+}
+/* Function       : diagdump_user_interrupt_handler
+ * Resposibility  : ctrl c handler for showtech
+ * Return         : NULL
+ */
+void diagdump_user_interrupt_handler(int signum)
+{
+    pthread_mutex_lock( &gDiagDumpwaitMutex );
+    pthread_cond_signal( &gDiagDumpWaitCond );
+    pthread_mutex_unlock( &gDiagDumpwaitMutex );
+
+    pthread_mutex_lock(&diagDumpAlarmMutex);
+    gDiagDumpUserInterruptAlarm = FALSE;
+    pthread_mutex_unlock(&diagDumpAlarmMutex);
+}
+/* Function       : showtech_signal_handler
+ * Resposibility  : signal handler for showtech
+ * Return         : NULL
+ */
+void
+diagdump_signal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+    struct vty * vty = gVty;
+    gDiagDumpUserInterrupt = TRUE ;
+    //tigger the alarm only if it is not yet tiggered .
+    vty_out(vty,"USER INTERRUPT:Diag dump will be terminated in 10 secs%s",VTY_NEWLINE);
+    pthread_mutex_lock(&diagDumpAlarmMutex);
+    if(!gDiagDumpUserInterruptAlarm)
+    {
+        gDiagDumpUserInterruptAlarm = TRUE;
+        alarm(USER_INT_ALARM);
+    }
+    pthread_mutex_unlock(&diagDumpAlarmMutex);
+}
 
 
 /*
@@ -301,6 +526,45 @@ DEFUN (vtysh_diag_dump_show,
     char time_str[MAX_TIME_STR_LEN]={0};
     char write_buff[MAX_CLI_STR_LEN]={0};
     char err_buf[MAX_CLI_STR_LEN];
+    struct sigaction oldSignalHandler,newSignalHandler,
+                oldAlarmHandler,newAlarmHandler;
+    int return_val = CMD_SUCCESS;
+
+    /* init global var */
+    gDiagDumpUserInterrupt      = FALSE;
+    gDiagDumpThreadCancelled    = FALSE;
+    gDiagDumpUserInterruptAlarm = FALSE;
+    gVty                        = vty;
+
+    /*change the signal handler */
+    memset (&oldSignalHandler, '\0', sizeof(oldSignalHandler));
+    memset (&newSignalHandler, '\0', sizeof(newSignalHandler));
+    memset (&oldAlarmHandler, '\0', sizeof(oldAlarmHandler));
+    memset (&newAlarmHandler, '\0', sizeof(newAlarmHandler));
+
+    newSignalHandler.sa_sigaction = diagdump_signal_handler;
+    newSignalHandler.sa_flags = SA_SIGINFO;
+
+    newAlarmHandler.sa_handler =  diagdump_user_interrupt_handler ;
+
+    if(sigaction(SIGINT, &newSignalHandler, &oldSignalHandler) != 0)
+    {
+      VLOG_ERR("Failed to change signal handler");
+      vty_out(vty, "diag dump init failed %s" ,VTY_NEWLINE);
+      return CMD_WARNING;
+    }
+    if(sigaction(SIGALRM, &newAlarmHandler, &oldAlarmHandler) != 0)
+    {
+      VLOG_ERR("Failed to change Alarm handler");
+      vty_out(vty, "diag dump init failed %s" ,VTY_NEWLINE);
+      if(sigaction(SIGINT, &oldSignalHandler, NULL) != 0)
+      {
+         VLOG_ERR("Failed to change signal handler to old state");
+         exit(0); //should never hit this place
+         /* we changed the CLI behavior */
+      }
+      return CMD_WARNING;
+    }
 
 
     fun_argv[1] = (char *)  argv[0];
@@ -310,7 +574,8 @@ DEFUN (vtysh_diag_dump_show,
         feature_head  = get_feature_mapping();
         if ( feature_head == NULL ) {
             vty_out(vty,"%s%s", ERR_STR ,VTY_NEWLINE);
-            return  CMD_WARNING ;
+            return_val = CMD_WARNING ;
+            goto EXIT_FUN;
         }
         else {
             initialized = 1;
@@ -331,18 +596,21 @@ DEFUN (vtysh_diag_dump_show,
             if (rc) {
                 vty_out (vty,"failed to check or create dir:%s%s",
                         DIAG_DUMP_DIR,VTY_NEWLINE);
-                return CMD_WARNING;
+                return_val = CMD_WARNING ;
+                goto EXIT_FUN;
             }
 
             if ( argv[1][0] == '/') {
                 vty_out (vty,"please provide filename without /%s",VTY_NEWLINE);
-                return CMD_WARNING;
+                return_val = CMD_WARNING ;
+                goto EXIT_FUN;
             }
 
             if ( strlen(argv[1]) > USER_FILE_LEN_MAX ) {
                 vty_out (vty,"please provide filename less than %d %s",
                         USER_FILE_LEN_MAX ,VTY_NEWLINE);
-                return CMD_WARNING;
+                return_val = CMD_WARNING ;
+                goto EXIT_FUN;
             }
 
             snprintf(file_path,sizeof(file_path),"%s/%s",DIAG_DUMP_DIR,argv[1]);
@@ -357,7 +625,8 @@ DEFUN (vtysh_diag_dump_show,
                 VLOG_ERR("failed to open file error:%d,file:%s", errno, file_path);
                 vty_out (vty, "failed to open file error:%s file:%s%s",
                         err_buf , file_path,VTY_NEWLINE);
-                return CMD_WARNING;
+                return_val = CMD_WARNING ;
+                goto EXIT_FUN;
             }
         }
 
@@ -395,7 +664,11 @@ DEFUN (vtysh_diag_dump_show,
         iter_daemon = iter->p_daemon;
         while(iter_daemon) {
             daemon_count++;
-            rc = vtysh_diag_dump_daemon(iter_daemon->name, fun_argv, fun_argc,
+            if(gDiagDumpUserInterrupt)
+            {
+               goto USER_INTERRUPT;
+            }
+            rc = vtysh_diag_dump_create_thread(iter_daemon->name, fun_argv, fun_argc,
                     vty, fd );
             /*Count daemon responded */
             if (!rc) {
@@ -406,6 +679,10 @@ DEFUN (vtysh_diag_dump_show,
             else {
                 VLOG_ERR("daemon :%s failed to capture diag dump , rc:%d",
                         iter_daemon->name,rc);
+            }
+            if(gDiagDumpUserInterrupt)
+            {
+               goto USER_INTERRUPT;
             }
             iter_daemon = iter_daemon->next;
         }
@@ -432,7 +709,8 @@ DEFUN (vtysh_diag_dump_show,
         VLOG_ERR("%s feature is not present",argv[0]);
         vty_out(vty,"%s feature is not present %s",argv[0], VTY_NEWLINE);
         CLOSE(fd);
-        return CMD_WARNING;
+        return_val = CMD_WARNING ;
+        goto EXIT_FUN;
     }
 
     /* Success rate 100% . All daemons responded */
@@ -449,7 +727,30 @@ DEFUN (vtysh_diag_dump_show,
     }
 
     CLOSE(fd);
-    return CMD_SUCCESS;
+    USER_INTERRUPT:
+    if(gDiagDumpUserInterrupt)
+    {
+      vty_out(vty,"USER INTERRUPT:Show tech terminated%s"
+           ,VTY_NEWLINE);
+    }
+    EXIT_FUN:
+    if(sigaction(SIGINT, &oldSignalHandler, NULL) != 0)
+    {
+      VLOG_ERR("Failed to change signal handler to old state");
+      exit(0); //should never hit this place
+      /* we changed the CLI behavior */
+    }
+    if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
+    {
+      VLOG_ERR("Failed to change Alarm handler to old state");
+      exit(0); //should never hit this place
+      /* we changed the CLI behavior */
+    }
+    if(gDiagDumpThreadCancelled)
+    {
+      VLOG_ERR("thread has been cancelled");
+    }
+    return return_val;
 
 #undef FEATURE_BEGIN
 #undef FEATURE_END
@@ -467,7 +768,6 @@ DEFUN (vtysh_diag_dump_show,
 static struct jsonrpc *
 vtysh_diag_connect_to_target(const char *target)
 {
-    struct jsonrpc *client=NULL;
     char *socket_name=NULL;
     int error=0;
     char * rundir = NULL;
@@ -556,18 +856,17 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
 
 
     char write_buff[MAX_CLI_STR_LEN]={0};
-    struct jsonrpc *client=NULL;
     char *cmd_result=NULL, *cmd_error=NULL;
     int rc=0;
     char  diag_cmd_str[DIAG_CMD_LEN_MAX] = {0};
 
+    client = NULL ;
     if  (!(daemon && cmd_type)) {
         VLOG_ERR("invalid parameter daemon or command ");
         return CMD_WARNING;
     }
 
-    client = vtysh_diag_connect_to_target(daemon);
-    if (!client) {
+    if (!vtysh_diag_connect_to_target(daemon)) {
         VLOG_ERR("%s transaction error.client is null ", daemon);
         vty_out(vty,"failed to connect daemon %s %s",daemon,VTY_NEWLINE);
         return CMD_WARNING;
@@ -595,6 +894,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         VLOG_ERR("%s: transaction error:%s , rc =%d", daemon ,
                 STR_NULL_CHK(cmd_error)  , rc);
         jsonrpc_close(client);
+        client = NULL;
         FREE(cmd_result);
         FREE(cmd_error);
         return CMD_WARNING;
@@ -658,6 +958,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         VLOG_ERR("%s: server returned error:rc=%d,error str:%s",
                 daemon,rc,cmd_error);
         jsonrpc_close(client);
+        client = NULL;
         FREE(cmd_result);
         FREE(cmd_error);
         return CMD_WARNING;
@@ -665,6 +966,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
 
 
     jsonrpc_close(client);
+    client = NULL ;
     FREE(cmd_result);
     FREE(cmd_error);
     return CMD_SUCCESS;

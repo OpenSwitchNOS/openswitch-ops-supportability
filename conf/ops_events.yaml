@@ -34,6 +34,10 @@ categories:
   description: 'Events related to TEMPERATURE'
   category_rank: 8
 
+- event_category: PLUGGABLE_MODULE
+  description: 'Events related to pluggable transceivers'
+  category_rank: 9
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -266,3 +270,51 @@ event_definitions:
   keys: name
   event_description_template:
       'Emergency shutdown initiated for sensor {name}'
+
+- event_name: PM_SERIAL_ID_DATA_READ_FAIL
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9001
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data read failed, retrying:  {port_instance}'
+
+- event_name: PM_MODULE_PRESENCE_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9002
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Unable to read module presence: {port_instance}'
+
+- event_name: PM_MODULE_SERIAL_ID_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9003
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data read failed, retrying: {port_instance}'
+
+- event_name: PM_MODULE_SERIAL_ID_CHECKSUM_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9004
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data failed checksum, retrying: {port_instance}'
+
+- event_name: PM_MODULE_ENABLE_DISABLE_WRITE_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9005
+  severity: LOG_INFO
+  keys: port_instance, return_code
+  event_description_template:
+      'Failed to write module enable/disable: {port_instance} ({return_code})'
+
+- event_name: PM_MODULE_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 9006
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module read failed: {port_instance}'

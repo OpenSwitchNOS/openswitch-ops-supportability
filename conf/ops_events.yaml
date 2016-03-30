@@ -42,6 +42,10 @@ categories:
   description: 'Events related to Sub-Interface'
   category_rank: 10
 
+- event_category: PLUGGABLE_MODULE
+  description: 'Events related to pluggable transceivers'
+  category_rank: 11
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -378,3 +382,51 @@ event_definitions:
   keys: interface, state
   event_description_template:
       'Sub-Interface {interface}, configured administratively {state}'
+
+- event_name: PM_SERIAL_ID_DATA_READ_FAIL
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11001
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data read failed, retrying:  {port_instance}'
+
+- event_name: PM_MODULE_PRESENCE_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11002
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Unable to read module presence: {port_instance}'
+
+- event_name: PM_MODULE_SERIAL_ID_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11003
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data read failed, retrying: {port_instance}'
+
+- event_name: PM_MODULE_SERIAL_ID_CHECKSUM_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11004
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module serial ID data failed checksum, retrying: {port_instance}'
+
+- event_name: PM_MODULE_ENABLE_DISABLE_WRITE_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11005
+  severity: LOG_INFO
+  keys: port_instance, return_code
+  event_description_template:
+      'Failed to write module enable/disable: {port_instance} ({return_code})'
+
+- event_name: PM_MODULE_READ_FAILURE
+  event_category: PLUGGABLE_MODULE
+  event_ID : 11006
+  severity: LOG_INFO
+  keys: port_instance
+  event_description_template:
+      'Module read failed: {port_instance}'

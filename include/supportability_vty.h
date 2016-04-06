@@ -51,4 +51,29 @@ extern struct cmd_element cli_platform_show_vlog_cmd;
 extern struct cmd_element cli_platform_show_vlog_config_list_cmd;
 extern struct cmd_element cli_platform_show_vlog_feature_cmd;
 extern struct cmd_element cli_config_vlog_set_cmd;
+
+extern struct cmd_element show_debugging_info_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element debug_ospf_packet_all_cmd;
+extern struct cmd_element debug_ospf_ism_sub_cmd;
+extern struct cmd_element debug_ospf_ism_cmd;
+extern struct cmd_element debug_ospf_nsm_sub_cmd;
+extern struct cmd_element debug_ospf_nsm_cmd;
+extern struct cmd_element debug_ospf_lsa_sub_cmd;
+extern struct cmd_element debug_ospf_lsa_cmd;
+extern struct cmd_element debug_ospf_event_cmd;
+extern struct cmd_element debug_ospf_nssa_cmd;
+
+extern struct cmd_element no_debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element no_debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element no_debug_ospf_packet_all_cmd;
+extern struct cmd_element no_debug_ospf_ism_sub_cmd;
+extern struct cmd_element no_debug_ospf_ism_cmd;
+extern struct cmd_element no_debug_ospf_nsm_sub_cmd;
+extern struct cmd_element no_debug_ospf_nsm_cmd;
+extern struct cmd_element no_debug_ospf_lsa_sub_cmd;
+extern struct cmd_element no_debug_ospf_lsa_cmd;
+extern struct cmd_element no_debug_ospf_event_cmd;
+extern struct cmd_element no_debug_ospf_nssa_cmd;
 #endif /* _SUPPORTABILITY_VTY_H_ */

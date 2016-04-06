@@ -68,4 +68,29 @@ cli_post_init()
   install_element (ENABLE_NODE, &cli_platform_show_vlog_config_list_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_vlog_feature_cmd);
   install_element (CONFIG_NODE, &cli_config_vlog_set_cmd);
+
+  install_element (ENABLE_NODE, &show_debugging_info_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_send_recv_detail_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_send_recv_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_all_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_ism_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_ism_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nsm_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nsm_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_lsa_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_lsa_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_event_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nssa_cmd);
+
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_send_recv_detail_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_send_recv_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_all_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_ism_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_ism_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nsm_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nsm_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_lsa_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_lsa_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_event_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nssa_cmd);
 }

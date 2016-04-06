@@ -87,4 +87,29 @@ extern struct cmd_element no_vtysh_config_syslog_prot_svrt_noport_cmd;
 extern struct cmd_element vtysh_config_no_syslog_cmd;
 
 extern void syslog_ovsdb_init(void);
+
+extern struct cmd_element show_debugging_info_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element debug_ospf_packet_all_cmd;
+extern struct cmd_element debug_ospf_ism_sub_cmd;
+extern struct cmd_element debug_ospf_ism_cmd;
+extern struct cmd_element debug_ospf_nsm_sub_cmd;
+extern struct cmd_element debug_ospf_nsm_cmd;
+extern struct cmd_element debug_ospf_lsa_sub_cmd;
+extern struct cmd_element debug_ospf_lsa_cmd;
+extern struct cmd_element debug_ospf_event_cmd;
+extern struct cmd_element debug_ospf_nssa_cmd;
+
+extern struct cmd_element no_debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element no_debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element no_debug_ospf_packet_all_cmd;
+extern struct cmd_element no_debug_ospf_ism_sub_cmd;
+extern struct cmd_element no_debug_ospf_ism_cmd;
+extern struct cmd_element no_debug_ospf_nsm_sub_cmd;
+extern struct cmd_element no_debug_ospf_nsm_cmd;
+extern struct cmd_element no_debug_ospf_lsa_sub_cmd;
+extern struct cmd_element no_debug_ospf_lsa_cmd;
+extern struct cmd_element no_debug_ospf_event_cmd;
+extern struct cmd_element no_debug_ospf_nssa_cmd;
 #endif /* _SUPPORTABILITY_VTY_H_ */

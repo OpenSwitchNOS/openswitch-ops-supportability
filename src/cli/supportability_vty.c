@@ -450,10 +450,38 @@ cli_post_init()
            "config context unable to add syslog client callback");
     assert(0);
   }
+  
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_tftp_cmd);
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_sftp_cmd);
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_kernel_tftp_cmd);
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_kernel_sftp_cmd);
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_tftp_cmd_inst);
   install_element (ENABLE_NODE, &cli_platform_copy_core_dump_sftp_cmd_inst);
+
+  install_element (ENABLE_NODE, &show_debugging_info_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_send_recv_detail_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_send_recv_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_packet_all_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_ism_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_ism_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nsm_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nsm_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_lsa_sub_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_lsa_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_event_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_nssa_cmd);
+  install_element (CONFIG_NODE, &debug_ospf_intf_redst_cmd);
+
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_send_recv_detail_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_send_recv_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_packet_all_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_ism_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_ism_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nsm_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nsm_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_lsa_sub_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_lsa_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_event_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_nssa_cmd);
+  install_element (CONFIG_NODE, &no_debug_ospf_intf_redst_cmd);
 }

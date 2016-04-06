@@ -91,4 +91,32 @@ extern struct cmd_element cli_platform_copy_core_dump_kernel_tftp_cmd;
 extern struct cmd_element cli_platform_copy_core_dump_kernel_sftp_cmd;
 extern struct cmd_element cli_platform_copy_core_dump_tftp_cmd_inst;
 extern struct cmd_element cli_platform_copy_core_dump_sftp_cmd_inst;
+
+extern struct cmd_element show_debugging_info_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element debug_ospf_packet_all_cmd;
+extern struct cmd_element debug_ospf_ism_sub_cmd;
+extern struct cmd_element debug_ospf_ism_cmd;
+extern struct cmd_element debug_ospf_nsm_sub_cmd;
+extern struct cmd_element debug_ospf_nsm_cmd;
+extern struct cmd_element debug_ospf_lsa_sub_cmd;
+extern struct cmd_element debug_ospf_lsa_cmd;
+extern struct cmd_element debug_ospf_event_cmd;
+extern struct cmd_element debug_ospf_nssa_cmd;
+extern struct cmd_element debug_ospf_intf_redst_cmd;
+
+extern struct cmd_element no_debug_ospf_packet_send_recv_detail_cmd;
+extern struct cmd_element no_debug_ospf_packet_send_recv_cmd;
+extern struct cmd_element no_debug_ospf_packet_all_cmd;
+extern struct cmd_element no_debug_ospf_ism_sub_cmd;
+extern struct cmd_element no_debug_ospf_ism_cmd;
+extern struct cmd_element no_debug_ospf_nsm_sub_cmd;
+extern struct cmd_element no_debug_ospf_nsm_cmd;
+extern struct cmd_element no_debug_ospf_lsa_sub_cmd;
+extern struct cmd_element no_debug_ospf_lsa_cmd;
+extern struct cmd_element no_debug_ospf_event_cmd;
+extern struct cmd_element no_debug_ospf_nssa_cmd;
+extern struct cmd_element no_debug_ospf_intf_redst_cmd;
+
 #endif /* _SUPPORTABILITY_VTY_H_ */

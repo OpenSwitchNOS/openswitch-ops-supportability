@@ -52,6 +52,7 @@ set (SOURCES_CLI ${PROJECT_SOURCE_DIR}/show_tech_vty.c
                  ${PROJECT_SOURCE_DIR}/../featuremapping/feature_mapping.c
                  ${PROJECT_SOURCE_DIR}/supportability_vty.c
                  ${PROJECT_SOURCE_DIR}/../supportability_utils.c
+                 ${PROJECT_SOURCE_DIR}/ospf_debug_vty.c
     )
 
 add_library (${LIBSUPPORTABILITYCLI} SHARED ${SOURCES_CLI})

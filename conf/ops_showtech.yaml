@@ -31,3 +31,11 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech SFLOW Feature Definition
+  feature:
+  -
+    feature_desc: "Sampled Flow Protocol"
+    feature_name: sflow
+    cli_cmds:
+      - "show sflow"

@@ -42,3 +42,8 @@
     feature_desc: "Loopback interface"
     daemon:
        - "ops-portd"
+  -
+    feature_name: "mstp"
+    feature_desc: "Multiple Spanning Tree Protocol"
+    daemon:
+       - "ops-stpd"

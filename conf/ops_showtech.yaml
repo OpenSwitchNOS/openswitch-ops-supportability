@@ -31,3 +31,13 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech MSTP Feature Definition
+  feature:
+  -
+    feature_desc: "Multiple Spanning Tree Protocol"
+    feature_name: mstp
+    cli_cmds:
+      - "show spanning-tree"
+      - "show spanning-tree mst-config"
+      - "show spanning-tree mst"

@@ -47,3 +47,8 @@
     feature_desc: "REST interface"
     daemon:
        - "restd"
+  -
+    feature_name: "mstp"
+    feature_desc: "Multiple Spanning Tree Protocol"
+    daemon:
+       - "ops-stpd"

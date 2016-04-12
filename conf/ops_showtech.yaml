@@ -150,3 +150,12 @@
               - hw_default
               - other_config
               - external_ids
+# Show Tech MSTP Feature Definition
+  feature:
+  -
+    feature_desc: "Multiple Spanning Tree Protocol"
+    feature_name: mstp
+    cli_cmds:
+      - "show spanning-tree detail"
+      - "show spanning-tree mst-config"
+      - "show spanning-tree mst"

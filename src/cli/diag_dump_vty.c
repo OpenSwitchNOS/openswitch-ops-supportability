@@ -34,7 +34,7 @@
 #include "openvswitch/vlog.h"
 #include "diag_dump_vty.h"
 #include "jsonrpc.h"
-
+#include "supportability_utils.h"
 #define ARGC 2
 #define  ERR_STR\
     "Error in retrieving the mapping of feature names to daemon names"

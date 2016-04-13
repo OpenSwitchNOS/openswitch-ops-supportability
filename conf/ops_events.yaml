@@ -46,6 +46,10 @@ categories:
   description: 'Events related to OSPFv2'
   category_rank: 11
 
+- event_category: SUPPORTABILITY
+  description: 'Events related to Supportability'
+  category_rank: 14
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -412,3 +416,13 @@ event_definitions:
     'Logs the changes in the router-id.'
   event_description_template:
       'Router-id  updated from {old} to {new}'
+
+- event_name: SUPPORTABILITY_DAEMON_CRASH
+  event_category: SUPPORTABILITY
+  event_ID : 14001
+  severity: LOG_ERR
+  keys: process, signal, timestamp
+  description:
+      'A daemon has crashed and generated core dump'
+  event_description_template:
+      '{process} has crashed due to {signal} on {timestamp}'

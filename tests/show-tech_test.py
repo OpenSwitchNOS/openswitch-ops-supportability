@@ -349,6 +349,59 @@ def checkShowTechFeatureLag(dut01Obj):
             return True
 
 
+def checkShowTechFeatureNTP(dut01Obj):
+    LogOutput('info', "\n############################################")
+    LogOutput('info', "4.0 Running Show tech Feature NTP Test ")
+    LogOutput('info', "############################################\n")
+    # Variables
+    overallBuffer = []
+    finalReturnCode = 0
+
+    # Get into vtyshelll
+    returnStructure = dut01Obj.VtyshShell(enter=True)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to get vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    # Run Show Tech NTP Command
+    returnDevInt = dut01Obj.DeviceInteract(command="show tech ntp")
+
+    # exit the vtysh shell
+    returnStructure = dut01Obj.VtyshShell(enter=False)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to exit vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    finalReturnCode = returnDevInt['returnCode']
+    overallBuffer.append(returnDevInt['buffer'])
+    if finalReturnCode != 0:
+        LogOutput('error',
+                  "Failed to run Show Tech NTP " +
+                  " on device " + str(dut01Obj.device))
+        return False
+    else:
+        if ("Show Tech commands executed successfully"
+           not in returnDevInt['buffer']):
+            LogOutput('error',
+                      "Test Case Failure,refer output below")
+            for outputs in overallBuffer:
+                LogOutput('info', str(outputs))
+            return False
+        else:
+            LogOutput('info',
+                      " Show Tech Feature NTP Ran Successfully on device " +
+                      str(dut01Obj.device))
+            return True
+
+
 def checkInvalidCommandFailure(dut01Obj):
     LogOutput('info', "\n############################################")
     LogOutput('info', "2.1 Running Show tech Cli Command Failure")
@@ -441,6 +494,12 @@ def checkShowTechInvalidParameters(dut01Obj):
         errorCheck=False
     )
 
+    # Run Show Tech ntp statistics Command
+    returnDevInt = dut01Obj.DeviceInteract(
+        command="show tech ntp statistics extraparameter",
+        errorCheck=False
+    )
+
     # exit the vtysh shell
     returnStructure = dut01Obj.VtyshShell(enter=False)
     overallBuffer.append(returnStructure.buffer())
@@ -488,7 +547,7 @@ def checkShowTechUnSupportedFeature(dut01Obj):
             LogOutput('info', str(curLine))
         return False
 
-    # Run Show Tech lldp statistics Command
+    # Run Show Tech Unsupported Command
     returnDevInt = dut01Obj.DeviceInteract(
         command="show tech  !@#$%^&*((QWERTYUIOPLFDSAZXCVBNM<>)(&^%$#!",
         errorCheck=False
@@ -797,6 +856,11 @@ class Test_showtech:
     def test_show_tech_config_with_duplicate_entries(self):
         global dut01Obj
         assert(TestShowTechConfigDuplicateEntries(dut01Obj))
+    
+    def test_show_tech_feature_ntp(self):
+        global dut01Obj
+        assert(checkShowTechFeatureNTP(dut01Obj))
+
 
     # Teardown Class
     def teardown_class(cls):

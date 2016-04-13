@@ -78,7 +78,8 @@ cli_show_core_dump(void)
       globbuf_daemon.gl_pathv will contain the core dump file names
       */
    if(0 !=
-         get_file_list(CORE_DUMP_CONFIG,TYPE_DAEMON,&globbuf_daemon,GB_PATTERN)
+         get_file_list(CORE_DUMP_CONFIG,TYPE_DAEMON,&globbuf_daemon,GB_PATTERN,
+             NULL,NULL)
      )
    {
       /* Failed to locate Core Dump Files */
@@ -120,7 +121,7 @@ cli_show_core_dump(void)
       globbuf_daemon.gl_pathv will contain the kernel core dump file names
       */
    if(get_file_list(KERNEL_DUMP_CONFIG,TYPE_KERNEL,
-            &globbuf_kernel,KERN_GB_PATTERN)  != 0)
+            &globbuf_kernel,KERN_GB_PATTERN, NULL,NULL)  != 0)
    {
       /* Failed to locate Core Dump Files */
 

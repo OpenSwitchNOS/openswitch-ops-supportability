@@ -156,107 +156,108 @@ extract_info (
    return 0;
 }
 
+/*
+ * Function       : get_file_list
+ * Responsibility : Generates lists of core files present for daemon and kernel
+ * Parameters
+ *                : filepath
+ *                        - absolute path of kdump.conf ( kernel coredump conf )
+ *                          standard path  "/etc/kdump.conf"
+ *                        - NULL for daemon . Daemon uses hardcoded path.
+ *                          For daemon case we don't use this parameter
+ *                : type
+ *                : globbuf
+ *                : globpattern
+ *                : daemon
+ *
+ * Returns        : 0 on success
+ */
+
 int
-get_file_list(const char* filepath,int type,
-   glob_t* globbuf, const char* globpattern )
+get_file_list(const char* filepath,int type, glob_t* globbuf,
+        const char* globpattern ,const char* daemon, const char* instance_id )
 {
    char* config_token  = NULL;
    FILE *config_fp = NULL;
    char config_line[CORE_LOC_CONFIG];
    char* corelocation = NULL;
    char location_buf[CORE_FILE_NAME];
+   int rc=0;
+   int locsize = 0;
 
    if( type != TYPE_DAEMON && type != TYPE_KERNEL)
    {
       /* unknown type */
       return -1;
    }
-   /* Open daemon core dump configuration file to find the daemon core
-      dump location */
-   config_fp = fopen(filepath,"r");
-   if (config_fp == NULL)
+
+   if(type == TYPE_KERNEL)
    {
-      /* Failed to open the file */
-      if (type == TYPE_KERNEL)
-      {
-         vty_out(vty,"Unable to read kernel core dump config file%s"
-               ,VTY_NEWLINE );
-      }
-      else if (type == TYPE_DAEMON)
-      {
-         vty_out(vty,"Unable to read daemon core dump config file%s"
-               ,VTY_NEWLINE );
-      }
-      return CMD_WARNING;
-   }
+       /* Open daemon core dump configuration file to find the daemon core
+          dump location */
+       if ( filepath == NULL )
+       {
+           vty_out(vty,"Invalid parameter: Kernel coredump config file invalid%s"
+                   ,VTY_NEWLINE );
+           return CMD_WARNING;
+       }
 
-   /* Find the core dump location from the configuration file */
-   while ( fgets (config_line , CORE_LOC_CONFIG , config_fp) != NULL )
-   {
-      if(type == TYPE_DAEMON)
-      {
-         corelocation = strstr(config_line,"corepath");
-      }
-      else if (type == TYPE_KERNEL)
-      {
-         corelocation = strstr(config_line,"path");
-      }
-      /* Config Line Reached */
-      if(corelocation)
-      {
-         /* String contains the corepath key, find its value */
-         if(type == TYPE_DAEMON)
-         {
-            config_token = strtok(config_line, "=");
-         }
-         else if (type == TYPE_KERNEL)
-         {
-            config_token = strtok(config_line, " ");
-         }
+       config_fp = fopen(filepath,"r");
+       if (config_fp == NULL)
+       {
+           /* Failed to open the file */
+           vty_out(vty,"Unable to read kernel core dump config file%s"
+                   ,VTY_NEWLINE );
+           return CMD_WARNING;
+       }
 
-         if (config_token == NULL)
-         {
-            corelocation = NULL;
-            break;
-         }
-         else
-         {
+       /* Find the core dump location from the configuration file */
+       while ( fgets (config_line , CORE_LOC_CONFIG , config_fp) != NULL )
+       {
+           corelocation = strstr(config_line,"path");
+           /* Config Line Reached */
+           if(corelocation)
+           {
+               /* String contains the corepath key, find its value */
+               config_token = strtok(config_line, " ");
 
-            if(type == TYPE_DAEMON)
-            {
-               /* Verify that the first token contains the key */
-               corelocation = strstr(config_token,"corepath");
-               if(corelocation == NULL)
+               if (config_token == NULL)
                {
-                  break;
+                   corelocation = NULL;
+                   break;
                }
-               config_token = strtok(NULL, "=");
-            }
-            else if (type == TYPE_KERNEL)
-            {
-               /* Verify that the first token contains the key */
-               corelocation = strstr(config_token,"path");
-               if(corelocation == NULL)
+               else
                {
-                  break;
-               }
-               config_token = strtok(NULL, " ");
-            }
 
-            if (config_token == NULL)
-            {
-               corelocation = NULL;
+                   /* Verify that the first token contains the key */
+                   corelocation = strstr(config_token,"path");
+                   if(corelocation == NULL)
+                   {
+                       break;
+                   }
+                   config_token = strtok(NULL, " ");
+
+                   if (config_token == NULL)
+                   {
+                       corelocation = NULL;
+                       break;
+                   }
+                   else
+                   {
+                       /* Configuration Read Successfully, trim the data */
+                       corelocation = trim_white_space(config_token);
+                   }
+               }
+               /* Break the loop since the location is found */
                break;
-            }
-            else
-            {
-               /* Configuration Read Successfully, trim the data */
-               corelocation = trim_white_space(config_token);
-            }
-         }
-         /* Break the loop since the location is found */
-         break;
-      }
+           }
+       }
+
+       fclose(config_fp);
+       config_fp = NULL;
+   } else if (type == TYPE_DAEMON)
+   {
+       corelocation = DAEMON_CORE_PATH;
    }
 
 
@@ -264,31 +265,44 @@ get_file_list(const char* filepath,int type,
       configuration file */
    if(corelocation == NULL)
    {
-      if(type == TYPE_DAEMON)
-      {
-         vty_out(vty,"Invalid daemon core dump config file%s"
-               ,VTY_NEWLINE);
-      }
-      else if (type == TYPE_KERNEL)
-      {
          vty_out(vty,"Invalid kernel core dump config file%s"
                ,VTY_NEWLINE );
-      }
-
-      fclose(config_fp);
-      config_fp = NULL;
       return -1;
    }
 
 
    /* Form the GLOB pattern using the core dump location */
-   int locsize = 0;
-   locsize = snprintf(location_buf,CORE_FILE_NAME,globpattern,corelocation);
+   if ( type == TYPE_KERNEL )
+       locsize = snprintf(location_buf ,CORE_FILE_NAME ,"%s/%s/%s",
+               corelocation ,"kernel-core",globpattern);
+   else
+       if (( type == TYPE_DAEMON ) &&  daemon ) {
+           /* Daemon name is specified in cli
+              copy core-dump cli specify the daemon name*/
+           if ( instance_id == NULL ) {
+               /* user has not provided instance id */
+               locsize = snprintf(location_buf,CORE_FILE_NAME,
+                       "%s\\/%s\\.%s\\.%s",
+                       corelocation,"core", daemon,globpattern);
+           }
+           else {
+               /* user provided instance id */
+               locsize = snprintf(location_buf,CORE_FILE_NAME,
+                        "%s\\/%s\\.%s\\.*%s\\.%s",
+                       corelocation,"core", daemon, instance_id, globpattern);
+           }
+       }
+       else
+           /* Daemon name is unspecified in cli
+              show core-dump doesn't specify the daemon name */
+           locsize = snprintf(location_buf,CORE_FILE_NAME,
+                   globpattern,corelocation);
+
    if(locsize > CORE_FILE_NAME)
    {
       if(type == TYPE_DAEMON)
       {
-         vty_out(vty,"Invalid daemon core dump config file%s"
+         vty_out(vty,"Invalid daemon core dump config %s"
                ,VTY_NEWLINE);
       }
       else if (type == TYPE_KERNEL)
@@ -297,8 +311,6 @@ get_file_list(const char* filepath,int type,
                ,VTY_NEWLINE);
       }
 
-      fclose(config_fp);
-      config_fp = NULL;
       return -1;
    }
 
@@ -307,8 +319,43 @@ get_file_list(const char* filepath,int type,
       globbuf.gl_pathc will contain the number of core dumps found
       globbuf.gl_pathv will contain the core dump file names
       */
-   glob(location_buf,GLOB_BRACE,NULL,globbuf);
-   fclose(config_fp);
-   config_fp = NULL;
-   return 0;
+   rc = glob(location_buf,GLOB_BRACE,NULL,globbuf);
+
+   /* globe returns error for nomatch . So ignore nomatch error */
+   if ( rc == GLOB_NOMATCH )
+       rc = 0;
+
+   return rc;
+}
+
+/*
+ * Function       : validate_cli_args
+ * Responsibility : validates given cli argument with regular expression.
+ * Parameters
+ *                : arg - argument passed in cli
+ *                : regex - regular expression to validate user input
+ *
+ * Returns        : 0 on success
+ */
+
+int
+validate_cli_args(const char * arg , const char * regex)
+{
+    regex_t r;
+    int rc = 0;
+    const int n_matches = 10;
+    regmatch_t m[n_matches];
+
+    if (!( arg && regex ) )
+        return 1;
+
+    rc = regcomp(&r, regex , REG_EXTENDED|REG_NEWLINE);
+    if ( rc )  {
+        regfree (&r);
+        return rc;
+    }
+
+    rc = regexec (&r,arg,n_matches, m, 0);
+    regfree (&r);
+    return rc;
 }

@@ -18,7 +18,7 @@
  *
  * File: core_dump.h
  *
- * Purpose: To Run Show Core Dump command from CLI.
+ * Purpose: To Run Copy, Show Core Dump command from CLI.
  */
 
 #ifndef _CORE_DUMP_VTY_H
@@ -37,6 +37,13 @@
 #define KERN_GB_PATTERN \
    "%s/vmcore.[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9]" \
 "[0-9][0-9][0-9].tar.gz"
+
+/* systemd uses hardcoded path to store core files
+e.g.     "/var/lib/systemd/coredump\
+/core.vtysh.0.68b62225067c4523af7d4d38e723da39.682.1459547856000000.xz" */
+
+#define DAEMON_CORE_PATH        "\\/var\\/lib\\/systemd\\/coredump"
+
 
 #define KERN_CORE_FILE_PATTERN "([0-9]{8})\\.([0-9]{6})\\.tar\\.gz"
 
@@ -75,9 +82,11 @@ extract_info (
       regex_t * regexst, const char * filename,struct core_dump_data* cd,int type);
 
 int
-get_file_list(const char* filepath,int type,
-      glob_t* globbuf, const char* globpattern );
+get_file_list(const char* filepath,int type, glob_t* globbuf,
+        const char* globpattern , const char *daemon, const char* instance_id );
 
 
+int
+validate_cli_args(const char * arg , const char * regex);
 
 #endif //_CORE_DUMP_VTY_H

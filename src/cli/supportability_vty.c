@@ -469,4 +469,8 @@ cli_post_init()
            "config context unable to add syslog client callback");
     assert(0);
   }
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_tftp_cmd);
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_sftp_cmd);
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_tftp_cmd_inst);
+  install_element (ENABLE_NODE, &cli_platform_copy_core_dump_sftp_cmd_inst);
 }

@@ -46,6 +46,10 @@ categories:
   description: 'Events related to OSPFv2'
   category_rank: 11
 
+- event_category: SFLOW
+  description: 'Events related to sFlow'
+  category_rank: 12
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -412,3 +416,43 @@ event_definitions:
     'Logs the changes in the router-id.'
   event_description_template:
       'Router-id  updated from {old} to {new}'
+
+- event_name: SFLOW_HSFLOWD_FAILURE
+  event_category: SFLOW
+  event_ID : 12001
+  severity: LOG_ERR
+  keys: operation, error
+  event_description_template:
+      'Failed to {operation} host sFlow agent : {error}'
+
+- event_name: SFLOW_HSFLOWD_CFG_FILE_FAILURE
+  event_category: SFLOW
+  event_ID : 12002
+  severity: LOG_ERR
+  keys: operation, file, error
+  event_description_template:
+      'Failed to {operation} host sFlow configuration file {file} : {error}'
+
+- event_name: SFLOW_SIM_CFG_FAILURE
+  event_category: SFLOW
+  event_ID : 12003
+  severity: LOG_ERR
+  keys: operation, bridge, error
+  event_description_template:
+      'Failed to {operation} sFlow configuration from bridge {bridge} : {error}'
+
+- event_name: SFLOW_IPTABLES_DEL_ALL_FAILURE
+  event_category: SFLOW
+  event_ID : 12004
+  severity: LOG_ERR
+  keys: error
+  event_description_template:
+      'Failed to delete all iptable rules : {error}'
+
+- event_name: SFLOW_IPTABLES_FAILURE
+  event_category: SFLOW
+  event_ID : 12005
+  severity: LOG_ERR
+  keys: operation, chain, port, error
+  event_description_template:
+      'Failed to {operation} {chain} iptable rules for {port} : {error}'

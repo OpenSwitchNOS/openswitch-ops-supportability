@@ -10,6 +10,7 @@
       - "show interface mgmt"
       - "show vlan"
       - "show events"
+      - "show rib"
       - "show interface loopback"
 
 # Show Tech LLDP Feature Definition
@@ -31,3 +32,15 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech L3 Routes Feature Definition
+# It lists the routes configured in database as well as the routes selected
+# for forwarding
+  feature:
+  -
+    feature_desc: "Layer3 Routes: Protocol - BGP, Connected, OSPF, Static"
+    feature_name: l3routes
+    cli_cmds:
+      - "show ip route"
+      - "show ipv6 route"
+      - "show rib"

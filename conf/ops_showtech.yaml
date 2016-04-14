@@ -11,7 +11,6 @@
       - "show vlan"
       - "show ntp status"
       - "show events"
-      - "show interface loopback"
 
 # Show Tech NTP Feature Definition
   feature:
@@ -43,3 +42,20 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech L3 Routes Feature Definition
+# It lists the routes configured in database as well as the routes selected
+# for forwarding
+  feature:
+  -
+    feature_desc: "Unicast Routing Information"
+    feature_name: ucast-routing
+    cli_cmds:
+      - "show ip route"
+      - "show ipv6 route"
+      - "show rib"
+      - "show ip interface"
+      - "show ipv6 interface"
+      - "show arp"
+      - "show ipv6 neighbors"
+      - "show interface loopback"

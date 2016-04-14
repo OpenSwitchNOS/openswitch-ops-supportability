@@ -31,3 +31,11 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech COPP Feature Definition
+  feature:
+  -
+    feature_desc: "Control Plane Policing"
+    feature_name: copp
+    cli_cmds:
+      - "show copp statistics"

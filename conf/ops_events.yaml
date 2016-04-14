@@ -46,6 +46,10 @@ categories:
   description: 'Events related to OSPFv2'
   category_rank: 11
 
+- event_category: NTP
+  description: 'Events related to NTP'
+  category_rank: 13
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -412,3 +416,33 @@ event_definitions:
     'Logs the changes in the router-id.'
   event_description_template:
       'Router-id  updated from {old} to {new}'
+
+- event_name: NTP_ASSOC
+  event_category: NTP
+  event_ID : 13001
+  severity: LOG_INFO
+  keys: event, server, server_info
+  description:
+    'Logs NTP config changes'
+  event_description_template:
+    'NTP Association {event} for {server} {server_info}'
+
+- event_name: NTP_KEY
+  event_category: NTP
+  event_ID : 13002
+  severity: LOG_INFO
+  keys: key_type, key_ids
+  description:
+    'Logs NTP trusted and untrusted authentication-keys'
+  event_description_template:
+    'NTP {key_type} keys are {key_ids}'
+
+- event_name: NTP_GLOBAL
+  event_category: NTP
+  event_ID : 13003
+  severity: LOG_INFO
+  keys: old, new
+  description:
+    'Logs NTP authentication state changes'
+  event_description_template:
+    'NTP authentication state changes from {old} to {new}'

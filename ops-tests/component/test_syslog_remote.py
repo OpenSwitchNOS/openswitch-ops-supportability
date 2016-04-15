@@ -98,10 +98,12 @@ def _remote_syslog_test(remotes_config):
     for conn in remotes_config:
 
         if(conn['trans'] == 'udp'):
-            script = "../../../test//syslog_udp_server.py"
+            script = ("../../../code_under_test/ops-supportability"
+                      "//syslog_udp_server.py")
             execscript = "/tmp/syslog_udp_server.py"
         elif(conn['trans'] == 'tcp'):
-            script = "../../../test//syslog_tcp_server.py"
+            script = ("../../../code_under_test/ops-supportability"
+                      "//syslog_tcp_server.py")
             execscript = "/tmp/syslog_tcp_server.py"
 
         conn['hs']('rm -f /tmp/syslog_out.sb')

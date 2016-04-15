@@ -11,6 +11,7 @@
       - "show vlan"
       - "show events"
       - "show interface loopback"
+      - "show ip ospf"
 
 # Show Tech LLDP Feature Definition
   feature:
@@ -31,3 +32,24 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show layer3
+  feature:
+  -
+    feature_desc: "Layer3 Protocol Information"
+    feature_name: layer3
+    cli_cmds:
+      - "show ip interface"
+      - "show ip route"
+      - "show rib"
+
+# Show ospf
+  feature:
+  -
+    feature_desc: "Open Shortest Path First version 2 Protocol"
+    feature_name: ospfv2
+    cli_cmds:
+      - "show ip ospf"
+      - "show ip ospf interface"
+      - "show ip ospf neighbor"
+      - "show ip ospf route"

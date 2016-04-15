@@ -150,3 +150,13 @@
               - hw_default
               - other_config
               - external_ids
+# Show ospf
+  feature:
+  -
+    feature_desc: "Open Shortest Path First version 2 Protocol"
+    feature_name: ospfv2
+    cli_cmds:
+      - "show ip ospf"
+      - "show ip ospf interface"
+      - "show ip ospf neighbor"
+      - "show ip ospf route"

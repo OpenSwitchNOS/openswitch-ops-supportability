@@ -31,3 +31,11 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech Version Feature Definition
+  feature:
+  -
+    feature_desc: "Image versioning scheme"
+    feature_name: version
+    cli_cmds:
+      - "show version detail"

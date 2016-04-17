@@ -67,6 +67,22 @@ switch_config_status = 0
 host_config_status = 0
 
 
+def _check_and_set_hostip(host, ip, port):
+    """
+    Checks whether the host has the given ip set, otherwise it will
+    set the ip
+
+    :param host: host machine node
+    :param ip: ip address with subnet mask
+    :param port: port label
+    :return: None.
+    """
+    currentip = host('ip addr')
+    if ip not in currentip:
+        print(currentip)
+        host.libs.ip.interface(port, addr=ip, up=True)
+
+
 def _wait_until_interface_up(switch, portlbl, timeout=30, polling_frequency=1):
     """
     Wait until the interface, as mapped by the given portlbl, is marked as up.
@@ -118,23 +134,22 @@ def _remote_syslog_test(remotes_config):
     """
     Helper function to perform test based on configuration provided
     """
+    script_loc = "../../../code_under_test/ops-supportability"
+    # script_loc = "../../../test"
     global host_config_status
     for conn in remotes_config:
 
         if(conn['trans'] == 'udp'):
-            script = ("../../../code_under_test/ops-supportability"
-                      "//syslog_udp_server.py")
+            script = (script_loc + "/syslog_udp_server.py")
             execscript = "/tmp/syslog_udp_server.py"
         elif(conn['trans'] == 'tcp'):
-            script = ("../../../code_under_test/ops-supportability"
-                      "//syslog_tcp_server.py")
+            script = (script_loc + "//syslog_tcp_server.py")
             execscript = "/tmp/syslog_tcp_server.py"
 
         conn['hs']('rm -f /tmp/syslog_out.sb')
 
         if host_config_status == 0:
-            conn['hs'].libs.ip.interface(conn['int'], addr=conn['hs_addr'],
-                                         up=True)
+            _check_and_set_hostip(conn['hs'], conn['hs_addr'], conn['int'])
 
         with open(script, "r") as fi:
             for line in fi:
@@ -149,12 +164,13 @@ def _remote_syslog_test(remotes_config):
             ctx.logging(remote_host=conn['rmt_addr'],
                         transport=" " + conn['trans'] + " " + conn["port"])
 
-    host_config_status = 1
+    # host_config_status = 1
     remotes_config[0]['sw']("systemctl restart ops-fand", shell="bash")
     remotes_config[0]['sw']("systemctl restart ops-fand", shell="bash")
     sleep(2)
     # set_trace()
     for conn in remotes_config:
+        print(conn['hs']("ip addr"))
         print(conn['hs']("ls -Shila /tmp"))
         print(conn['hs']("ps -aux"))
         remote_log = conn['hs']("cat /tmp/syslog_out.sb")
@@ -164,7 +180,9 @@ def _remote_syslog_test(remotes_config):
         conn['hs']("pkill -f " + execscript)
         print(remote_log)
         if "switch systemd" not in remote_log:
-            assert False
+            return False
+        else:
+            return True
 
 
 def test_udp_connection(topology):
@@ -172,6 +190,9 @@ def test_udp_connection(topology):
     Verifies syslog messages transmission to 4 different udp syslog
     remote servers
     """
+    no_of_retries = 3
+    current_iteration = 0
+
     sw1 = topology.get('sw1')
     hs1 = topology.get('hs1')
     hs2 = topology.get('hs2')
@@ -239,7 +260,11 @@ def test_udp_connection(topology):
             "ip": "10.0.40.1/24"
         }]
     _switchconf(sw1, switch_configs)
-    _remote_syslog_test(remote_cfg)
+    while current_iteration < no_of_retries:
+        retval = _remote_syslog_test(remote_cfg)
+        if retval:
+            break
+        current_iteration += 1
 
 
 def test_tcp_connection(topology):
@@ -247,6 +272,9 @@ def test_tcp_connection(topology):
     Verifies syslog messages transmission to 4 different tcp syslog
     remote servers
     """
+    no_of_retries = 3
+    current_iteration = 0
+
     sw1 = topology.get('sw1')
     hs1 = topology.get('hs1')
     hs2 = topology.get('hs2')
@@ -316,7 +344,11 @@ def test_tcp_connection(topology):
 
     _switchconf(sw1, switch_configs)
 
-    _remote_syslog_test(remote_cfg)
+    while current_iteration < no_of_retries:
+        retval = _remote_syslog_test(remote_cfg)
+        if retval:
+            break
+        current_iteration += 1
 
 
 def test_tcp_udp_combination(topology):
@@ -324,6 +356,9 @@ def test_tcp_udp_combination(topology):
     Verifies syslog messages transmission to 4 different syslog with
     combination of tcp and upd based servers
     """
+    no_of_retries = 3
+    current_iteration = 0
+
     sw1 = topology.get('sw1')
     hs1 = topology.get('hs1')
     hs2 = topology.get('hs2')
@@ -393,4 +428,8 @@ def test_tcp_udp_combination(topology):
 
     _switchconf(sw1, switch_configs)
 
-    _remote_syslog_test(remote_cfg)
+    while current_iteration < no_of_retries:
+        retval = _remote_syslog_test(remote_cfg)
+        if retval:
+            break
+        current_iteration += 1

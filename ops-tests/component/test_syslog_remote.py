@@ -157,11 +157,14 @@ def _remote_syslog_test(remotes_config):
     for conn in remotes_config:
         print(conn['hs']("ls -Shila /tmp"))
         print(conn['hs']("ps -aux"))
+        print(conn['hs']("ip addr"))
         remote_log = conn['hs']("cat /tmp/syslog_out.sb")
         with conn['sw'].libs.vtysh.Configure() as ctx:
             ctx.no_logging(remote_host=conn['rmt_addr'],
                            transport=" " + conn['trans'] + " " + conn["port"])
         conn['hs']("pkill -f " + execscript)
+        conn['hs']("pkill -f " + execscript)
+        sleep(2)
         print(remote_log)
         if "switch systemd" not in remote_log:
             assert False
@@ -344,7 +347,7 @@ def test_tcp_udp_combination(topology):
             "hs_addr": "10.0.10.2/24",
             "rmt_addr": "10.0.10.2",
             "trans": "tcp",
-            "port": "21514"
+            "port": "31514"
         },
         {
             "hs": hs2,
@@ -353,7 +356,7 @@ def test_tcp_udp_combination(topology):
             "hs_addr": "10.0.20.2/24",
             "rmt_addr": "10.0.20.2",
             "trans": "tcp",
-            "port": "21514"
+            "port": "31514"
         },
         {
             "hs": hs3,
@@ -362,7 +365,7 @@ def test_tcp_udp_combination(topology):
             "hs_addr": "10.0.30.2/24",
             "rmt_addr": "10.0.30.2",
             "trans": "udp",
-            "port": "11514"
+            "port": "12514"
         },
         {
             "hs": hs4,
@@ -371,7 +374,7 @@ def test_tcp_udp_combination(topology):
             "hs_addr": "10.0.40.2/24",
             "rmt_addr": "10.0.40.2",
             "trans": "udp",
-            "port": "11514"
+            "port": "13514"
         }]
     switch_configs = [
         {

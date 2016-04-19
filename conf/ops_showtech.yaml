@@ -43,3 +43,11 @@
       - "show lacp configuration"
       - "show lacp aggregates"
       - "show lacp interfaces"
+
+# Show Tech ECMP Feature Definition
+  feature:
+  -
+    feature_desc: "IP ECMP Load Balancing"
+    feature_name: ecmp
+    cli_cmds:
+      - "show ip ecmp"

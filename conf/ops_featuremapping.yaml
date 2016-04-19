@@ -52,3 +52,8 @@
     feature_desc: "Network Time Protocol"
     daemon:
        - "ops_ntpd"
+  -
+    feature_name: "sflow"
+    feature_desc: "Sampled Flow Protocol"
+    daemon:
+       - "ops-switchd"

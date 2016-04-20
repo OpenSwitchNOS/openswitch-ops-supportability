@@ -66,6 +66,22 @@ categories:
   description: 'Events related to LAG'
   category_rank: 16
 
+- event_category: VLANINTERFACE
+  description: 'Events related to Vlaninterface'
+  category_rank: 17
+
+- event_category: L3INTERFACE
+  description: 'Events related to Layer 3 interface'
+  category_rank: 18
+
+- event_category: ECMP
+  description: 'Events related to ecmp'
+  category_rank: 19
+
+- event_category: OSPFv3
+  description: 'Events related to OSPFv3'
+  category_rank: 20
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -419,6 +435,46 @@ event_definitions:
   event_description_template:
       'Sub-Interface {interface}, configured administratively {state}'
 
+- event_name: SUBINTERFACE_VLAN_CREATE_ERR
+  event_category: SUBINTERFACE
+  event_ID : 10008
+  severity: LOG_ERR
+  keys: interface, vlanid
+  description:
+      'logs errors while creating subinterface encapsulation dot1q.'
+  event_description_template:
+      'Sub-Interface {interface}, failed to create encapsulation dot1q {vlanid}'
+
+- event_name: SUBINTERFACE_VLAN_DESTROY_ERR
+  event_category: SUBINTERFACE
+  event_ID : 10009
+  severity: LOG_ERR
+  keys: interface, vlanid
+  description:
+      'logs errors while destroying subinterface encapsulation dot1q.'
+  event_description_template:
+      'Sub-Interface {interface}, failed to destroy subinterface encapsulation dot1q {vlanid}'
+
+- event_name: SUBINTERFACE_L3INTF_CREATE_ERR
+  event_category: SUBINTERFACE
+  event_ID : 10010
+  severity: LOG_ERR
+  keys: interface
+  description:
+      'logs errors while creating subinterface.'
+  event_description_template:
+      'Sub-Interface {interface}, failed to create an l3 interface'
+
+- event_name: SUBINTERFACE_L3INTF_DELETE_ERR
+  event_category: SUBINTERFACE
+  event_ID : 10011
+  severity: LOG_ERR
+  keys: interface
+  description:
+      'logs errors while destroying subinterface.'
+  event_description_template:
+      'Sub-Interface {interface}, failed to delete an l3 interface'
+
 - event_name: OSPFv2_ROUTE
   event_category: OSPFv2
   event_ID : 11001
@@ -448,6 +504,16 @@ event_definitions:
     'Logs the changes in the router-id.'
   event_description_template:
       'Router-id  updated from {old} to {new}'
+
+- event_name: OSPFv2_FP_ERR
+  event_category: OSPFv2
+  event_ID : 11004
+  severity: LOG_ERR
+  keys: action, rule, err
+  description:
+    'Logs errors for OSPFv2 FP creation/installation.'
+  event_description_template:
+      'Failed to {action} {rule} error : {err}'
 
 - event_name: SFLOW_HSFLOWD_FAILURE
   event_category: SFLOW
@@ -876,3 +942,371 @@ event_definitions:
     'Logs the failure to set port selection criteria.'
   event_description_template:
       'Trunk psc set failed on unit {unit} lag_id {lag_id} psc {psc} rc {rc} error {error}'
+
+- event_name: LAG_LOAD_BAL_MODE
+  event_category: LAG
+  event_ID : 16009
+  severity: LOG_INFO
+  keys: interface, mode
+  description:
+      'logs to set load balancing mode for LAG L2/L3 interfaces.'
+  event_description_template:
+      'LAG {interface}, set to load balance mode to {mode}'
+
+- event_name: LAG_ADD_PORT_BITMAP
+  event_category: LAG
+  event_ID : 16010
+  severity: LOG_INFO
+  keys: interface, port, l2_l3_flag
+  description:
+      'logs to add port to LAG.'
+  event_description_template:
+      'Add port {port} to LAG {interface}'
+
+- event_name: LAG_REM_PORT_BITMAP
+  event_category: LAG
+  event_ID : 16011
+  severity: LOG_INFO
+  keys: interface, port
+  description:
+      'logs to remove port from LAG.'
+  event_description_template:
+      'Remove port {port} from LAG {interface}'
+
+- event_name: L3_LAG_ADD_VLAN_PORT_BITMAP
+  event_category: LAG
+  event_ID : 16012
+  severity: LOG_INFO
+  keys: interface, port, vlan
+  description:
+      'logs to add port to L3 LAG.'
+  event_description_template:
+      'Add port {port} to vlan {vlan} for L3 LAG {interface}'
+
+- event_name: L3_LAG_REM_VLAN_PORT_BITMAP
+  event_category: LAG
+  event_ID : 16013
+  severity: LOG_INFO
+  keys: interface, port, vlan
+  description:
+      'logs to remove port from LAG.'
+  event_description_template:
+      'Remove port {port} to vlan {vlan} for L3 LAG {interface}'
+
+- event_name: L3_LAG_DELETE
+  event_category: LAG
+  event_ID : 16014
+  severity: LOG_INFO
+  keys: interface
+  description:
+      'logs to destroy L3 LAG.'
+  event_description_template:
+      'Destroy L3 LAG interface {interface}'
+
+- event_name: VLANINTERFACE_L3INTF_CREATE_ERR
+  event_category: VLANINTERFACE
+  event_ID : 17001
+  severity: LOG_ERR
+  keys: vlan, err
+  description:
+      'logs errors while creating vlaninterface.'
+  event_description_template:
+      'Vlaninterface vlan{vlan}, failed to create an l3 interface, error: {err}'
+
+- event_name: L3INTERFACE_CREATE
+  event_category: L3INTERFACE
+  event_ID : 18001
+  severity: LOG_INFO
+  keys: interface
+  description:
+       'logs to create L3 interface.'
+  event_description_template:
+       'L3-Interface {interface}, created'
+
+- event_name: L3INTERFACE_DELETE
+  event_category: L3INTERFACE
+  event_ID : 18002
+  severity: LOG_INFO
+  keys: interface
+  description:
+      'logs to delete L3 interface.'
+  event_description_template:
+      'L3-Interface {interface}, deleted'
+
+- event_name: L3INTERFACE_ADMIN_STATE
+  event_category: L3INTERFACE
+  event_ID : 18003
+  severity: LOG_INFO
+  keys: interface, state
+  event_description_template:
+      'L3-Interface {interface}, configured administratively {state}'
+
+- event_name: L3INTERFACE_VLAN_CREATE_ERR
+  event_category: L3INTERFACE
+  event_ID : 18004
+  severity: LOG_ERR
+  keys: interface, vlanid
+  description:
+      'logs errors while creating vlan for layer 3 interfaces.'
+  event_description_template:
+      'Failed to create {vlanid} for layer 3 interface {interface}'
+
+- event_name: L3INTERFACE_VLAN_DESTROY_ERR
+  event_category: L3INTERFACE
+  event_ID : 18005
+  severity: LOG_ERR
+  keys: interface, vlanid, err
+  description:
+      'logs errors while destroying vlan for layer 3 interfaces.'
+  event_description_template:
+      'Failed to destroy layer 3 interface {interface} vlan {vlanid}, error: {err}'
+
+- event_name: L3INTERFACE_CREATE_ERR
+  event_category: L3INTERFACE
+  event_ID : 18006
+  severity: LOG_ERR
+  keys: interface
+  description:
+      'logs errors while creating layer 3 interface.'
+  event_description_template:
+      'Failed to create an l3 interface {interface}'
+
+- event_name: L3INTERFACE_DELETE_ERR
+  event_category: L3INTERFACE
+  event_ID : 18007
+  severity: LOG_ERR
+  keys: interface, err
+  description:
+      'logs errors while destroying layer 3 interface.'
+  event_description_template:
+      'Failed to delete an l3 interface {interface}, error: {err}'
+
+- event_name: L3INTERFACE_ADD_HOST_ERR
+  event_category: L3INTERFACE
+  event_ID : 18008
+  severity: LOG_ERR
+  keys: ipaddr, egressid, err
+  description:
+      'logs errors while adding l3 hosts.'
+  event_description_template:
+      'Failed to add L3 host entry for ip {ipaddr} egress_id {egressid}, error: {err}'
+
+- event_name: L3INTERFACE_ADD_HOST
+  event_category: L3INTERFACE
+  event_ID : 18009
+  severity: LOG_INFO
+  keys: ipaddr, egressid
+  description:
+      'logs while adding l3 hosts.'
+  event_description_template:
+      'Added L3 host entry for ip {ipaddr}, egress_id {egressid}'
+
+- event_name: L3INTERFACE_DEL_HOST_ERR
+  event_category: L3INTERFACE
+  event_ID : 18010
+  severity: LOG_ERR
+  keys: ipaddr, egressid, err
+  description:
+      'logs errors while deleting l3 hosts.'
+  event_description_template:
+      'Failed to delete L3 host entry for ip {ipaddr} egress_id {egressid}, error: {err}'
+
+- event_name: L3INTERFACE_DEL_HOST
+  event_category: L3INTERFACE
+  event_ID : 18011
+  severity: LOG_INFO
+  keys: ipaddr, egressid
+  description:
+      'logs while deleting l3 hosts.'
+  event_description_template:
+      'Deleted L3 host entry for ip {ipaddr}, egress_id {egressid}'
+
+- event_name: L3INTERFACE_HITBIT_FAILURE
+  event_category: L3INTERFACE
+  event_ID : 18012
+  severity: LOG_ERR
+  keys: ipaddr
+  description:
+      'logs errors to get L3 host hit for a specific ip.'
+  event_description_template:
+      'Failed to get L3 host hit for ip {ipaddr}'
+
+- event_name: L3INTERFACE_HITBIT_SUCCESS
+  event_category: L3INTERFACE
+  event_ID : 18013
+  severity: LOG_INFO
+  keys: ipaddr
+  description:
+      'logs to get L3 host hit for a specific ip.'
+  event_description_template:
+      'L3 host hitbit set for ip {ipaddr}'
+
+- event_name: L3INTERFACE_ERR
+  event_category: L3INTERFACE
+  event_ID : 18014
+  severity: LOG_ERR
+  keys: err
+  description:
+      'logs for L3 setup errors.'
+  event_description_template:
+      'L3 interface error : {err}'
+
+- event_name: L3INTERFACE_NEXTHOP_ADD
+  event_category: L3INTERFACE
+  event_ID : 18015
+  severity: LOG_INFO
+  keys: nexthop, egress_id, prefix
+  description:
+      'logs for nexthop addition.'
+  event_description_template:
+      'Added Nexthop {nexthop}, egress_id {egress_id}, for route {prefix}'
+
+- event_name: L3INTERFACE_NEXTHOP_DELETE
+  event_category: L3INTERFACE
+  event_ID : 18016
+  severity: LOG_INFO
+  keys: nexthop, prefix
+  description:
+      'logs for nexthop deletion.'
+  event_description_template:
+      'Delete Nexthop {nexthop} for route {prefix}'
+
+- event_name: L3INTERFACE_ROUTE_ADD
+  event_category: L3INTERFACE
+  event_ID : 18017
+  severity: LOG_INFO
+  keys: prefix
+  description:
+      'logs for route addition.'
+  event_description_template:
+      'Added route {prefix}'
+
+- event_name: L3INTERFACE_ROUTE_UPDATE
+  event_category: L3INTERFACE
+  event_ID : 18018
+  severity: LOG_INFO
+  keys: state
+  description:
+      'logs for route update.'
+  event_description_template:
+      'Update: route state : {state}'
+
+- event_name: L3INTERFACE_ROUTE_DELETE
+  event_category: L3INTERFACE
+  event_ID : 18019
+  severity: LOG_INFO
+  keys: prefix
+  description:
+      'logs for route deletion.'
+  event_description_template:
+      'Delete route {prefix}'
+
+- event_name: L3INTERFACE_ROUTE_DELETE_ERR
+  event_category: L3INTERFACE
+  event_ID : 18020
+  severity: LOG_ERR
+  keys: prefix, err
+  description:
+      'logs error for route deletion.'
+  event_description_template:
+      'Delete route {prefix}, error: {err}'
+
+- event_name: L3INTERFACE_ROUTE_ADD_ERR
+  event_category: L3INTERFACE
+  event_ID : 18021
+  severity: LOG_ERR
+  keys: prefix, err
+  description:
+      'logs error for route aditiontion.'
+  event_description_template:
+      'Add route {prefix}, error: {err}'
+
+- event_name: L3INTERFACE_CREATE_EGRESS_OBJ_ERR
+  event_category: L3INTERFACE
+  event_ID : 18022
+  severity: LOG_ERR
+  keys: port, err
+  description:
+      'logs errors for egress object creation.'
+  event_description_template:
+      'Error creating egress object for port {port}, error: {err}'
+
+- event_name: L3INTERFACE_CREATE_EGRESS_OBJ
+  event_category: L3INTERFACE
+  event_ID : 18023
+  severity: LOG_INFO
+  keys: egress_id, port, intf
+  description:
+      'logs for egress object creation.'
+  event_description_template:
+      'Created L3 egress ID {egress_id} for port {port} intf {intf}'
+
+- event_name: L3INTERFACE_DESTROY_EGRESS_OBJ_ERR
+  event_category: L3INTERFACE
+  event_ID : 18024
+  severity: LOG_ERR
+  keys: port, err
+  description:
+      'logs errors for egress object deletion.'
+  event_description_template:
+      'Error deleting egress object for port {port}, error: {err}'
+
+- event_name: L3INTERFACE_DESTROY_EGRESS_OBJ
+  event_category: L3INTERFACE
+  event_ID : 18025
+  severity: LOG_INFO
+  keys: egress_id, port
+  description:
+      'logs for egress object deletion.'
+  event_description_template:
+      'Deleted L3 egress ID {egress_id} for port {port}'
+
+- event_name: ECMP_CREATE_ERR
+  event_category: ECMP
+  event_ID : 19001
+  severity: LOG_ERR
+  keys: route, err
+  description:
+      'logs errors while creating ecmp group.'
+  event_description_template:
+      'Failed to update ecmp object for route {route}, error: {err}'
+
+- event_name: ECMP_CREATE
+  event_category: ECMP
+  event_ID : 19002
+  severity: LOG_INFO
+  keys: route
+  description:
+      'logs while creating ecmp group.'
+  event_description_template:
+      'Update ecmp object for route {route}'
+
+- event_name: ECMP_DELETE_ERR
+  event_category: ECMP
+  event_ID : 19003
+  severity: LOG_ERR
+  keys: egressid, err
+  description:
+      'logs errors while deleting ecmp group.'
+  event_description_template:
+      'Failed to delete ecmp egress object {egressid}, error: {err}'
+
+- event_name: ECMP_DELETE
+  event_category: ECMP
+  event_ID : 19004
+  severity: LOG_INFO
+  keys: egressid
+  description:
+      'logs while deleting ecmp group.'
+  event_description_template:
+      'Delete ecmp egress object {egressid}'
+
+- event_name: ECMP_ERR
+  event_category: ECMP
+  event_ID : 19005
+  severity: LOG_ERR
+  keys: err
+  description:
+      'logs for ECMP setup errors.'
+  event_description_template:
+      'ECMP error : {err}'

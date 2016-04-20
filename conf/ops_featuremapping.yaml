@@ -42,11 +42,13 @@
     feature_desc: "sub-interface"
     daemon:
        - "ops-portd"
+       - "ops-switchd"
   -
     feature_name: "loopback"
     feature_desc: "Loopback interface"
     daemon:
        - "ops-portd"
+       - "ops-switchd"
   -
     feature_name: "rest"
     feature_desc: "REST interface"
@@ -65,5 +67,20 @@
 
     feature_name: "sflow"
     feature_desc: "Sampled Flow Protocol"
+    daemon:
+       - "ops-switchd"
+  -
+    feature_name: "l3interface"
+    feature_desc: "Layer 3 interface"
+    daemon:
+       - "ops-switchd"
+  -
+    feature_name: "vlaninterface"
+    feature_desc: "Vlan interface"
+    daemon:
+       - "ops-switchd"
+  -
+    feature_name: "laginterface"
+    feature_desc: "LAG interface"
     daemon:
        - "ops-switchd"

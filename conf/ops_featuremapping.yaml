@@ -67,3 +67,8 @@
     feature_desc: "Sampled Flow Protocol"
     daemon:
        - "ops-switchd"
+  -
+    feature_name: "lag"
+    feature_desc: "Link Aggregation"
+    daemon:
+       - "ops-switchd"

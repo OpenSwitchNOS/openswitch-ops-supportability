@@ -28,11 +28,16 @@
     "/etc/openswitch/supportability/ops_featuremapping.yaml"
 #define FEATURE_SIZE           20
 #define FEATURE_DESC_SIZE     100
+#define DIAG_DUMP_FEATURE_FLAG "y"
 
-
+typedef enum  diagdump_enable {
+    DISABLE = 0,
+    ENABLE = 1
+} diag_enable;
 
 struct daemon {
    char* name;
+   diag_enable diag_flag; /* daemon supports diag-dump feature flag*/
    struct daemon* next;
 };
 
@@ -40,6 +45,10 @@ struct feature {
    char* name;
    char* desc;
    struct daemon*   p_daemon;
+   /* Enable this flag if any one daemon supports diag-dump feature.
+      Disable this flag If all the daemons doesnot support diag-dump.
+      This flag useful to know whether this feature supports diag-dump */
+   diag_enable diag_flag;
    struct feature*   next;
 };
 
@@ -48,6 +57,8 @@ enum  {
    FEATURE_NAME,
    FEATURE_DESC,
    DAEMON,
+   DAEMON_NAME,
+   DIAGDUMP_FLAG,
    MAX_NUM_KEYS
 } ;
 

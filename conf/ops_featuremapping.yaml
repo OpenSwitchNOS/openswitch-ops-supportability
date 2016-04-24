@@ -3,89 +3,94 @@
     feature_name: "sysd"
     feature_desc: "System Daemon and Mgmt Info"
     daemon:
-      - "ops-sysd"
+        - [name: "ops-sysd", 'diag_dump': "y"]
   -
     feature_name: "lldp"
     feature_desc: "Link Layer Discovery Protocol"
     daemon:
-      - "ops-lldpd"
+        - [name: "ops-lldpd", 'diag_dump': "y"]
   -
     feature_name: "lacp"
     feature_desc: "Link Aggregation Control Protocol"
     daemon:
-      - "ops-lacpd"
-      - "ops-portd"
+        - [name: "ops-lacpd", 'diag_dump': "y"]
+        - [name: "ops-portd", 'diag_dump': "y"]
   -
-    feature_name: "fand"
+    feature_name: "fan"
     feature_desc: "System Fan"
     daemon:
-       - "ops-fand"
+        - [name: "ops-fand", 'diag_dump': "n"]
   -
     feature_name: "routing"
     feature_desc: "Routing protocols"
     daemon:
-       - "ops-ospfd"
-       - "ops-bgpd"
-       - "ops-zebra"
+        - [name: "ops-ospfd", 'diag_dump': "n"]
+        - [name: "ops-bgpd", 'diag_dump': "n"]
+        - [name: "ops-zebra", 'diag_dump': "n"]
   -
     feature_name: "ospfv2"
     feature_desc: "Open Shortest Path First Version 2"
     daemon:
-       - "ops-ospfd"
+        - [name: "ops-ospfd", 'diag_dump': "n"]
   -
     feature_name: "bgp"
     feature_desc: "Border Gateway Protocol"
     daemon:
-       - "ops-bgpd"
+        - [name: "ops-bgpd", 'diag_dump': "n"]
   -
     feature_name: "sub-interface"
     feature_desc: "sub-interface"
     daemon:
-       - "ops-portd"
-       - "ops-switchd"
+        - [name: "ops-portd", 'diag_dump': "y"]
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "loopback"
     feature_desc: "Loopback interface"
     daemon:
-       - "ops-portd"
-       - "ops-switchd"
+        - [name: "ops-portd", 'diag_dump': "y"]
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "rest"
     feature_desc: "REST interface"
     daemon:
-       - "restd"
+        - [name: "restd", 'diag_dump': "y"]
   -
     feature_name: "ntp"
     feature_desc: "Network Time Protocol"
     daemon:
-       - "ops_ntpd"
+        - [name: "ops_ntpd", 'diag_dump': "y"]
   -
     feature_name: "mstp"
     feature_desc: "Multiple Spanning Tree Protocol"
     daemon:
-       - "ops-stpd"
-
+        - [name: "ops-stpd", 'diag_dump': "n"]
+  -
     feature_name: "sflow"
     feature_desc: "Sampled Flow Protocol"
     daemon:
-       - "ops-switchd"
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "l3interface"
     feature_desc: "Layer 3 interface"
     daemon:
-       - "ops-switchd"
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "vlaninterface"
     feature_desc: "Vlan interface"
     daemon:
-       - "ops-switchd"
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "laginterface"
     feature_desc: "LAG interface"
     daemon:
-       - "ops-switchd"
+        - [name: "ops-switchd", 'diag_dump': "y"]
   -
     feature_name: "copp"
     feature_desc: "Control plane policing"
     daemon:
-       - "ops-switchd"
+        - [name: "ops-switchd", 'diag_dump': "y"]
+  -
+    feature_name: "ops-aaautils"
+    feature_desc: "AAA utils"
+    daemon:
+        - [name: "ops_aaautilspamcfg", 'diag_dump': "y"]

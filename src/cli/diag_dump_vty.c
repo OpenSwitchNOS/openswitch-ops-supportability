@@ -68,8 +68,6 @@ vtysh_diag_list_features (struct feature* head ,  struct vty *vty);
 
 static int vtysh_diag_check_crete_dir( char *dir);
 
-static struct feature* feature_head;
-static char initialized=0; /* flag to check before parseing yaml file */
 
 
 void diagdump_user_interrupt_handler(int );
@@ -392,10 +390,14 @@ vtysh_diag_list_features (struct feature* head ,  struct vty *vty)
     vty_out(vty,"%s%s",CLI_STR_HYPHEN,VTY_NEWLINE);
     vty_out(vty,STR_FORMAT,"Feature","Description",VTY_NEWLINE);
     vty_out(vty,"%s%s",CLI_STR_HYPHEN,VTY_NEWLINE);
-    while(iter != NULL) {
+
+    for(iter = head; iter; iter = iter->next) {
+        if ( iter->diag_flag == DISABLE ) {
+            continue;
+        }
+
         vty_out(vty,STR_FORMAT,STR_NULL_CHK(iter->name),
                 STR_NULL_CHK(iter->desc) ,VTY_NEWLINE);
-        iter = iter->next;
     }
 
 #undef  STR_FORMAT
@@ -513,23 +515,25 @@ DEFUN (vtysh_diag_dump_list_show,
         DIAG_DUMP_LIST_STR
       )
 {
-    if ( !initialized ) {
-        feature_head = get_feature_mapping();
-        if ( feature_head == NULL ) {
-            vty_out(vty,"%s%s", ERR_STR ,VTY_NEWLINE);
-            return  CMD_WARNING ;
-        }
-        else {
-            initialized = 1;
-        }
+    struct feature* feature_head;
+    feature_head = get_feature_mapping();
+    if ( feature_head == NULL ) {
+        vty_out(vty,"%s%s", ERR_STR ,VTY_NEWLINE);
+        return  CMD_WARNING ;
     }
     vtysh_diag_list_features(feature_head,vty);
     return CMD_SUCCESS;
 }
 
+/*
+ * This cli is not installed on switch .
+ * We parse yaml file and extract list of deamons which supports diag-dump,
+ * and create dynamically command name and install that command .
+ * This function handles the dyanamically installed cli arguments .
+ */
 DEFUN (vtysh_diag_dump_show,
         vtysh_diag_dump_cmd,
-        "diag-dump (FEATURE_NAME) basic [FILENAME]",
+        "diag-dump FEATURE_NAME basic [FILENAME]",
         DIAG_DUMP_STR
         DIAG_DUMP_FEATURE
         DIAG_DUMP_FEATURE_BASIC
@@ -546,7 +550,7 @@ DEFUN (vtysh_diag_dump_show,
 
 
     int fun_argc=ARGC;
-    struct feature* iter = feature_head;
+    struct feature* iter = NULL;
     struct daemon* iter_daemon = NULL;
     unsigned int  daemon_count=0;
     unsigned int  daemon_resp =0;
@@ -560,6 +564,7 @@ DEFUN (vtysh_diag_dump_show,
     struct sigaction oldSignalHandler,newSignalHandler,
                 oldAlarmHandler,newAlarmHandler;
     int return_val = CMD_SUCCESS;
+    struct feature* feature_head = NULL;
 
     /* init global var */
     gDiagDumpUserInterrupt      = FALSE;
@@ -601,22 +606,16 @@ DEFUN (vtysh_diag_dump_show,
     fun_argv[1] = (char *)  argv[0];
     fun_argv[0] = DIAG_BASIC;
 
-    if ( !initialized ) {
-        feature_head  = get_feature_mapping();
-        if ( feature_head == NULL ) {
-            vty_out(vty,"%s%s", ERR_STR ,VTY_NEWLINE);
-            return_val = CMD_WARNING ;
-            goto EXIT_FUN;
-        }
-        else {
-            initialized = 1;
-        }
+    feature_head  = get_feature_mapping();
+    if ( feature_head == NULL ) {
+        vty_out(vty,"%s%s", ERR_STR ,VTY_NEWLINE);
+        return_val = CMD_WARNING ;
+        goto EXIT_FUN;
     }
 
-
-
     /* traverse linkedlist to find node */
-    for (iter=feature_head ; iter && strcmp_with_nullcheck(iter->name,argv[0]);
+    for (   iter=feature_head ;
+            iter && strcmp_with_nullcheck(iter->name,argv[0]);
             iter = iter->next);
 
     if (iter) {
@@ -693,15 +692,24 @@ DEFUN (vtysh_diag_dump_show,
 
         VLOG_DBG("feature:%s , desc:%s",STR_NULL_CHK(iter->name),
                 STR_NULL_CHK(iter->desc));
-        iter_daemon = iter->p_daemon;
-        while(iter_daemon) {
+
+        for (iter_daemon = iter->p_daemon; iter_daemon;
+                iter_daemon = iter_daemon->next ) {
+
+            /* Diag-dump only for supported daemons */
+            if ( iter_daemon->diag_flag == DISABLE )  {
+                continue;
+            }
             daemon_count++;
+
             if(gDiagDumpUserInterrupt)
             {
-               goto USER_INTERRUPT;
+                goto USER_INTERRUPT;
             }
+
+
             rc = vtysh_diag_dump_create_thread(iter_daemon->name, fun_argv,
-                     fun_argc, vty, fd );
+                    fun_argc, vty, fd );
             /*Count daemon responded */
             if (!rc) {
                 VLOG_DBG("daemon :%s captured diag dump , rc:%d",
@@ -712,11 +720,12 @@ DEFUN (vtysh_diag_dump_show,
                 VLOG_ERR("daemon :%s failed to capture diag dump , rc:%d",
                         iter_daemon->name,rc);
             }
+
+
             if(gDiagDumpUserInterrupt)
             {
-               goto USER_INTERRUPT;
+                goto USER_INTERRUPT;
             }
-            iter_daemon = iter_daemon->next;
         }
 
 
@@ -778,6 +787,7 @@ DEFUN (vtysh_diag_dump_show,
       vty_out(vty,"USER INTERRUPT:Diag dump terminated%s"
            ,VTY_NEWLINE);
     }
+
     EXIT_FUN:
     if(sigaction(SIGINT, &oldSignalHandler, NULL) != 0)
     {

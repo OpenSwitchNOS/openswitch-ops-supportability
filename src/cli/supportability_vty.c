@@ -39,6 +39,7 @@
 #include "supportability_utils.h"
 #include "vtysh_ovsdb_syslog_context.h"
 #include "vtysh/vtysh_ovsdb_config.h"
+#include "feature_mapping.h"
 
 VLOG_DEFINE_THIS_MODULE (vtysh_supportability_cli);
 
@@ -109,23 +110,18 @@ install_show_vlog()
 int
 install_diag_dump()
 {
-    yaml_parser_t parser;
-    yaml_event_t ev_obj;
-    yaml_event_t *token = &ev_obj;
-    int found = 0, doc = 0;
-    char *key = NULL, *help = NULL;
-    char *cmd = (char*)calloc(MAX_FEATURES, MAX_FEATURE_NAME_SIZE);
-    FILE *fh;
-    int install = 0;
+    char *help = NULL;
+    char *cmd = NULL;
+    struct feature* feature_head;
+    struct feature* iter;
+    diag_enable  install_diag = DISABLE;
+
+    cmd = (char*)calloc(MAX_FEATURES, MAX_FEATURE_NAME_SIZE);
     if(cmd == NULL) {
         VLOG_ERR("Failed to calloc");
         return 1;
     }
-    if (!yaml_parser_initialize(&parser)) {
-        VLOG_ERR("YAML initialisation failure");
-        free(cmd);
-        return 1;
-    }
+
     /* Keeping a hard limit of help string for 500 features
      * This has to be increased once 500 features are crossed.
      * Please note that if it crosses 500, there is no impact on
@@ -137,68 +133,55 @@ install_diag_dump()
         return 1;
     }
 
-    fh = fopen(FEATURE_MAPPING_CONF, "r");
-    if (fh == NULL) {
-        VLOG_ERR("Failed to open file");
-        free(cmd);
-        free(help);
-        return 1;
-    }
     /* Now form the first part of cmd string */
     strncpy(cmd, "diag-dump (", (MAX_CMD_SIZE-1));
     /* Form the 1st part of help string */
     strncpy(help, DIAG_DUMP_STR, (MAX_FEATURE_HELP_SIZE-1));
-    yaml_parser_set_input_file(&parser, fh);
     /* Loop through YAML file & populate the cmd string with tokens */
-    while((key = get_yaml_tokens(&parser, &token, fh)) != NULL)
-    {
-        if((found) && (!strcmp_with_nullcheck(key, "feature_desc"))) {
-            doc = 1;
-            found = 0;
-            yaml_event_delete(token);
-            continue;
-        }
-        if(found) {
-            /* Found a feature name append it to cmd */
-            strncat(cmd, key, ((MAX_CMD_SIZE - strlen(cmd))-1));
-            strncat(cmd, "|", ((MAX_CMD_SIZE - strlen(cmd))-1));
-            install = 1;
-        }
-        if(doc) {
-            /* populate help string for particular feature */
-            strncat(help, key, ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
-            /* Append a newline after each help string */
-            strncat(help, "\n", ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
-            doc = 0;
-        }
-        if(!strcmp_with_nullcheck(key,"feature_name")) {
-            found = 1;
-        }
-        yaml_event_delete(token);
 
-    }
-    if(!install) {
-        /* This means we didn't find any feature in YAML file
-           which possibly points to a corrupt YAML as well.
-           We will skip installation in that case */
-        VLOG_ERR("Unable to find any features in YAML file");
-        free(cmd);
-        free(help);
-        yaml_parser_delete(&parser);
-        fclose(fh);
-        return 1;
+
+    feature_head = get_feature_mapping();
+
+
+    for (iter=feature_head ; iter ; iter = iter->next)
+    {
+        if ( iter->diag_flag == FALSE )
+            continue;
+        /* Found a feature name append it to cmd */
+        strncat(cmd, iter->name , ((MAX_CMD_SIZE - strlen(cmd))-1));
+        strncat(cmd, "|", ((MAX_CMD_SIZE - strlen(cmd))-1));
+
+        /* populate help string for particular feature */
+        strncat(help, iter->desc, ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
+        /* Append a newline after each help string */
+        strncat(help, "\n", ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
+        install_diag = ENABLE;
     }
     /* Append ending part of cmd string */
     strncat(cmd, ") basic [FILENAME]", ((MAX_CMD_SIZE - strlen(cmd))-1));
     /* Now let cmd_element structure point to the new cmd & help string */
     vtysh_diag_dump_cmd.string = cmd;
-    strncat(help, DIAG_DUMP_FEATURE_BASIC, ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
-    strncat(help, DIAG_DUMP_FEATURE_FILE, ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
+
+    strncat(help, DIAG_DUMP_FEATURE,
+            ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
+    strncat(help, DIAG_DUMP_FEATURE_BASIC,
+            ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
+    strncat(help, DIAG_DUMP_FEATURE_FILE,
+            ((MAX_FEATURE_HELP_SIZE - strlen(help))-1));
     vtysh_diag_dump_cmd.doc = help;
-    install_element (ENABLE_NODE, &vtysh_diag_dump_cmd);
-    yaml_event_delete(token);
-    yaml_parser_delete(&parser);
-    fclose(fh);
+
+    /* vtysh don't accept "diag-dump () basic [FILENAME]"
+       if yaml file don't have any diag-dump supported feature  then don't
+       install */
+    if (  install_diag == ENABLE ) {
+        install_element (ENABLE_NODE, &vtysh_diag_dump_cmd);
+    }
+    else {
+        free(help);
+        free(cmd);
+        VLOG_ERR("diag-dump help string not installed .\
+                yaml file don't have diag-dump supported daemon");
+    }
     return 0;
 }
 

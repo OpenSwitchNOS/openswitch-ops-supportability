@@ -52,10 +52,12 @@ int
 strcmp_with_nullcheck( const char *, const char *);
 
 const char* keystr_feat[MAX_NUM_KEYS] = {
-  "values",
-  "feature_name",
-  "feature_desc",
-  "daemon",
+  [ VALUE         ] = "values",
+  [ FEATURE_NAME  ] = "feature_name",
+  [ FEATURE_DESC  ] = "feature_desc",
+  [ DAEMON        ] = "daemon",
+  [ DAEMON_NAME   ] = "name",
+  [ DIAGDUMP_FLAG ] = "diag_dump"
 };
 
 static struct feature* feature_head = NULL;
@@ -188,6 +190,13 @@ feature_mapping_check_key(const char *data)
 static int
 parse_feature_mapping_yaml(void)
 {
+#define  CASE_SET_FEATURE_STATE(STATE) \
+    case (STATE): \
+                  {\
+                      current_state = (STATE); \
+                      break; \
+                  }
+
     FILE *fh=NULL;
     yaml_parser_t parser;
     yaml_event_t  event;
@@ -195,6 +204,8 @@ parse_feature_mapping_yaml(void)
     int current_state = 0;
     struct feature*   curr_feature    = NULL;
     struct daemon*    curr_daemon     = NULL;
+    diag_enable daemon_diag_flag;
+
     /* Initialize parser */
     if(!yaml_parser_initialize(&parser)) {
         VLOG_ERR("Failed to initialize parser!");
@@ -248,7 +259,7 @@ parse_feature_mapping_yaml(void)
                                             event.data.scalar.value);
                                     break;
                                 }
-                            case DAEMON:
+                            case DAEMON_NAME:
                                 {
                                     curr_daemon = feature_mapping_add_daemon(
                                             curr_daemon,
@@ -261,27 +272,32 @@ parse_feature_mapping_yaml(void)
                                     break;
                                 }
 
+
+                            case DIAGDUMP_FLAG:
+                                {
+                                    daemon_diag_flag = ( strcmp_with_nullcheck(
+                                                DIAG_DUMP_FEATURE_FLAG ,
+                                                (const char*)
+                                                event.data.scalar.value) ) ?
+                                        DISABLE : ENABLE ;
+
+                                    curr_daemon->diag_flag = daemon_diag_flag;
+                                    curr_feature->diag_flag = daemon_diag_flag;
+                                    break;
+                                }
+
                             default:
                                 break;
 
                         }
                         break;
                     }
-                case FEATURE_NAME:
-                    {
-                        current_state = FEATURE_NAME;
-                        break;
-                    }
-                case FEATURE_DESC:
-                    {
-                        current_state = FEATURE_DESC;
-                        break;
-                    }
-                case DAEMON:
-                    {
-                        current_state = DAEMON;
-                        break;
-                    }
+
+                CASE_SET_FEATURE_STATE(FEATURE_NAME);
+                CASE_SET_FEATURE_STATE(FEATURE_DESC);
+                CASE_SET_FEATURE_STATE(DAEMON);
+                CASE_SET_FEATURE_STATE(DAEMON_NAME);
+                CASE_SET_FEATURE_STATE(DIAGDUMP_FLAG);
 
                 default:
                     break;
@@ -304,6 +320,7 @@ parse_feature_mapping_yaml(void)
     yaml_parser_delete(&parser);
     fclose(fh);
     return 0;
+#undef  CASE_SET_FEATURE_STATE
 }
 
 /*

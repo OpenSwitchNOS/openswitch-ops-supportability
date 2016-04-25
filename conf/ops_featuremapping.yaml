@@ -1,6 +1,6 @@
 ---
   -
-    feature_name: "sysd"
+    feature_name: "sys"
     feature_desc: "System Daemon and Mgmt Info"
     daemon:
         - [name: "ops-sysd", 'diag_dump': "y"]

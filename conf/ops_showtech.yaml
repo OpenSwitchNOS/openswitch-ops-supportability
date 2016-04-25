@@ -209,6 +209,7 @@
       - "show arp"
       - "show ipv6 neighbors"
       - "show interface loopback"
+      - "show ip ecmp"
 
 # Show Tech COPP Feature Definition
   feature:

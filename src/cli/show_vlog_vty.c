@@ -271,6 +271,14 @@ vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type,
       FREE(cmd_error);
       return CMD_WARNING;
    }
+
+   if(cmd_result == NULL) {
+      VLOG_ERR("%s: transaction error cmd_result:%s",daemon,cmd_result);
+      jsonrpc_close(client);
+      FREE(cmd_error);
+      return CMD_WARNING;
+   }
+
    jsonrpc_close(client);
    FREE(cmd_result);
    FREE(cmd_error);
@@ -278,13 +286,13 @@ vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type,
 }
 
 
-/* Function       :  cli_show_vlog_feature
- * Responsibility :  Displays show vlog feature
+/* Function       :  cli_show_vlog_feature_or_daemon
+ * Responsibility :  Displays show vlog config feature or daemon
  * Return         :  0 on Success 1 otherwise
  */
 
    int
-cli_show_vlog_feature(const char *argv0, const char *argv1)
+cli_show_vlog_feature_or_daemon(const char *type, const char *name)
 {
 
    static int rc = 0;
@@ -302,10 +310,10 @@ cli_show_vlog_feature(const char *argv0, const char *argv1)
    }
    strncpy(fun_argv,LIST,LIST_SIZE);
 
-   if( argv0 == NULL ||argv1 == NULL) {
+   if( type == NULL ||name == NULL) {
       FREE(fun_argv);
       return CMD_WARNING;
-   }else if(!strcmp_with_nullcheck(argv0,FEATURE)) {
+   }else if(!strcmp_with_nullcheck(type,FEATURE)) {
       /*argv0 matches feature request*/
       request = FEATURE_REQUEST;
       if(!initialized) {
@@ -322,7 +330,7 @@ cli_show_vlog_feature(const char *argv0, const char *argv1)
       }
 
       /* traverse linked list to find feature */
-      for (iter=feature_head ; iter && strcmp_with_nullcheck(iter->name,argv1);
+      for (iter=feature_head ; iter && strcmp_with_nullcheck(iter->name,name);
             iter = iter->next);
 
       if(iter) {
@@ -337,7 +345,7 @@ cli_show_vlog_feature(const char *argv0, const char *argv1)
             }
             else{
                VLOG_DBG("daemon :%s , rc:%d",iter_daemon->name,rc);
-               vty_out(vty,"Not able to communicate with daemon %s%s",argv1,
+               vty_out(vty,"Not able to communicate with daemon %s%s",name,
                      VTY_NEWLINE);
             }
             iter_daemon = iter_daemon->next;
@@ -349,16 +357,16 @@ cli_show_vlog_feature(const char *argv0, const char *argv1)
          return CMD_WARNING;
       }
    }
-   if(!strcmp_with_nullcheck(argv0,DAEMON)){
+   if(!strcmp_with_nullcheck(type,DAEMON)){
       request = DAEMON_REQUEST;
       /*Directly given daemon name */
-      rc = vtysh_vlog_interface_daemon(NULL,(char *)argv1,&fun_argv,
+      rc = vtysh_vlog_interface_daemon(NULL,(char *)name,&fun_argv,
             fun_argc,request);
 
       if (!rc) {
-         VLOG_DBG("daemon :%s , rc:%d",argv1,rc);
+         VLOG_DBG("daemon :%s , rc:%d",name,rc);
       } else {
-         vty_out(vty,"Not able to communicate with daemon %s%s",argv1,
+         vty_out(vty,"Not able to communicate with daemon %s%s",name,
                VTY_NEWLINE);
          FREE(fun_argv);
          return CMD_WARNING;
@@ -525,14 +533,13 @@ cli_config_vlog_set(const char* type,
 
 /*CLI to configure the log settings of FILE or SYSLOG */
 
-DEFUN_NOLOCK (cli_config_set_vlog,
-      cli_config_vlog_set_cmd,
-      "vlog (feature|daemon) NAME (syslog | file | all) " \
+DEFUN_NOLOCK (cli_config_daemon_set_vlog,
+      cli_config_vlog_daemon_set_cmd,
+      "vlog daemon NAME (syslog | file | all) " \
       "(emer | err | warn | info | dbg | off)",
       VLOG_CONFIG
-      VLOG_CONFIG_FEATURE
       VLOG_CONFIG_DAEMON
-      SHOW_VLOG_NAME
+      SHOW_VLOG_DAEMON_NAME
       VLOG_LOG_DEST_SYSLOG
       VLOG_LOG_DEST_FILE
       VLOG_LOG_DEST_ALL
@@ -543,8 +550,33 @@ DEFUN_NOLOCK (cli_config_set_vlog,
       VLOG_LOG_LEVEL_DBG
       VLOG_LOG_LEVEL_OFF)
 {
-   return cli_config_vlog_set(argv[0],argv[1],argv[2],argv[3]);
+   return cli_config_vlog_set(DAEMON,argv[0],argv[1],argv[2]);
 }
+
+
+
+DEFUN_NOLOCK (cli_config_feature_set_vlog,
+      cli_config_vlog_feature_set_cmd,
+      "vlog feature NAME (syslog | file | all) " \
+      "(emer | err | warn | info | dbg | off)",
+      VLOG_CONFIG
+      VLOG_CONFIG_FEATURE
+      SHOW_VLOG_FEATURE_NAME
+      VLOG_LOG_DEST_SYSLOG
+      VLOG_LOG_DEST_FILE
+      VLOG_LOG_DEST_ALL
+      VLOG_LOG_LEVEL_EMER
+      VLOG_LOG_LEVEL_ERR
+      VLOG_LOG_LEVEL_WARN
+      VLOG_LOG_LEVEL_INFO
+      VLOG_LOG_LEVEL_DBG
+      VLOG_LOG_LEVEL_OFF)
+{
+   return cli_config_vlog_set(FEATURE,argv[0],argv[1],argv[2]);
+}
+
+
+
 
 /*Action routine for show vlog features list*/
 
@@ -795,15 +827,28 @@ DEFUN_NOLOCK (cli_platform_show_vlog_config,
 
 DEFUN_NOLOCK (cli_platform_showvlog_feature_list,
       cli_platform_show_vlog_feature_cmd,
-      "show vlog config (feature | daemon) NAME",
+      "show vlog config feature NAME",
       SHOW_STR
       SHOW_VLOG_STR
       SHOW_VLOG_CONFIG_STR
       SHOW_VLOG_FEATURE
-      SHOW_VLOG_DAEMON
-      SHOW_VLOG_NAME)
+      SHOW_VLOG_FEATURE_NAME)
 {
-   return cli_show_vlog_feature(argv[0],argv[1]);
+   return cli_show_vlog_feature_or_daemon(FEATURE,argv[0]);
+}
+
+/*Action routine for show vlog config daemon*/
+
+DEFUN_NOLOCK (cli_platform_showvlog_daemon_list,
+      cli_platform_show_vlog_daemon_cmd,
+      "show vlog config daemon NAME",
+      SHOW_STR
+      SHOW_VLOG_STR
+      SHOW_VLOG_CONFIG_STR
+      SHOW_VLOG_DAEMON
+      SHOW_VLOG_DAEMON_NAME)
+{
+   return cli_show_vlog_feature_or_daemon(DAEMON,argv[0]);
 }
 
 /*Action routine for show vlog*/

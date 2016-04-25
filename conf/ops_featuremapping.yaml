@@ -1,6 +1,6 @@
 ---
   -
-    feature_name: "sysd"
+    feature_name: "sys"
     feature_desc: "System Daemon and Mgmt Info"
     daemon:
       - "ops-sysd"
@@ -16,7 +16,7 @@
       - "ops-lacpd"
       - "ops-portd"
   -
-    feature_name: "fand"
+    feature_name: "fan"
     feature_desc: "System Fan"
     daemon:
        - "ops-fand"
@@ -27,6 +27,7 @@
        - "ops-ospfd"
        - "ops-bgpd"
        - "ops-zebra"
+
   -
     feature_name: "ospfv2"
     feature_desc: "Open Shortest Path First Version 2"

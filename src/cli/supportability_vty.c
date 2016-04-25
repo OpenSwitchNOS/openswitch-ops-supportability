@@ -440,7 +440,9 @@ cli_post_init()
   install_element (ENABLE_NODE, &cli_platform_show_vlog_config_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_vlog_config_list_cmd);
   install_element (ENABLE_NODE, &cli_platform_show_vlog_feature_cmd);
-  install_element (CONFIG_NODE, &cli_config_vlog_set_cmd);
+  install_element (ENABLE_NODE, &cli_platform_show_vlog_daemon_cmd);
+  install_element (CONFIG_NODE, &cli_config_vlog_daemon_set_cmd);
+  install_element (CONFIG_NODE, &cli_config_vlog_feature_set_cmd);
   install_element (CONFIG_NODE, &vtysh_config_syslog_basic_cmd);
   install_element (CONFIG_NODE, &vtysh_config_syslog_udp_cmd);
   install_element (CONFIG_NODE, &vtysh_config_syslog_tcp_cmd);

@@ -925,21 +925,15 @@ def checkShowTechFeatureUnicastRouting(dut01Obj):
 
     # Verify if the expected cli commands for u-cast routing is seen in the
     # output buffer
-    expected_commands = ['Command : show ip route',
-                         'Command : show ipv6 route',
-                         'Command : show rib',
-                         'Command : show ip interface',
-                         'Command : show ipv6 interface',
-                         'Command : show arp',
-                         'Command : show ipv6 neighbors',
-                         'Command : show interface loopback']
-
-    for command in expected_commands:
-        if command not in returnDevInt['buffer']:
-            LogOutput('error',
-                      "Failed to run 'show tech ucast-routing' " +
-                      " cli commands on device " + str(dut01Obj.device))
-            return False
+    expected_commands = ['show ip route',
+                         'show ipv6 route',
+                         'show rib',
+                         'show ip interface',
+                         'show ipv6 interface',
+                         'show arp',
+                         'show ipv6 neighbors',
+                         'show interface loopback',
+                         'show ip ecmp']
 
     finalReturnCode = returnDevInt['returnCode']
     overallBuffer.append(returnDevInt['buffer'])
@@ -949,18 +943,17 @@ def checkShowTechFeatureUnicastRouting(dut01Obj):
                   " on device " + str(dut01Obj.device))
         return False
     else:
-        if ("Show Tech commands executed successfully"
-           not in returnDevInt['buffer']):
-            LogOutput('error',
-                      "Test Case Failure,refer output below")
-            for outputs in overallBuffer:
-                LogOutput('info', str(outputs))
-            return False
-        else:
-            LogOutput('info',
-                      " Show Tech Feature Unicast Routing Ran Successfully"
-                      "on device " + str(dut01Obj.device))
-            return True
+        for command in expected_commands:
+            if command not in returnDevInt['buffer']:
+                LogOutput('error',
+                          "Failed to run 'show tech ucast-routing' " +
+                          " cli commands on device " + str(dut01Obj.device))
+                return False
+
+        LogOutput('info',
+                  " Show Tech Feature Unicast Routing Ran Successfully"
+                  "on device " + str(dut01Obj.device))
+        return True
 
 class Test_showtech:
 

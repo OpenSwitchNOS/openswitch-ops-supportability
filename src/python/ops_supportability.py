@@ -45,8 +45,11 @@ import subprocess
 import sys
 import termios
 import xattr
+import signal
 from shutil import copyfile
 from string import Template
+from subprocess import check_output
+
 
 # OVS definitions.
 idl = None
@@ -138,6 +141,12 @@ def post_crash_processing(corefile):
     except:
         vlog.dbg("Invalid core dump file found")
 
+# ---------------- journald_init() ------------------------------
+# Flush systemd-journald & make journal logs persistent
+# systemd flushes when it receive SIGUSR1 signal.
+def journald_init():
+    journal_pid = check_output(["pidof", "systemd-journald"])
+    os.kill(int(journal_pid), signal.SIGUSR1)
 
 # ---------------- process_coredumps() ------------------------------
 # Checks whether a new core dump is available.  If found it will
@@ -250,6 +259,8 @@ def supportability_init(remote):
                                     SYSLOG_REMOTE_SEVERTIY_COLUMN])
 
     idl = ovs.db.idl.Idl(remote, schema_helper)
+    # make the journal persistent after sending SIGUSR1
+    journald_init()
 
     ops_eventlog.event_log_init('SUPPORTABILITY')
 

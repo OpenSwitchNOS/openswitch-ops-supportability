@@ -36,7 +36,8 @@
 
 #define SHOW_VLOG_STR            "Display all vlogs\n"
 #define SHOW_VLOG_CONFIG_STR     "Display vlog configurations\n"
-#define SHOW_VLOG_NAME           "Specify the feature or ops-daemon name\n"
+#define SHOW_VLOG_FEATURE_NAME   "Specify the feature name\n"
+#define SHOW_VLOG_DAEMON_NAME    "Specify the ops-daemon name\n"
 #define SHOW_VLOG_LIST_FEATURE   "Display vlog supported features list\n"
 #define SHOW_VLOG_FEATURE        "Displays feature vlog configuration\n"
 #define SHOW_VLOG_DAEMON         "Displays ops-daemon vlog configurations\n"

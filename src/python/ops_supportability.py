@@ -45,8 +45,11 @@ import subprocess
 import sys
 import termios
 import xattr
+import signal
 from shutil import copyfile
 from string import Template
+from subprocess import check_output
+
 
 # OVS definitions.
 idl = None
@@ -129,7 +132,7 @@ def post_crash_processing(corefile):
         timestamp = xattr.getxattr(corefile, 'user.coredump.timestamp')
         timestamp_human = datetime.datetime.fromtimestamp(
             int(timestamp)
-            ).strftime('%Y-%m-%d %H:%M:%S')
+        ).strftime('%Y-%m-%d %H:%M:%S')
 
         ops_eventlog.log_event('SUPPORTABILITY_DAEMON_CRASH',
                                ['process', process],
@@ -138,10 +141,24 @@ def post_crash_processing(corefile):
     except:
         vlog.dbg("Invalid core dump file found")
 
+# ---------------- journald_init() ------------------------------
+# Flush systemd-journald & make journal logs persistent
+# systemd flushes when it receive SIGUSR1 signal.
+
+
+def journald_init():
+    # Following command tells to read from the given config file any attribute rule
+    # starting with path prefix /var & apply it. We have FACL for /var/log/journal
+    # in ops_journal.conf.
+    supportability_run_command(
+        'systemd-tmpfiles --prefix=/var --create /etc/openswitch/supportability/ops_journal.conf')
+    journal_pid = check_output(["pidof", "systemd-journald"])
+    os.kill(int(journal_pid), signal.SIGUSR1)
 
 # ---------------- process_coredumps() ------------------------------
 # Checks whether a new core dump is available.  If found it will
 # call post_crash_processing to perform post crash processing
+
 
 def process_coredumps():
     corefile_list = glob.glob(core_pattern)
@@ -192,7 +209,7 @@ def crashprocessing_run():
 
     bytes_available = sizebuffer[0]
     if bytes_available > 0:
-        vlog.dbg("Core Dump file available "+str(bytes_available))
+        vlog.dbg("Core Dump file available " + str(bytes_available))
         os.read(watch_fd, bytes_available)
         process_coredumps()
 
@@ -250,6 +267,8 @@ def supportability_init(remote):
                                     SYSLOG_REMOTE_SEVERTIY_COLUMN])
 
     idl = ovs.db.idl.Idl(remote, schema_helper)
+    # make the journal persistent after sending SIGUSR1
+    journald_init()
 
     ops_eventlog.event_log_init('SUPPORTABILITY')
 

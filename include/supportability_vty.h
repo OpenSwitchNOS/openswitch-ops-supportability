@@ -63,7 +63,9 @@ extern struct cmd_element cli_platform_show_vlog_config_cmd;
 extern struct cmd_element cli_platform_show_vlog_cmd;
 extern struct cmd_element cli_platform_show_vlog_config_list_cmd;
 extern struct cmd_element cli_platform_show_vlog_feature_cmd;
-extern struct cmd_element cli_config_vlog_set_cmd;
+extern struct cmd_element cli_platform_show_vlog_daemon_cmd;
+extern struct cmd_element cli_config_vlog_feature_set_cmd;
+extern struct cmd_element cli_config_vlog_daemon_set_cmd;
 /* Syslog Command */
 
 extern struct cmd_element vtysh_config_syslog_basic_cmd;

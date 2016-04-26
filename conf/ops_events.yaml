@@ -529,6 +529,16 @@ event_definitions:
   event_description_template:
       'OSPF all routers field entry added: group_id={group_id} fp_id={fp_id} stat_id={stats_id}'
 
+- event_name: OSPFv2_DR_FP_SUCCESS
+  event_category: OSPFv2
+  event_ID : 11006
+  severity: LOG_INFO
+  keys: group_id, fp_id, stats_id
+  description:
+    'Logs for OSPFv2 DR FP creation/installation.'
+  event_description_template:
+      'OSPF designated routers field entry added: group_id={group_id} fp_id={fp_id} stat_id={stats_id}'
+
 - event_name: SFLOW_HSFLOWD_FAILURE
   event_category: SFLOW
   event_ID : 12001

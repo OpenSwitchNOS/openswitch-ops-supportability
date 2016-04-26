@@ -541,10 +541,22 @@ DEFUN (vtysh_diag_dump_show,
       )
 {
 
+#define  WRITE_ERR_HANDLE_LOG( FD , BUF ) \
+            rc = write( FD , BUF , strlen( BUF ) ); \
+            if ( rc < 0 ) \
+            { \
+                strerror_r (errno,err_buf,sizeof(err_buf));\
+                vty_out(vty, "Failed to write file. Reason:%s%s",\
+                        err_buf ,VTY_NEWLINE ); \
+                return_val = CMD_WARNING ;\
+                goto USER_INTERRUPT ;\
+            }
+
+
 #define  FEATURE_BEGIN\
             snprintf(write_buff,sizeof(write_buff),"%s\n",CLI_STR_EQUAL);\
             STR_SAFE(write_buff); \
-            write(fd,write_buff,strlen(write_buff));
+            WRITE_ERR_HANDLE_LOG( fd , write_buff );
 
 #define  FEATURE_END FEATURE_BEGIN
 
@@ -622,23 +634,23 @@ DEFUN (vtysh_diag_dump_show,
 
         /* user provided filepath */
         if (argc >= 2){
+
+            /* validate based on regular expression */
+            rc = validate_cli_args(argv[1],DIAG_FILE_NAME_REGEX);
+            if ( rc != 0) {
+                vty_out(vty,"Failed to validate destination file name:%s%s",
+                        argv[1], VTY_NEWLINE);
+                VLOG_ERR("Failed to validate destination file name:%s,rc:%d",
+                        argv[1],rc);
+                CLOSE(fd);
+                return_val = CMD_WARNING ;
+                goto EXIT_FUN;
+            }
+
             rc = vtysh_diag_check_crete_dir(DIAG_DUMP_DIR);
             if (rc) {
                 vty_out (vty,"failed to check or create dir:%s%s",
                         DIAG_DUMP_DIR,VTY_NEWLINE);
-                return_val = CMD_WARNING ;
-                goto EXIT_FUN;
-            }
-
-            if ( argv[1][0] == '/') {
-                vty_out (vty,"please provide filename without /%s",VTY_NEWLINE);
-                return_val = CMD_WARNING ;
-                goto EXIT_FUN;
-            }
-
-            if ( strlen(argv[1]) > USER_FILE_LEN_MAX ) {
-                vty_out (vty,"please provide filename less than %d %s",
-                        USER_FILE_LEN_MAX ,VTY_NEWLINE);
                 return_val = CMD_WARNING ;
                 goto EXIT_FUN;
             }
@@ -677,8 +689,7 @@ DEFUN (vtysh_diag_dump_show,
             snprintf(write_buff,sizeof(write_buff),"[Start] Feature %s %s",
                     argv[0], time_str);
             STR_SAFE(write_buff);
-            write(fd,write_buff,strlen(write_buff));
-
+            WRITE_ERR_HANDLE_LOG( fd , write_buff );
             /*   print ==== line */
             FEATURE_BEGIN
 
@@ -736,7 +747,7 @@ DEFUN (vtysh_diag_dump_show,
             snprintf(write_buff,sizeof(write_buff),
                     "[End] Feature %s\n",argv[0]);
             STR_SAFE(write_buff);
-            write(fd,write_buff,strlen(write_buff));
+            WRITE_ERR_HANDLE_LOG( fd , write_buff );
 
             /* print ===== */
             FEATURE_END
@@ -776,7 +787,7 @@ DEFUN (vtysh_diag_dump_show,
         snprintf(write_buff,sizeof(write_buff),
                 "USER INTERRUPT:Diag dump terminated\n");
         STR_SAFE(write_buff);
-        write(fd,write_buff,strlen(write_buff));
+        WRITE_ERR_HANDLE_LOG( fd , write_buff );
 
         /* print ===== */
         FEATURE_END
@@ -805,10 +816,16 @@ DEFUN (vtysh_diag_dump_show,
     {
       VLOG_ERR("thread has been cancelled");
     }
-    return return_val;
 
+    if  (( return_val == CMD_SUCCESS ) && (argc >= 2))
+        vty_out(vty,"Collect diag-dump file at %s%s",file_path,VTY_NEWLINE);
+    else
+        vty_out(vty,"diag-dump failed %s",VTY_NEWLINE);
+
+    return return_val;
 #undef FEATURE_BEGIN
 #undef FEATURE_END
+#undef WRITE_ERR_HANDLE_LOG
 }
 
 /*
@@ -902,14 +919,30 @@ static int
 vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         int cmd_argc , struct vty *vty , int fd)
 {
+
+/* This macro is used to call write and handle failure case of write  */
+#define WRITE_ERR_HANDLE_LOG_DAEMON(FD,BUF) \
+    rc = write( FD , BUF , strlen( BUF ) ); \
+    if ( rc < 0 ) \
+    { \
+        strerror_r (errno,err_buf,sizeof(err_buf));\
+        vty_out(vty, "Failed to write file. Reason:%s%s",\
+                err_buf ,VTY_NEWLINE ); \
+        jsonrpc_close(client); \
+        client = NULL ; \
+        FREE(cmd_result); \
+        FREE(cmd_error); \
+        return CMD_WARNING; \
+    }
+
 #define  FEATURE_BEGIN\
-            snprintf(write_buff,sizeof(write_buff),"%s\n",CLI_STR_HYPHEN);\
-            STR_SAFE(write_buff);\
-            write(fd,write_buff,strlen(write_buff));
+    snprintf(write_buff,sizeof(write_buff),"%s\n",CLI_STR_HYPHEN);\
+    STR_SAFE(write_buff);\
+    WRITE_ERR_HANDLE_LOG_DAEMON(fd, write_buff );
 
 #define  FEATURE_END FEATURE_BEGIN
 
-
+    char err_buf[MAX_CLI_STR_LEN]={0};
     char write_buff[MAX_CLI_STR_LEN]={0};
     char *cmd_result=NULL, *cmd_error=NULL;
     int rc=0;
@@ -982,14 +1015,14 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
                 snprintf(write_buff,sizeof(write_buff),
                         "[Start] Daemon %s\n",daemon);
                 STR_SAFE(write_buff);
-                write(fd,write_buff,strlen(write_buff));
+                WRITE_ERR_HANDLE_LOG_DAEMON( fd , write_buff );
 
 
                 /* print ------- */
                 FEATURE_BEGIN
 
-                write(fd,cmd_result ,strlen(cmd_result));
-                write(fd,"\n", 2);
+                WRITE_ERR_HANDLE_LOG_DAEMON( fd , cmd_result);
+                WRITE_ERR_HANDLE_LOG_DAEMON( fd , "\n");
 
 
                 /* print ------- */
@@ -998,7 +1031,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
                 snprintf(write_buff,sizeof(write_buff),
                         "[End] Daemon %s\n",daemon );
                 STR_SAFE(write_buff);
-                write(fd,write_buff,strlen(write_buff));
+                WRITE_ERR_HANDLE_LOG_DAEMON( fd , write_buff );
 
 
                 /* print ------- */
@@ -1028,4 +1061,5 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
 
 #undef  FEATURE_BEGIN
 #undef  FEATURE_END
+#undef  WRITE_ERR_HANDLE_LOG_DAEMON
 }

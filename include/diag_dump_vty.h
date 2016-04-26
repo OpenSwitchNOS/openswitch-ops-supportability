@@ -53,11 +53,11 @@ typedef struct
 #define     TRUE              1
 #endif
 
+#define DIAG_FILE_NAME_REGEX       "^([A-Za-z0-9_.-]){1,50}$"
 #define DIAG_DUMP_DIR              "/tmp/ops-diag"
 #define FILE_PATH_LEN_MAX          256
 #define MAX_TIME_STR_LEN           256
 #define MAX_CLI_STR_LEN            256
-#define USER_FILE_LEN_MAX          50
 #define DIAG_CMD_LEN_MAX           50
 
 #define MAX_PID                    65536

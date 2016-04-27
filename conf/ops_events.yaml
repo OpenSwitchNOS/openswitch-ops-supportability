@@ -82,6 +82,10 @@ categories:
   description: 'Events related to ecmp'
   category_rank: 20
 
+- event_category: SYSMON
+  description: 'Events related to System Monitoring Daemon'
+  category_rank: 22
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1382,3 +1386,11 @@ event_definitions:
       'logs for ECMP setup errors.'
   event_description_template:
       'ECMP error : {err}'
+
+- event_name: SYSMON_WARN
+  event_category: SYSMON
+  event_ID : 22001
+  severity: LOG_WARN
+  keys: pid, process_name, cpu_usage, memory_usage
+  event_description_template:
+    'Process {process_name} with id {pid} has high resource usage cpu({cpu_usage}%)-memory({memory_usage}%)'

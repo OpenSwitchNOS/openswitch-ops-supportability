@@ -43,6 +43,21 @@
 #define DIAG_BASIC              "basic"
 #define DIAG_ADVANCED           "advanced"
 
+#define DIAG_BASIC_ARG_MIN           2
+#define DIAG_BASIC_ARG_MAX           2
+#define DIAG_BASIC_MAX_FEATURE_LEN  30
+
+#define __STRCMP(X,Y) \
+    ( ( X && Y ) && ( 0 == strcmp ( X, Y )) )
+
+#define __STRLEN(X) \
+    ( (X) ? strlen(X) : 0 )
+
+#define __VALIDATE_FEATURE(X) \
+    ( ( __STRLEN(X)  <=  DIAG_BASIC_MAX_FEATURE_LEN  )  && \
+      ( __STRLEN(X) > 0 ) )\
+
+
 /*
  * Macro            : INIT_DIAG_DUMP_BASIC
  * Responsibility   : It will register handler function for basic diag-dump.
@@ -55,25 +70,53 @@
  *
  */
 
-#define INIT_DIAG_DUMP_BASIC(CB_BASIC) \
-void diag_handler_cb (struct unixctl_conn *conn, int argc ,\
-                   const char *argv[], void *aux OVS_UNUSED)\
-{\
-    char *buf = NULL;\
-    char err_desc[200];\
-/*    argv[0] is  DIAG_DUMP_BASIC_CMD , \
-      argv[1] is  DIAG_BASIC , \
-      argv[2] is  feature name */\
-    CB_BASIC(argv[2],&buf);\
-    if (buf){\
-        unixctl_command_reply(conn, buf);\
-        free(buf);\
-    } else {\
-        snprintf(err_desc,sizeof(err_desc),\
-                "%s feature failed to provide basic diagnostic data",argv[2]);\
-        unixctl_command_reply_error(conn, err_desc);\
+/*    argv[0] is  DIAG_DUMP_BASIC_CMD ,
+      argv[1] is  DIAG_BASIC ,
+      argv[2] is  feature name
+      validation steps -
+      1) argc == 3
+      2) argv[0] == DIAG_DUMP_BASIC_CMD
+      3) argv[1] == DIAG_BASIC
+      4) argv[2] == length validation
+*/
+
+#define INIT_DIAG_DUMP_BASIC(CB_BASIC)  \
+void diag_handler_cb (struct unixctl_conn *conn, int argc , \
+                   const char *argv[], void *aux OVS_UNUSED) \
+{ \
+    char *buf = NULL; \
+    char err_desc[200] = {0} ; \
+    if( \
+            ( argc == 3 ) && ( argv ) &&  \
+            __STRCMP(argv[0], DIAG_DUMP_BASIC_CMD) && \
+            __STRCMP(argv[1], DIAG_BASIC) &&  \
+            __VALIDATE_FEATURE(argv[2]) \
+      ) \
+    { \
+        CB_BASIC(argv[2],&buf); \
+    } \
+    else \
+    { \
+        snprintf(err_desc,sizeof(err_desc), \
+                "Diagdump failed for feature %s, reason: invalid parameter", \
+                (argc >= 3 ) ? \
+                ( argv && argv[2] ? argv[2] : "NULL" ) : "NULL" ); \
+        unixctl_command_reply_error(conn, err_desc); \
+        return ; \
     }\
-    return;\
-}\
-unixctl_command_register(DIAG_DUMP_BASIC_CMD,"",2,2,diag_handler_cb,NULL);
+    if (buf) \
+    { \
+        unixctl_command_reply(conn, buf); \
+        free(buf); \
+    } else \
+    { \
+        snprintf(err_desc,sizeof(err_desc), \
+                "%s feature failed to provide basic diagnostic data",argv[2]); \
+        unixctl_command_reply_error(conn, err_desc); \
+    }\
+    return; \
+} \
+unixctl_command_register(DIAG_DUMP_BASIC_CMD,"", DIAG_BASIC_ARG_MIN, \
+    DIAG_BASIC_ARG_MAX,diag_handler_cb,NULL);
+
 #endif /* __DIAG_DUMP_H_ */

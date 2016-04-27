@@ -46,13 +46,18 @@ def init_diag_dump_basic(diag_daemon_cb):
 def diag_basic_unxctl_cb(conn, argv, unused_aux):
     # argv[0] is basic
     # argv[1] is feature name
-    if _diag_dump_cb_global is None:
-        err_desc = 'No handler registered for basic diagnostics dump'
-        buff = ' Internal error : ' + err_desc
+    if (len(argv) == 2) and (argv[0] is not None) and (argv[1] is not None) \
+       and (argv[0] == "basic") and (len(argv[1]) <= 30) \
+       and (len(argv[1]) > 0):
+        if _diag_dump_cb_global is None:
+            err_desc = 'No handler registered for basic diagnostics dump'
+            buff = ' Internal error : ' + err_desc
+        else:
+            try:
+                buff = _diag_dump_cb_global(argv)
+            except:
+                buff = ' An exception occured during diagnostics dump '
     else:
-        try:
-            buff = _diag_dump_cb_global(argv)
-        except:
-            buff = ' An exception occured during diagnostics dump '
+        buff = ' Invalid parameter : diag dump failed '
 
     conn.reply(buff)

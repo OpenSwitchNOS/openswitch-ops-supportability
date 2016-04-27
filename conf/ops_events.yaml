@@ -82,6 +82,10 @@ categories:
   description: 'Events related to ecmp'
   category_rank: 20
 
+- event_category: ZEBRA
+  description: 'Events related to ZEBRA'
+  category_rank: 21
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1382,3 +1386,107 @@ event_definitions:
       'logs for ECMP setup errors.'
   event_description_template:
       'ECMP error : {err}'
+
+- event_name: ZEBRA_OVSDB_INIT_COMPLETE
+  event_category: ZEBRA
+  event_ID : 21001
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Openswitch Zebra Daemon started'
+
+- event_name: ZEBRA_OVSDB_EXIT
+  event_category: ZEBRA
+  event_ID : 21002
+  severity: LOG_INFO
+  keys: NA
+  event_description_template:
+      'Openswitch Zebra Daemon ended'
+
+- event_name: ZEBRA_ROUTE
+  event_category: ZEBRA
+  event_ID : 21003
+  severity: LOG_DEBUG
+  keys: rouremsg, prefix
+  event_description_template:
+      '{routemsg} for route prefix {prefix}'
+
+- event_name: ZEBRA_ROUTE_ADD
+  event_category: ZEBRA
+  event_ID : 21004
+  severity: LOG_DEBUG
+  keys: prefix, protocol
+  event_description_template:
+      'Adding a route for prefix {prefix} protocol {protocol}'
+
+- event_name: ZEBRA_ROUTE_ADD_NEXTHOP_EVENTS
+  event_category: ZEBRA
+  event_ID : 21005
+  severity: LOG_DEBUG
+  keys: prefix, nexthop
+  event_description_template:
+      'Processing route {prefix} Inserted/Modified nexthop {nexthop}'
+
+- event_name: ZEBRA_INTERFACE
+  event_category: ZEBRA
+  event_ID : 21006
+  severity: LOG_DEBUG
+  keys: interface_name, admin_state
+  event_description_template:
+      'Interface {interface_name} admin state modified to {admin_state}'
+
+- event_name: ZEBRA_ROUTE_DEL
+  event_category: ZEBRA
+  event_ID : 21007
+  severity: LOG_DEBUG
+  keys: prefix
+  event_description_template:
+      'Need to delete OVSDB route for prefix {prefix}'
+
+- event_name: ZEBRA_PORT
+  event_category: ZEBRA
+  event_ID : 21008
+  severity: LOG_DEBUG
+  keys: port_msg, port_name
+  event_description_template:
+      '{port_msg} {port_name}'
+
+- event_name: ZEBRA_PORT_STATE
+  event_category: ZEBRA
+  event_ID : 21009
+  severity: LOG_DEBUG
+  keys: port_name, port_old_state, port_new_state
+  event_description_template:
+      'port {port_name} changed from {port_old_state} to {port_new_state}'
+
+- event_name: ZEBRA_NEXTHOP_STATE
+  event_category: ZEBRA
+  event_ID : 21010
+  severity: LOG_DEBUG
+  keys: nexthop_port, msg
+  event_description_template:
+      'next-hop port {nexthop_port} {msg}'
+
+- event_name: ZEBRA_NEXTHOP_STATE_CHANGE
+  event_category: ZEBRA
+  event_ID : 21011
+  severity: LOG_DEBUG
+  keys: nexthop_port, msg
+  event_description_template:
+      'next-hop port {nexthop_port} {msg}'
+
+- event_name: ZEBRA_RTM
+  event_category: ZEBRA
+  event_ID : 21012
+  severity: LOG_DEBUG
+  keys: rtm_type, route_address, prefixlen
+  event_description_template:
+      '{rtm_type} {route_address}/{prefixlen}'
+
+- event_name: ZEBRA_NETLINK_ROUTE
+  event_category: ZEBRA
+  event_ID : 21014
+  severity: LOG_DEBUG
+  keys: routedesc, nexthop, ifindex
+  event_description_template:
+      '{routedesc} nexthop via {nexthop} if {ifindex}'

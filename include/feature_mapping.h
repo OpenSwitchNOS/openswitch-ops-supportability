@@ -26,7 +26,7 @@
 
 #define FEATURE_MAPPING_CONF  \
     "/etc/openswitch/supportability/ops_featuremapping.yaml"
-#define FEATURE_SIZE           20
+#define FEATURE_SIZE           30
 #define FEATURE_DESC_SIZE     100
 #define DIAG_DUMP_FEATURE_FLAG "y"
 

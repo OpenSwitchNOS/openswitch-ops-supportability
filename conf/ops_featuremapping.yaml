@@ -38,8 +38,8 @@
     daemon:
         - [name: "ops-bgpd", 'diag_dump': "n"]
   -
-    feature_name: "sub-interface"
-    feature_desc: "sub-interface"
+    feature_name: "subinterface"
+    feature_desc: "subinterface"
     daemon:
         - [name: "ops-portd", 'diag_dump': "y"]
         - [name: "ops-switchd", 'diag_dump': "y"]

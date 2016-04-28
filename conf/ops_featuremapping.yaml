@@ -38,8 +38,8 @@
     daemon:
        - "ops-bgpd"
   -
-    feature_name: "sub-interface"
-    feature_desc: "sub-interface"
+    feature_name: "subinterface"
+    feature_desc: "subinterface"
     daemon:
        - "ops-portd"
   -

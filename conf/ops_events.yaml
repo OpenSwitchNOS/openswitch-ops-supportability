@@ -1407,7 +1407,7 @@ event_definitions:
   event_category: ZEBRA
   event_ID : 21003
   severity: LOG_DEBUG
-  keys: rouremsg, prefix
+  keys: routemsg, prefix
   event_description_template:
       '{routemsg} for route prefix {prefix}'
 
@@ -1471,9 +1471,9 @@ event_definitions:
   event_category: ZEBRA
   event_ID : 21011
   severity: LOG_DEBUG
-  keys: nexthop_port, msg
+  keys: nexthop_port, old_state, new_state
   event_description_template:
-      'next-hop port {nexthop_port} {msg}'
+      'next-hop port {nexthop_port} old state {old_state} to {new_state}'
 
 - event_name: ZEBRA_RTM
   event_category: ZEBRA

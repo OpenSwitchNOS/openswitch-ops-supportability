@@ -55,6 +55,7 @@
       - show qos dscp-map
       - show qos queue-profile
       - show qos schedule-profile
+      - show interface queues
 
     ovsdb:
       -

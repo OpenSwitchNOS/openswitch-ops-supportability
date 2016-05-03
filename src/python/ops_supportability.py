@@ -46,6 +46,7 @@ import sys
 import termios
 import xattr
 import signal
+import socket
 from shutil import copyfile
 from string import Template
 from subprocess import check_output
@@ -101,6 +102,15 @@ syslog_transport = ''
 syslog_remote = ''
 syslog_port_number = 0
 syslog_severity = 'debug'
+
+
+def is_ipv6(address):
+    try:
+        # if the address is not IPV6 then exception will be raised
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except:
+        return False
 
 
 def unixctl_exit(conn, unused_argv, unused_aux):
@@ -295,6 +305,9 @@ def supportability_reconfigure():
     sysserver_tmpl_udp = Template('*.$severity @$remote:$port\n')
     sysserver_tmpl_tcp = Template('*.$severity @@$remote:$port\n')
 
+    ipv6sysserver_tmpl_udp = Template('*.$severity @[$remote]:$port\n')
+    ipv6sysserver_tmpl_tcp = Template('*.$severity @@[$remote]:$port\n')
+
     syslogfile = open("/tmp/rsyslog.remote.conf", "w")
 
     for syslog_row in idl.tables[SYSLOG_REMOTE_TABLE].rows.itervalues():
@@ -318,22 +331,37 @@ def supportability_reconfigure():
                 else:
                     syslog_port_number = 514
 
-                syslogfile.write(sysserver_tmpl_udp.safe_substitute(
-                                 severity=syslog_severity,
-                                 remote=syslog_row.remote_host,
-                                 port=syslog_port_number
-                                 ))
+                if is_ipv6(syslog_row.remote_host):
+                    syslogfile.write(ipv6sysserver_tmpl_udp.safe_substitute(
+                                     severity=syslog_severity,
+                                     remote=syslog_row.remote_host,
+                                     port=syslog_port_number
+                                     ))
+                else:
+                    syslogfile.write(sysserver_tmpl_udp.safe_substitute(
+                                     severity=syslog_severity,
+                                     remote=syslog_row.remote_host,
+                                     port=syslog_port_number
+                                     ))
             elif syslog_transport == "tcp":
                 if len(syslog_row.port_number) > 0:
                     syslog_port_number = syslog_row.port_number[0]
                 else:
                     syslog_port_number = 1470
 
-                syslogfile.write(sysserver_tmpl_tcp.safe_substitute(
-                                 severity=syslog_severity,
-                                 remote=syslog_row.remote_host,
-                                 port=syslog_port_number
-                                 ))
+                if is_ipv6(syslog_row.remote_host):
+                    syslogfile.write(ipv6sysserver_tmpl_tcp.safe_substitute(
+                                     severity=syslog_severity,
+                                     remote=syslog_row.remote_host,
+                                     port=syslog_port_number
+                                     ))
+                else:
+                    syslogfile.write(sysserver_tmpl_tcp.safe_substitute(
+                                     severity=syslog_severity,
+                                     remote=syslog_row.remote_host,
+                                     port=syslog_port_number
+                                     ))
+
     syslogfile.close()
 
     # Compare the syslog temporary file with the syslog file to check if any

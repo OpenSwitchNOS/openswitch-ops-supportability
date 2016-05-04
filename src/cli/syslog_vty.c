@@ -351,6 +351,28 @@ cli_syslog_config(const char* remote_host,
         return CMD_WARNING;
     }
 
+    if (strlen(remote_host) > 255)
+    {
+        vty_out(vty,"Host name too long%s",VTY_NEWLINE);
+        cli_do_config_abort(txn);
+        return CMD_WARNING;
+    }
+    /* Validate the remote host address */
+    if(!is_valid_ip_address(remote_host))
+    {
+        /* Remote host address is not a valid ipv4 or ipv6 address
+         * Check whether it is a valid host name, if not throw error
+         */
+        if( validate_cli_args(remote_host, HOSTNAME_RGX) ||
+            !validate_cli_args(remote_host, IPV4_RANGE_RGX))
+        {
+             /* Host name is not proper */
+            vty_out(vty,"Remote syslog server address is invalid%s",
+                    VTY_NEWLINE);
+            cli_do_config_abort(txn);
+            return CMD_WARNING;
+        }
+    }
     system_row = ovsrec_system_first(idl);
     if(system_row == NULL)
     {

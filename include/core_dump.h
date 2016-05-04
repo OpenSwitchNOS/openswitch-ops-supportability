@@ -86,8 +86,4 @@ extract_info (
 int
 get_file_list(int type, glob_t* globbuf, const char* globpattern ,
         const char *daemon, const char* instance_id );
-
-int
-validate_cli_args(const char * arg , const char * regex);
-
 #endif //_CORE_DUMP_VTY_H

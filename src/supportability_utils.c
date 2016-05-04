@@ -251,3 +251,37 @@ strnlwr(char *str, int size)
     }
     return str;
 }
+
+
+
+/*
+ * Function       : validate_cli_args
+ * Responsibility : validates given cli argument with regular expression.
+ * Parameters
+ *                : arg - argument passed in cli
+ *                : regex - regular expression to validate user input
+ *
+ * Returns        : 0 on success
+ */
+
+int
+validate_cli_args(const char * arg , const char * regex)
+{
+    regex_t r;
+    int rc = 0;
+    const int n_matches = 10;
+    regmatch_t m[n_matches];
+
+    if (!( arg && regex ) )
+        return 1;
+
+    rc = regcomp(&r, regex , REG_EXTENDED|REG_NEWLINE);
+    if ( rc )  {
+        regfree (&r);
+        return rc;
+    }
+
+    rc = regexec (&r,arg,n_matches, m, 0);
+    regfree (&r);
+    return rc;
+}

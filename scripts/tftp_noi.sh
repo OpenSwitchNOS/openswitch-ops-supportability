@@ -22,9 +22,24 @@
 # tftp_noi.sh  <tftp server ip> <absolute path of local file to send>
 #                               <destination file name>
 
+
+TIMEOUT=180  #timeout in sec
+
+function timeout_monitor() {
+   local   PID=$1
+   sleep "$TIMEOUT"
+   ps -p $PID  >/dev/null 2>&1
+   if [[ $? -eq 0 ]] ; then
+       echo "TFTP timeout"
+       kill -TERM "$PID"
+   fi
+}
+
 if [ $# -ne 3 ]; then
     exit 1;
 fi
+
+timeout_monitor "$$" &
 echo 'copying ...'
 tftp $1 <<EOF
 bin

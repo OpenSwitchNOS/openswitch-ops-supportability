@@ -63,7 +63,7 @@
     feature_name: "mstp"
     feature_desc: "Multiple Spanning Tree Protocol"
     daemon:
-        - [name: "ops-stpd", 'diag_dump': "n"]
+        - [name: "ops-stpd", 'diag_dump': "y"]
   -
     feature_name: "sflow"
     feature_desc: "Sampled Flow Protocol"

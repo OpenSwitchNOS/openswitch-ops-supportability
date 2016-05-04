@@ -252,6 +252,8 @@ strnlwr(char *str, int size)
     return str;
 }
 
+
+
 /*
  * Function       : validate_cli_args
  * Responsibility : validates given cli argument with regular expression.

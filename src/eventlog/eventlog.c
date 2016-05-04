@@ -401,6 +401,7 @@ char
 {
     char *tmp = NULL;
     int size = 0;
+    unsigned size_str2 =0;
     char str[KEY_VALUE_SIZE] = {0,};
     char str2[KEY_VALUE_SIZE] = {0,};
     /* This memory is freed in log_event():line 622 */
@@ -418,12 +419,20 @@ char
         return NULL;
     }
     /* Add "=" to make "key=value" string */
-    tmp = strcat(str, "=");
+    if ( ( KEY_VALUE_SIZE - (size+1) ) > 0) {
+        tmp = strcat(str, "=");
+    }
+    else {
+        return NULL;
+    }
     s1 = va_arg(arg, char*);
     vsnprintf(str2, KEY_VALUE_SIZE, s1, arg);
-    size = strlen(str2);
-    if((size > 0) && (size < KEY_VALUE_SIZE)) {
+    size_str2 = strlen(str2);
+    if( (size_str2 > 0) && (size_str2 < (KEY_VALUE_SIZE - (size+2)) ) ) {
         strcat(tmp, str2);
+    }
+    else {
+        return NULL;
     }
     size = strlen(tmp);
     if((size > 0) && (size < KEY_VALUE_SIZE)) {

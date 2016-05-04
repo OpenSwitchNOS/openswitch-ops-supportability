@@ -63,6 +63,7 @@ install_show_vlog()
     cmd = (char*)calloc(MAX_DAEMONS, MAX_FEATURE_NAME_SIZE);
     if(cmd == NULL) {
         VLOG_ERR("Memory allocation failure");
+        closedir(fd);
         return 1;
     }
     strncpy(cmd, VLOG_CMD, (MAX_VLOG_CMD-1));
@@ -81,6 +82,7 @@ install_show_vlog()
             if(strstr(fd1->d_name, ".pid"))
             {
                 strncpy(str, fd1->d_name, (MAX_FILENAME_SIZE-1));
+                str[MAX_FILENAME_SIZE] = '\0';
                 ptr = strtok(str, ".");
                 strncat(cmd, ptr, ((MAX_VLOG_CMD - strlen(cmd)) - 1));
                 strncat(cmd, "|", ((MAX_VLOG_CMD - strlen(cmd)) - 1));
@@ -334,6 +336,7 @@ install_show_evnts()
     if(help == NULL) {
         VLOG_ERR("Memory allocation failure");
         free(cmd);
+        fclose(fh);
         return 1;
     }
     /* Copy 1st part of help string */
@@ -376,6 +379,7 @@ install_show_evnts()
         free(cmd);
         free(help);
         yaml_parser_delete(&parser);
+        fclose(fh);
         return 1;
     }
     if(exit) {

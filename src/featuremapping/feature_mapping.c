@@ -254,7 +254,8 @@ parse_feature_mapping_yaml(void)
                                             curr_daemon,
                                             (const char*)
                                             event.data.scalar.value);
-                                    if(curr_feature->p_daemon == NULL)
+                                    if( (curr_feature != NULL)
+                                            && (curr_feature->p_daemon == NULL))
                                     {
                                         curr_feature->p_daemon = curr_daemon;
                                     }

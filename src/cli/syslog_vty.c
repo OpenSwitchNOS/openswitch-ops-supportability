@@ -116,7 +116,8 @@ syslog_remote_get_config(const char* remote_host,
 
         /* Compare Host name */
         /* This is common for both use case 1 and 2 */
-        if(strcmp_with_nullcheck(row->remote_host,remote_host))
+        if((row != NULL )
+                && (strcmp_with_nullcheck(row->remote_host,remote_host)))
         {
             continue;
         }

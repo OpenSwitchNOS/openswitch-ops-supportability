@@ -116,7 +116,8 @@ syslog_remote_get_config(const char* remote_host,
 
         /* Compare Host name */
         /* This is common for both use case 1 and 2 */
-        if(strcmp_with_nullcheck(row->remote_host,remote_host))
+        if((row != NULL )
+                && (strcmp_with_nullcheck(row->remote_host,remote_host)))
         {
             continue;
         }
@@ -841,7 +842,7 @@ DEFUN (vtysh_config_no_syslog,
             "removed.\nDo you want to continue [y/n]?");
     while(1)
     {
-        flag=getchar();
+        flag= (char) getchar();
         if (flag == 'y')
         {
             txn = cli_do_config_start();

@@ -127,7 +127,7 @@ unsigned dd_alarm(unsigned seconds)
     {
         VLOG_ERR("diag dump:alarm failed, rc =%d", rc);
     }
-    return rc;
+    return (unsigned int)rc;
 }
 
 /* Function       : diagdump_thread_cleanup_handler
@@ -795,6 +795,7 @@ DEFUN (vtysh_diag_dump_show,
     {
       VLOG_ERR("thread has been cancelled");
     }
+    CLOSE(fd);
     return return_val;
 
 #undef FEATURE_BEGIN

@@ -640,8 +640,8 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
             if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
                vty_out(vty,"%-200.200s%s",msg,VTY_NEWLINE);
             }
-            FREE(msg_str);
          }
+         FREE(msg_str);
       }
       else{
          /*show vlog and show vlog severity*/

@@ -749,7 +749,7 @@ parse_showtech_config (const char* config_file)
                   goto CLEAN_UP;
                 }
                 set_subfeature_as_dummy(curr_subfeature);
-                if (!curr_feature->p_subfeature)
+                if ( (curr_feature != NULL) && (!curr_feature->p_subfeature))
                 {
                   curr_feature->p_subfeature = curr_subfeature;
                 }
@@ -778,7 +778,7 @@ parse_showtech_config (const char* config_file)
                   goto CLEAN_UP;
                 }
                 set_subfeature_as_dummy(curr_subfeature);
-                if (!curr_feature->p_subfeature)
+                if ( (curr_feature != NULL) && !curr_feature->p_subfeature)
                 {
                   curr_feature->p_subfeature = curr_subfeature;
                 }
@@ -808,7 +808,7 @@ parse_showtech_config (const char* config_file)
                   goto CLEAN_UP;
                 }
                 set_subfeature_as_dummy(curr_subfeature);
-                if (!curr_feature->p_subfeature)
+                if ( (curr_feature != NULL) && !curr_feature->p_subfeature)
                 {
                   curr_feature->p_subfeature = curr_subfeature;
                 }

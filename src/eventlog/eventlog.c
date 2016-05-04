@@ -176,10 +176,12 @@ parse_yaml_for_category(char *category)
     }
     index = find_last_index();
     if((index < 0) || (index > MAX_EVENT_TABLE_SIZE)) {
+        fclose(fh);
         return -1;
     }
     if (!yaml_parser_initialize(&parser)) {
         VLOG_ERR("YAML Initialize failed");
+        fclose(fh);
         return -1;
     }
     yaml_parser_set_input_file(&parser, fh);
@@ -225,6 +227,7 @@ parse_yaml_for_category(char *category)
                     assign_parsed_values(key, &val_flag, &found, &index);
                     ret = asprintf(&ev_table[index].category, "%s", category);
                     if(ret < 0) {
+                        fclose(fh);
                         return -1;
                         VLOG_ERR("Failed to allocate memory");
                     }
@@ -401,6 +404,7 @@ char
 {
     char *tmp = NULL;
     int size = 0;
+    unsigned size_str2 = 0;
     char str[KEY_VALUE_SIZE] = {0,};
     char str2[KEY_VALUE_SIZE] = {0,};
     /* This memory is freed in log_event():line 622 */
@@ -415,15 +419,26 @@ char
         strncpy(str, s1, (size+1));
     }
     else {
+        va_end(arg);
         return NULL;
     }
     /* Add "=" to make "key=value" string */
-    tmp = strcat(str, "=");
+    if ( ( KEY_VALUE_SIZE - (size+1) ) > 0) {
+        tmp = strncat(str, "=", 1);
+    }
+    else {
+        va_end(arg);
+        return NULL;
+    }
     s1 = va_arg(arg, char*);
     vsnprintf(str2, KEY_VALUE_SIZE, s1, arg);
-    size = strlen(str2);
-    if((size > 0) && (size < KEY_VALUE_SIZE)) {
-        strcat(tmp, str2);
+    size_str2 = strlen(str2);
+    if( (size_str2 > 0) && (size_str2 < (KEY_VALUE_SIZE - (size+2)) ) ) {
+        strncat(tmp, str2, size_str2);
+    }
+    else {
+        va_end(arg);
+        return NULL;
     }
     size = strlen(tmp);
     if((size > 0) && (size < KEY_VALUE_SIZE)) {

@@ -113,7 +113,7 @@ unsigned st_alarm(unsigned seconds)
     {
         VLOG_ERR("show tech:alarm failed, rc =%d", rc);
     }
-    return rc;
+    return (unsigned int)rc;
 }
 
 /* Function       : exec_showtech_cmd_on_thread

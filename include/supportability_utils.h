@@ -65,4 +65,8 @@ strnupr(char *str, int size);
 char*
 strnlwr(char *str, int size);
 
+int
+validate_cli_args(const char * arg , const char * regex);
+
+
 #endif /* _SUPPORTABILITY_UTILS_H_ */

@@ -617,7 +617,6 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
       const char *ch = "|";
       const char *msg = NULL;
       char *msg_str = NULL;
-      char *check_daemon = NULL;
       char *message = NULL;
       size_t data_length = 0;
       const char *module_name = NULL;
@@ -665,15 +664,14 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
          continue;
       }
       /*show vlog daemon*/
-      if(argv != NULL){
-         check_daemon = strstr(msg_str,argv);
-         if(check_daemon != NULL) {
+      if(argv != NULL && module != NULL && msg_str != NULL){
+         if(!strcmp_with_nullcheck(module,argv)){
             message = strtok(msg_str,ch);
-            if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
-               vty_out(vty,"%-200.200s%s",msg,VTY_NEWLINE);
+            if(message != NULL && !strcmp_with_nullcheck(message,"ovs")){
+               vty_out(vty,"%-25.25s|%-200.200s%s",argv,msg,VTY_NEWLINE);
             }
-            FREE(msg_str);
          }
+         FREE(msg_str);
       }
       else{
          /*show vlog and show vlog severity*/

@@ -218,3 +218,20 @@
     feature_name: copp
     cli_cmds:
       - "show copp statistics"
+
+# Show Tech DHCP Feature Definition
+  feature:
+  -
+    feature_desc: "Dynamic Host Configuration Protocol"
+    feature_name: dhcp
+    cli_cmds:
+      - "show dhcp-server"
+      - "show dhcp-server leases"
+
+# Show Tech TFTP Feature Definition
+  feature:
+  -
+    feature_desc: "Trivial File Transfer Protocol"
+    feature_name: tftp
+    cli_cmds:
+      - "show tftp-server"

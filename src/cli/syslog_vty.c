@@ -116,7 +116,8 @@ syslog_remote_get_config(const char* remote_host,
 
         /* Compare Host name */
         /* This is common for both use case 1 and 2 */
-        if(strcmp_with_nullcheck(row->remote_host,remote_host))
+        if((row != NULL )
+                && (strcmp_with_nullcheck(row->remote_host,remote_host)))
         {
             continue;
         }
@@ -128,7 +129,7 @@ syslog_remote_get_config(const char* remote_host,
             /* If the user has provided input then perform comparision */
             if(transport != NULL)
             {
-                if(row->transport != NULL)
+                if( (row != NULL) && (row->transport != NULL))
                 {
                     if(strcmp_with_nullcheck(row->transport,transport))
                     {
@@ -151,7 +152,7 @@ syslog_remote_get_config(const char* remote_host,
                   logging 10.0.0.2 tcp 559
                   and in query if only remote_host is given, we should not match
                   since the default is udp where as the record in OVSDB is tcp */
-                if(row->transport != NULL)
+                if( (row != NULL) && row->transport != NULL)
                 {
                     if(strcmp_with_nullcheck(row->transport,"udp"))
                     {
@@ -164,8 +165,8 @@ syslog_remote_get_config(const char* remote_host,
             /* Set whether the transport protocol is udp or tcp
              * It is sufficient to check just row->transport for protocol,
              * since we would reach this point only if both matches. */
-            if(row->transport == NULL ||
-                    !strcmp_with_nullcheck(row->transport,"udp"))
+            if( (row != NULL) && ( (row->transport == NULL) ||
+                    !strcmp_with_nullcheck(row->transport,"udp")) )
             {
                 curr_transport = UDP_TRANS_PROTOCOL;
             }
@@ -179,7 +180,7 @@ syslog_remote_get_config(const char* remote_host,
             /* If the user has provided port number, then compare */
             if(port_number != NULL)
             {
-                if(row->port_number == NULL)
+                if( (row != NULL) && row->port_number == NULL)
                 {
                     if(curr_transport ==UDP_TRANS_PROTOCOL &&
                             *port_number != DEFAULT_UDP_PORT)
@@ -194,7 +195,8 @@ syslog_remote_get_config(const char* remote_host,
                 }
                 else
                 {
-                    if(*row->port_number != *port_number)
+                    if( (row != NULL) && (next != NULL) &&
+                            ((*row->port_number) != *port_number))
                     {
                         continue;
                     }
@@ -202,7 +204,7 @@ syslog_remote_get_config(const char* remote_host,
             }
             else if (exact_match)
             {
-                if(row->port_number != NULL)
+                if( (row !=NULL) && row->port_number != NULL)
                 {
                     if(curr_transport ==UDP_TRANS_PROTOCOL &&
                             *(row->port_number) != DEFAULT_UDP_PORT)
@@ -222,7 +224,7 @@ syslog_remote_get_config(const char* remote_host,
             /* Compare severity only if provided by user */
             if(severity != NULL)
             {
-                if(row->severity != NULL)
+                if( (row !=NULL) && row->severity != NULL)
                 {
                     if(strcmp(row->severity,severity))
                     {
@@ -240,7 +242,7 @@ syslog_remote_get_config(const char* remote_host,
             }
             else if (exact_match)
             {
-                if(row->severity != NULL)
+                if( (row !=NULL) && row->severity != NULL)
                 {
                     if(strcmp_with_nullcheck(row->severity,"debug"))
                     {
@@ -849,6 +851,7 @@ DEFUN (vtysh_config_no_syslog,
        )
 {
     char flag = '0';
+    int char_value = 0;
     static struct termios oldt, newt;
     const struct ovsrec_syslog_remote* row = NULL;
     enum ovsdb_idl_txn_status txn_status;
@@ -863,7 +866,8 @@ DEFUN (vtysh_config_no_syslog,
             "removed.\nDo you want to continue [y/n]?");
     while(1)
     {
-        flag=getchar();
+        char_value = getchar();
+        flag = (char) char_value;
         if (flag == 'y')
         {
             txn = cli_do_config_start();

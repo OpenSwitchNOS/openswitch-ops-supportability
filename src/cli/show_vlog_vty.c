@@ -680,8 +680,8 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
             if(!strcmp_with_nullcheck(message,"ovs") && (message != NULL)){
                vty_out(vty,"%-25.25s|%-200.200s%s",module,msg,VTY_NEWLINE);
             }
-            FREE(msg_str);
          }
+         FREE(msg_str);
       }
    }
    if(!vlog_count){

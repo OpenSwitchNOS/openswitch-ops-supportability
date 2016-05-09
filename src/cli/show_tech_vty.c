@@ -107,7 +107,7 @@ int st_mutex_unlock(pthread_mutex_t *mutex)
  */
 unsigned st_alarm(unsigned seconds)
 {
-    int rc = -1 ;
+    unsigned int rc = 0 ;
     rc = alarm(seconds);
     if(rc)
     {
@@ -990,9 +990,14 @@ cli_show_tech_file(const char* fname,const char* feature,int force)
     buffer_reset(vty->obuf);
     if(outputbuf)
     {
-      write(fd, outputbuf,strlen(outputbuf));
+      if( write(fd, outputbuf,strlen(outputbuf)) == -1 ) {
+          vty_out(vty,"Show Tech execution failed to store in file%s",
+                  VTY_NEWLINE);
+      }
+      else{
+          vty_out(vty,"Show Tech output stored in file %s%s",filename,VTY_NEWLINE);
+      }
       free(outputbuf);
-      vty_out(vty,"Show Tech output stored in file %s%s",filename,VTY_NEWLINE);
     }
     else
     {

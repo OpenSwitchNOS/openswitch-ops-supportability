@@ -50,7 +50,7 @@ import socket
 from shutil import copyfile
 from string import Template
 from subprocess import check_output
-
+import shutil
 
 # OVS definitions.
 idl = None
@@ -277,6 +277,21 @@ def supportability_init(remote):
                                     SYSLOG_REMOTE_SEVERTIY_COLUMN])
 
     idl = ovs.db.idl.Idl(remote, schema_helper)
+
+    # Remove folders which have a machine id different
+    # than current machine id
+    machine_id = ""
+    with open("/etc/machine-id", "r") as f:
+        machine_id = f.readline()
+    if len(machine_id) > 0:
+        current_machine_id = machine_id
+        subfolders = ["logs"]
+        for subfolder in subfolders:
+            current_dir = "/var/diagnostics/%s/" % (subfolder)
+            for file_name in os.listdir(current_dir):
+                if file_name != current_machine_id:
+                    shutil.rmtree(current_dir+file_name)
+
     # make the journal persistent after sending SIGUSR1
     journald_init()
 

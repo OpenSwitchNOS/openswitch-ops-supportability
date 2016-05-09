@@ -341,6 +341,7 @@ DEFUN_NOLOCK (cli_platform_show_events,
             return CMD_WARNING;
          }
          temp_to_free = cmd_free_memory_range_list(temp_to_free);
+         FREE(in);
       }
     }
     if(argv[2] != NULL) {

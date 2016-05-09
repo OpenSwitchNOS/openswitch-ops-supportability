@@ -119,7 +119,7 @@ int dd_mutex_unlock(pthread_mutex_t *mutex)
  */
 unsigned dd_alarm(unsigned seconds)
 {
-    int rc = -1 ;
+    unsigned int rc = 0 ;
     rc = alarm(seconds);
     if(rc)
     {
@@ -823,6 +823,7 @@ DEFUN (vtysh_diag_dump_show,
                 argv[0],file_path,VTY_NEWLINE);
     }
 
+    CLOSE(fd);
     return return_val;
 #undef FEATURE_BEGIN
 #undef FEATURE_END

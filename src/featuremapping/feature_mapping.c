@@ -80,13 +80,13 @@ static struct feature*
 feature_mapping_add_feature(struct feature* afternode, const char* feature_name)
 {
   struct feature* elem = NULL;
+  if(feature_name == NULL) {
+    return NULL;
+  }
   elem = (struct feature*)calloc(1,sizeof(struct feature));
   if(elem == NULL) {
     VLOG_ERR("Memory Allocation Failure\n");
     return NULL;
-  }
-  if(feature_name == NULL) {
-     return NULL;
   }
   elem->name = strndup(feature_name,FEATURE_SIZE);
   if(afternode != NULL) {
@@ -141,13 +141,13 @@ feature_mapping_add_daemon(
 )
 {
   struct daemon* elem = NULL;
+  if(daemon == NULL) {
+    return NULL;
+  }
   elem = (struct daemon*)calloc(1,sizeof(struct daemon));
   if(elem == NULL) {
     VLOG_ERR("Memory Allocation Failure\n");
     return NULL;
-  }
-  if(daemon == NULL) {
-     return NULL;
   }
   elem->name = strndup(daemon,FEATURE_SIZE);
   if(afternode != NULL) {
@@ -265,7 +265,8 @@ parse_feature_mapping_yaml(void)
                                             curr_daemon,
                                             (const char*)
                                             event.data.scalar.value);
-                                    if(curr_feature->p_daemon == NULL)
+                                    if( (curr_feature != NULL)
+                                            && (curr_feature->p_daemon == NULL))
                                     {
                                         curr_feature->p_daemon = curr_daemon;
                                     }
@@ -280,9 +281,12 @@ parse_feature_mapping_yaml(void)
                                                 (const char*)
                                                 event.data.scalar.value) ) ?
                                         DISABLE : ENABLE ;
-
+                                    if ( curr_daemon != NULL) {
                                     curr_daemon->diag_flag = daemon_diag_flag;
+                                    }
+                                    if ( curr_feature != NULL) {
                                     curr_feature->diag_flag = daemon_diag_flag;
+                                    }
                                     break;
                                 }
 

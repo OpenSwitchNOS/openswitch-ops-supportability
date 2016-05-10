@@ -236,3 +236,15 @@
     feature_name: tftp-server
     cli_cmds:
       - "show tftp-server"
+
+# Show Tech SNMP Feature Configurations
+  feature:
+  -
+    feature_desc: "SNMP"
+    feature_name: snmp
+    cli_cmds:
+     - "show snmp agent-port"
+     - "show snmp community"
+     - "show snmp system"
+     - "show snmp trap"
+     - "show snmpv3 users"

@@ -493,7 +493,7 @@ def checkShowTechUnSupportedFeature(dut01Obj):
         command="show tech  !@#$%^&*((QWERTYUIOPLFDSAZXCVBNM<>)(&^%$#!",
         errorCheck=False
     )
- # exit the vtysh shell
+    # exit the vtysh shell
     returnStructure = dut01Obj.VtyshShell(enter=False)
     overallBuffer.append(returnStructure.buffer())
     returnCode = returnStructure.returnCode()
@@ -517,6 +517,7 @@ def checkShowTechUnSupportedFeature(dut01Obj):
                   successfully on device " +
                   str(dut01Obj.device))
         return True
+
 
 def checkShowTechUnSupportedSubFeature(dut01Obj):
     LogOutput('info',
@@ -735,6 +736,7 @@ def TestShowTechConfigDuplicateEntries(dut01Obj):
 
     return False
 
+
 def TestShowTechFeatureVersion(dut01Obj):
     LogOutput('info', "\n############################################")
     LogOutput('info', "5.0 Running Show tech Feature Versioning Test ")
@@ -783,8 +785,8 @@ def TestShowTechFeatureVersion(dut01Obj):
             return False
         else:
             LogOutput('info',
-                      " Show Tech Feature version Ran Successfully on device " +
-                      str(dut01Obj.device))
+                      " Show Tech Feature version Ran Successfully \
+                      on device " + str(dut01Obj.device))
             return True
 
 
@@ -896,13 +898,126 @@ def checkShowTechFeatureUnicastRouting(dut01Obj):
             if command not in returnDevInt['buffer']:
                 LogOutput('error',
                           "Failed to run 'show tech ucast-routing' " +
-                          " cli commands on device " + str(dut01Obj.device))
+                          "cli commands on device " + str(dut01Obj.device))
                 return False
 
         LogOutput('info',
                   " Show Tech Feature Unicast Routing Ran Successfully"
                   "on device " + str(dut01Obj.device))
         return True
+
+
+def checkShowTechFeatureSftpServer(dut01Obj):
+    LogOutput('info', "\n##############################################")
+    LogOutput('info', "4.0 Running Show tech Feature SFTP Server Test ")
+    LogOutput('info', "##############################################\n")
+    # Variables
+    overallBuffer = []
+    finalReturnCode = 0
+
+    # Get into vtyshelll
+    returnStructure = dut01Obj.VtyshShell(enter=True)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to get vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    # Run Show Tech SFTP Server Command
+    returnDevInt = dut01Obj.DeviceInteract(command="show tech sftp-server")
+
+    # exit the vtysh shell
+    returnStructure = dut01Obj.VtyshShell(enter=False)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to exit vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    finalReturnCode = returnDevInt['returnCode']
+    overallBuffer.append(returnDevInt['buffer'])
+    if finalReturnCode != 0:
+        LogOutput('error',
+                  "Failed to run Show Tech SFTP Server " +
+                  " on device " + str(dut01Obj.device))
+        return False
+    else:
+        if ("Show Tech commands executed successfully"
+           not in returnDevInt['buffer']):
+            LogOutput('error',
+                      "Test Case Failure,refer output below")
+            for outputs in overallBuffer:
+                LogOutput('info', str(outputs))
+            return False
+        else:
+            LogOutput('info',
+                      " Show Tech Feature SFTP Server Ran Successfully on \
+                      device " + str(dut01Obj.device))
+            return True
+
+
+def checkShowTechFeatureSourceIpSelection(dut01Obj):
+    LogOutput('info', "\n#################################################")
+    LogOutput('info', "7.0 Running Show tech Feature Source IP Selection ")
+    LogOutput('info', "#################################################\n")
+    # Variables
+    overallBuffer = []
+    finalReturnCode = 0
+
+    # Get into vtyshelll
+    returnStructure = dut01Obj.VtyshShell(enter=True)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to get vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    # Run Show Tech Source IP Selection Command
+    returnDevInt = dut01Obj.DeviceInteract(command="show tech \
+    source-interface-selection")
+
+    # exit the vtysh shell
+    returnStructure = dut01Obj.VtyshShell(enter=False)
+    overallBuffer.append(returnStructure.buffer())
+    returnCode = returnStructure.returnCode()
+    if returnCode != 0:
+        LogOutput('error', "Failed to exit vtysh prompt")
+        for curLine in overallBuffer:
+            LogOutput('info', str(curLine))
+        return False
+
+    # Verify if the expected cli commands for u-cast routing is seen in the
+    # output buffer
+    expected_commands = ['show ip source-interface',
+                         'show ip source-interface tftp']
+
+    finalReturnCode = returnDevInt['returnCode']
+    overallBuffer.append(returnDevInt['buffer'])
+    if finalReturnCode != 0:
+        LogOutput('error',
+                  "Failed to run 'show tech source-interface-selection' " +
+                  " on device " + str(dut01Obj.device))
+        return False
+    else:
+        for command in expected_commands:
+            if command not in returnDevInt['buffer']:
+                LogOutput('error',
+                          "Failed to run 'show tech '"
+                          "'source-interface-selection' " +
+                          " cli commands on device " + str(dut01Obj.device))
+                return False
+
+        LogOutput('info',
+                  " Show Tech Feature Source IP Selection Ran Successfully \
+                  on device " + str(dut01Obj.device))
+        return True
+
 
 class Test_showtech:
 
@@ -977,6 +1092,14 @@ class Test_showtech:
     def test_show_tech_feature_unicast_routing(self):
         global dut01Obj
         assert(checkShowTechFeatureUnicastRouting(dut01Obj))
+
+    def test_show_tech_feature_sftp_server(self):
+        global dut01Obj
+        assert(checkShowTechFeatureSftpServer(dut01Obj))
+
+    def test_show_tech_feature_source_ip_selection(self):
+        global dut01Obj
+        assert(checkShowTechFeatureSourceIpSelection(dut01Obj))
 
     # Teardown Class
     def teardown_class(cls):

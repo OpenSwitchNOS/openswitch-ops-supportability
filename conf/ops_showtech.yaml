@@ -231,3 +231,20 @@
     feature_name: tftp-server
     cli_cmds:
       - "show tftp-server"
+
+# Show Tech SFTP Server Feature Definition
+  feature:
+  -
+    feature_desc: "SSH File Transfer Protocol Server"
+    feature_name: sftp-server
+    cli_cmds:
+      - "show sftp server"
+
+# Show Tech Source Interface Selection Feature Definition
+  feature:
+  -
+    feature_desc: "Source Interface Selection"
+    feature_name: source-interface-selection
+    cli_cmds:
+      - "show ip source-interface"
+      - "show ip source-interface tftp"

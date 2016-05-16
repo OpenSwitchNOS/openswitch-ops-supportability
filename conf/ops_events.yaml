@@ -1483,10 +1483,3 @@ event_definitions:
   event_description_template:
       '{rtm_type} {route_address}/{prefixlen}'
 
-- event_name: ZEBRA_NETLINK_ERR
-  event_category: ZEBRA
-  event_ID : 21013
-  severity: LOG_ERR
-  keys: err_desc, nlsock, errno
-  event_description_template:
-      '{nlsock} {err_desc} {errno}'

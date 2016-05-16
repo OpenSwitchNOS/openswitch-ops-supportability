@@ -690,11 +690,11 @@ class Test_diag_dump:
         assert(checkDiagDumpFeatureFileSize(dut01Obj, 'lacp', 'diag.txt'))
 
     # negative test case
-    # When ops-bgpd daemon implement diag feature this TC will fail and they
+    # When ops-ospfd daemon implement diag feature this TC will fail and they
     # can't commit their changes. In that case we have to identify some other
     # daemon which doesn't support diag feature
     def test_diag_dump_unsupported_daemon(self):
-        assert(checkUnsupportedDaemon(dut01Obj, 'ops-bgpd'))
+        assert(checkUnsupportedDaemon(dut01Obj, 'ops-ospfd'))
 
     def test_diag_dump_unknown_daemon(self):
         assert(checkUnknownDaemon(dut01Obj))

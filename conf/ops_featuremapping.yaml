@@ -36,7 +36,7 @@
     feature_name: "bgp"
     feature_desc: "Border Gateway Protocol"
     daemon:
-        - [name: "ops-bgpd", 'diag_dump': "n"]
+        - [name: "ops-bgpd", 'diag_dump': "y"]
   -
     feature_name: "subinterface"
     feature_desc: "Layer 3 sub-interface"

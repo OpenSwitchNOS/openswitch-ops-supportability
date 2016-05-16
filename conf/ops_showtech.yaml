@@ -248,3 +248,11 @@
     cli_cmds:
       - "show ip source-interface"
       - "show ip source-interface tftp"
+
+# Show Tech SFLOW Feature Definition
+  feature:
+  -
+    feature_desc: "sFlow"
+    feature_name: sflow
+    cli_cmds:
+      - "show sflow"

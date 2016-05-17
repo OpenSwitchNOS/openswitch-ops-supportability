@@ -154,6 +154,81 @@
               - other_config
               - external_ids
 
+# Show Tech ACL Feature Definition
+  feature:
+  -
+    feature_desc: "Access Control Lists"
+    feature_name: acl
+    cli_cmds:
+      - show access-list commands configuration
+      - show access-list commands
+      - show access-list log-timer
+
+    ovsdb:
+      -
+        table:
+          -
+            table_name: system
+            col_names:
+              - acls
+              - other_config
+              - other_info
+      -
+        table:
+          -
+            table_name: port
+            col_names:
+              - aclv4_in_applied
+              - aclv4_in_cfg
+              - aclv4_in_cfg_version
+              - aclv4_in_status
+              - aclv4_in_statistics
+              - aclv4_in_statistics_clear_requested
+              - aclv4_in_statistics_clear_performed
+      -
+        table:
+          -
+            table_name: vlan
+            col_names:
+              - aclv4_in_applied
+              - aclv4_in_cfg
+              - aclv4_in_cfg_version
+              - aclv4_in_status
+              - aclv4_in_statistics
+              - aclv4_in_statistics_clear_requested
+              - aclv4_in_statistics_clear_performed
+      -
+        table:
+          -
+            table_name: ACL
+            col_names:
+              - name
+              - list_type
+              - cur_aces
+              - cfg_aces
+              - in_progress_aces
+              - cfg_version
+              - in_progress_version
+              - status
+      -
+        table:
+          -
+            table_name: ACL_Entry
+            col_names:
+              - comment
+              - action
+              - src_ip
+              - dst_ip
+              - protocol
+              - src_l4_port_min
+              - src_l4_port_max
+              - src_l4_port_range_reverse
+              - dst_l4_port_min
+              - dst_l4_port_max
+              - dst_l4_port_range_reverse
+              - log
+              - count
+
 # Show Tech ECMP Feature Definition
   feature:
   -

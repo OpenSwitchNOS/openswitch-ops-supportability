@@ -9,6 +9,7 @@
       - "show system"
       - "show interface mgmt"
       - "show interface dom"
+      - "show interface loopback"
       - "show vlan"
       - "show ntp status"
       - "show events"
@@ -209,7 +210,6 @@
       - "show ipv6 interface"
       - "show arp"
       - "show ipv6 neighbors"
-      - "show interface loopback"
       - "show ip ecmp"
 
 # Show Tech COPP Feature Definition

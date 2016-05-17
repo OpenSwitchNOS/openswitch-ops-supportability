@@ -209,7 +209,6 @@
       - "show ipv6 interface"
       - "show arp"
       - "show ipv6 neighbors"
-      - "show interface loopback"
       - "show ip ecmp"
 
 # Show Tech COPP Feature Definition
@@ -248,3 +247,11 @@
      - "show snmp system"
      - "show snmp trap"
      - "show snmpv3 users"
+
+# Show Tech LOOPBACK Feature Definition
+  feature:
+  -
+    feature_desc: "Loopback Interface"
+    feature_name: loopback
+    cli_cmds:
+      - "show interface loopback"

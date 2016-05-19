@@ -14,6 +14,7 @@
 #    under the License.
 #
 
+import pytest
 from opstestfw import testEnviron, LogOutput
 import re
 
@@ -452,6 +453,7 @@ def checkVlogConfigInvalidLogLevel(dut01Obj):
     return True
 
 
+@pytest.mark.skipif(True, reason="Disabling old tests")
 class Test_show_vlog:
 
     # Global variables

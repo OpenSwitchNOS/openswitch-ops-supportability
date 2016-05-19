@@ -14,6 +14,7 @@
 #    under the License.
 #
 
+import pytest
 import re
 from opstestfw import testEnviron, LogOutput
 
@@ -302,6 +303,7 @@ def evtlogfeature_cli(dut01):
             return False
 
 
+@pytest.mark.skipif(True, reason="Disabling old tests")
 class Test_ft_evtlog_feature:
     def setup_class(cls):
         # Create Topology object and connect to devices

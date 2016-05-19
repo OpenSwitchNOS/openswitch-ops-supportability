@@ -14,6 +14,7 @@
 #    under the License.
 #
 
+import pytest
 import uuid
 from opstestfw import testEnviron, LogOutput
 
@@ -1019,6 +1020,7 @@ def checkShowTechFeatureSourceIpSelection(dut01Obj):
         return True
 
 
+@pytest.mark.skipif(True, reason="Disabling old tests")
 class Test_showtech:
 
     def setup_class(cls):

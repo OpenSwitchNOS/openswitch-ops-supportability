@@ -14,6 +14,7 @@
 #    under the License.
 #
 
+import pytest
 from opstestfw import testEnviron, LogOutput
 
 topoDict = {"topoExecution": 120,
@@ -657,6 +658,7 @@ def checkCorruptedYamlFile(dut01Obj):
         return False
 
 
+@pytest.mark.skipif(True, reason="Disabling old tests")
 class Test_diag_dump:
 
     def setup_class(cls):

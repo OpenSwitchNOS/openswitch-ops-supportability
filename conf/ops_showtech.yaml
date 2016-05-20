@@ -204,7 +204,6 @@
       - "show ipv6 interface"
       - "show arp"
       - "show ipv6 neighbors"
-      - "show interface loopback"
       - "show ip ecmp"
 
 # Show Tech COPP Feature Definition
@@ -248,3 +247,11 @@
     cli_cmds:
       - "show ip source-interface"
       - "show ip source-interface tftp"
+
+# Show Tech LOOPBACK Feature Definition
+  feature:
+  -
+    feature_desc: "Loopback Interface"
+    feature_name: loopback
+    cli_cmds:
+      - "show interface loopback"

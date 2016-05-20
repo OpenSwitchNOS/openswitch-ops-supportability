@@ -86,6 +86,10 @@ categories:
   description: 'Events related to ZEBRA'
   category_rank: 21
 
+- event_category: DHCP-TFTP-SERVER
+  description: 'Events related to DHCP-TFTP Server'
+  category_rank: 22
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1490,3 +1494,83 @@ event_definitions:
   keys: err_desc, nlsock, errno
   event_description_template:
       '{nlsock} {err_desc} {errno}'
+
+- event_name: DHCP_LEASE_ADD
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22001
+  severity: LOG_INFO
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs DHCP lease addition'
+  event_description_template:
+    'DHCP Lease added {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DHCP_LEASE_DELETE
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22002
+  severity: LOG_INFO
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs DHCP lease deletion'
+  event_description_template:
+    'DHCP Lease deleted {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DHCP_LEASE_UPDATE
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22003
+  severity: LOG_INFO
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs DHCP lease updation'
+  event_description_template:
+    'DHCP Lease updated {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DHCP_LEASE_ADD_FAILED
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22004
+  severity: LOG_ERR
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs failure in DHCP lease addition'
+  event_description_template:
+    'DHCP Lease addition failed {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DHCP_LEASE_DELETE_FAILED
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22005
+  severity: LOG_ERR
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs failure in DHCP lease deletion'
+  event_description_template:
+    'DHCP Lease deletion failed {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DHCP_LEASE_UPDATE_FAILED
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22006
+  severity: LOG_ERR
+  keys: expiry_time, mac, ip, host, client_id
+  description:
+    'Logs failure in DHCP lease updation'
+  event_description_template:
+    'DHCP Lease update failed {expiry_time} {mac} {ip} {host} {client_id}'
+
+- event_name: DNSMASQ_SUCCESS
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22007
+  severity: LOG_INFO
+  keys: dnsmasq_command
+  description:
+    'Logs DNSMASQ successful restart'
+  event_description_template:
+    'DNSMASQ restarted successfully {dnsmasq_command}'
+
+- event_name: DNSMASQ_FAILURE
+  event_category: DHCP-TFTP-SERVER
+  event_ID : 22008
+  severity: LOG_ERR
+  keys: dnsmasq_command
+  description:
+    'Logs failure to restart DNSMASQ'
+  event_description_template:
+    'Failed to restart DNSMASQ {dnsmasq_command}'

@@ -99,3 +99,7 @@
     feature_desc: "Dynamic Host Configuration & Trivial File Transfer Protocol Server"
     daemon:
         - [name: "ops_dhcp_tftp", 'diag_dump': "y"]
+    feature_name: "interfaces"
+    feature_desc: "Physical interfaces"
+    daemon:
+        - [name: "ops-intfd", 'diag_dump': "y"]

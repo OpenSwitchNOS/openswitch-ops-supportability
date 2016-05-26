@@ -90,6 +90,11 @@
     daemon:
         - [name: "ops-switchd", 'diag_dump': "y"]
   -
+    feature_name: "hw-resource"
+    feature_desc: "Hardware resource"
+    daemon:
+        - [name: "ops-switchd", 'diag_dump': "y"]
+  -
     feature_name: "ops-aaautils"
     feature_desc: "AAA utils"
     daemon:

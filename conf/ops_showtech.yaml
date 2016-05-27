@@ -330,3 +330,30 @@
     feature_name: loopback
     cli_cmds:
       - "show interface loopback"
+
+# Show Tech AAA Feature Definition
+  feature:
+  -
+    feature_desc: "Authentication Authorization and Accounting"
+    feature_name: aaa
+    cli_cmds:
+      - "show aaa authentication"
+      - "show radius-server"
+
+# Show Tech VLAN Feature Definition
+  feature:
+  -
+    feature_desc: "Virtual Local Area Network"
+    feature_name: vlan
+    cli_cmds:
+      - "show vlan"
+      - "show vlan summary"
+      - "show vlan internal"
+
+# Show Tech ZTP Feature Definition
+  feature:
+  -
+    feature_desc: "Zero Touch Provisioning"
+    feature_name: ztp
+    cli_cmds:
+      - "show autoprovisioning"

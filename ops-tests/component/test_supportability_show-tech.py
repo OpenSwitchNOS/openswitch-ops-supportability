@@ -237,11 +237,10 @@ def check_show_tech_feature_unicast_routing(sw1):
                          'show ipv6 interface',
                          'show arp',
                          'show ipv6 neighbors',
-                         # 'show interface loopback',
                          'show ip ecmp']
 
     for command in expected_commands:
-        assert command in output
+        assert command in output, "Failed to run 'show tech ucast-routing"
 
 
 def test_showtech(topology, step):

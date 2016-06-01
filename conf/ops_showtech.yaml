@@ -202,14 +202,20 @@
     feature_desc: "Unicast Routing Information"
     feature_name: ucast-routing
     cli_cmds:
+      - "show ip interface"
       - "show ip route"
+      - "show arp"
+      - "show ipv6 interface"
+      - "show ipv6 neighbors"
       - "show ipv6 route"
       - "show rib"
-      - "show ip interface"
-      - "show ipv6 interface"
-      - "show arp"
-      - "show ipv6 neighbors"
       - "show ip ecmp"
+      - "show events category zebra"
+      - "show events category subinterface"
+      - "show events category lag"
+      - "show events category vlaninterface"
+      - "diag-dump l3interface basic"
+      - "diag-dump l3lag basic"
 
 # Show Tech COPP Feature Definition
   feature:

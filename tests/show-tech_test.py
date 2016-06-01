@@ -16,7 +16,6 @@
 
 import uuid
 from opstestfw import testEnviron, LogOutput
-from pytest import mark
 
 
 topoDict = {"topoExecution": 120,
@@ -926,15 +925,21 @@ def checkShowTechFeatureUnicastRouting(dut01Obj):
 
     # Verify if the expected cli commands for u-cast routing is seen in the
     # output buffer
-    expected_commands = ['show ip route',
+
+    expected_commands = ['show ip interface',
+                         'show ip route',
+                         'show arp',
+                         'show ipv6 interface',
+                         'show ipv6 neighbors',
                          'show ipv6 route',
                          'show rib',
-                         'show ip interface',
-                         'show ipv6 interface',
-                         'show arp',
-                         'show ipv6 neighbors',
-                         'show interface loopback',
-                         'show ip ecmp']
+                         'show ip ecmp',
+                         'show events category zebra',
+                         'show events category subinterface',
+                         'show events category lag',
+                         'show events category vlaninterface',
+                         'diag-dump l3interface basic',
+                         'diag-dump l3lag basic']
 
     finalReturnCode = returnDevInt['returnCode']
     overallBuffer.append(returnDevInt['buffer'])
@@ -1030,8 +1035,6 @@ class Test_showtech:
         global dut01Obj
         assert(TestShowTechFeatureVersion(dut01Obj))
 
-    @mark.skipif(True, reason="skipping ucast-routing test because loopback"
-                              "is added in new feature called loopback")
     def test_show_tech_feature_unicast_routing(self):
         global dut01Obj
         assert(checkShowTechFeatureUnicastRouting(dut01Obj))

@@ -80,7 +80,7 @@
     daemon:
         - [name: "ops-switchd", 'diag_dump': "y"]
   -
-    feature_name: "laginterface"
+    feature_name: "l3lag"
     feature_desc: "LAG interface"
     daemon:
         - [name: "ops-switchd", 'diag_dump': "y"]

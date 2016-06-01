@@ -1,0 +1,10 @@
+[device]
+domain:      hpe.com
+kingdom:     HPN-Aruba
+type:        HPN-Aruba Networking
+category:    HPN-Aruba Campus Core Switches
+subcategory: HPN-Aruba Campus Core Ethernet Switches
+bigseries:   HPN-Aruba Campus Core Switch Products
+series:      HPN-Aruba Campus Core Switch Series
+name:        HPN-Aruba Campus Core Switch
+#SKU/Model:  10000E

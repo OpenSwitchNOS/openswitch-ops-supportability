@@ -255,3 +255,11 @@
     feature_name: loopback
     cli_cmds:
       - "show interface loopback"
+
+# Show Tech SFLOW Feature Definition
+  feature:
+  -
+    feature_desc: "sFlow"
+    feature_name: sflow
+    cli_cmds:
+      - "show sflow"

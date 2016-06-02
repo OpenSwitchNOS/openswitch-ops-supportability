@@ -258,7 +258,7 @@ vtysh_set_ospf_debug(char* daemon, char **cmd_type, int cmd_argc,
     }
     else if (cmd_result != NULL)
     {
-        vty_out(vty, "%s", cmd_result);
+        vty_out(vty, "%s%s", cmd_result, VTY_NEWLINE);
     }
 
    /*
@@ -284,10 +284,10 @@ vtysh_set_ospf_debug(char* daemon, char **cmd_type, int cmd_argc,
 
 DEFUN (show_debugging_info,
        show_debugging_info_cmd,
-       "show debugging ospfv2",
+       "show debugging (ospfv2)",
        SHOW_STR
        SHOW_DBG_STR
-       OSPF_STR)
+       OSPFv2_STR)
 {
     int fun_argc = argc, flag = -1;
     int fd = -1;
@@ -351,7 +351,7 @@ ospf_debug(const char **argv, int argc, int flag)
     int rc = 0;
     struct feature* iter = feature_head;
     struct daemon* iter_daemon = NULL;
-    char *fun_argv[5];
+    char *fun_argv[argc];
 
     fun_argc = argc;
     if((argc < 2)||(argv == NULL)||(argc > 5))
@@ -417,9 +417,9 @@ ospf_debug(const char **argv, int argc, int flag)
 
 DEFUN (debug_ospf_packet,
        debug_ospf_packet_all_cmd,
-       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all)",
+       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -433,9 +433,9 @@ DEFUN (debug_ospf_packet,
 
 ALIAS (debug_ospf_packet,
        debug_ospf_packet_send_recv_cmd,
-       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
+       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -449,9 +449,9 @@ ALIAS (debug_ospf_packet,
 
 ALIAS (debug_ospf_packet,
        debug_ospf_packet_send_recv_detail_cmd,
-       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
+       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -465,10 +465,10 @@ ALIAS (debug_ospf_packet,
 
 DEFUN (no_debug_ospf_packet,
        no_debug_ospf_packet_all_cmd,
-       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all)",
+       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -482,10 +482,10 @@ DEFUN (no_debug_ospf_packet,
 
 ALIAS (no_debug_ospf_packet,
        no_debug_ospf_packet_send_recv_cmd,
-       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
+       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -499,10 +499,10 @@ ALIAS (no_debug_ospf_packet,
 
 ALIAS (no_debug_ospf_packet,
        no_debug_ospf_packet_send_recv_detail_cmd,
-       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
+       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -518,7 +518,7 @@ DEFUN (debug_ospf_ism,
        debug_ospf_ism_cmd,
        "debug (ospfv2) (ism)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_ISM)
 {
     return ospf_debug(argv, argc, 0);
@@ -526,9 +526,9 @@ DEFUN (debug_ospf_ism,
 
 ALIAS (debug_ospf_ism,
        debug_ospf_ism_sub_cmd,
-       "debug ospfv2 ism (status|events|timers)",
+       "debug (ospfv2) (ism) (status|events|timers)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_ISM
        OSPFv2_ISM_STAT_INFO
        OSPFv2_ISM_EVT_INFO
@@ -539,7 +539,7 @@ DEFUN (no_debug_ospf_ism,
        "no debug (ospfv2) (ism)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_ISM)
 {
     return ospf_debug(argv, argc, 2);
@@ -547,10 +547,10 @@ DEFUN (no_debug_ospf_ism,
 
 ALIAS (no_debug_ospf_ism,
        no_debug_ospf_ism_sub_cmd,
-       "no debug ospfv2 ism (status|events|timers)",
+       "no debug (ospfv2) (ism) (status|events|timers)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_ISM
        OSPFv2_ISM_STAT_INFO
        OSPFv2_ISM_EVT_INFO
@@ -558,9 +558,9 @@ ALIAS (no_debug_ospf_ism,
 
 DEFUN (debug_ospf_nsm,
        debug_ospf_nsm_cmd,
-       "debug ospfv2 nsm",
+       "debug (ospfv2) (nsm)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSM)
 {
     return ospf_debug(argv, argc, 0);
@@ -568,9 +568,9 @@ DEFUN (debug_ospf_nsm,
 
 ALIAS (debug_ospf_nsm,
        debug_ospf_nsm_sub_cmd,
-       "debug ospfv2 nsm (status|events|timers)",
+       "debug (ospfv2) (nsm) (status|events|timers)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSM
        OSPFv2_NSM_STAT_INFO
        OSPFv2_NSM_EVT_INFO
@@ -578,10 +578,10 @@ ALIAS (debug_ospf_nsm,
 
 DEFUN (no_debug_ospf_nsm,
        no_debug_ospf_nsm_cmd,
-       "no debug ospfv2 nsm",
+       "no debug (ospfv2) (nsm)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSM)
 {
     return ospf_debug(argv, argc, 2);
@@ -589,10 +589,10 @@ DEFUN (no_debug_ospf_nsm,
 
 ALIAS (no_debug_ospf_nsm,
        no_debug_ospf_nsm_sub_cmd,
-       "no debug ospfv2 nsm (status|events|timers)",
+       "no debug (ospfv2) (nsm) (status|events|timers)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSM
        OSPFv2_NSM_STAT_INFO
        OSPFv2_NSM_EVT_INFO
@@ -600,9 +600,9 @@ ALIAS (no_debug_ospf_nsm,
 
 DEFUN (debug_ospf_lsa,
        debug_ospf_lsa_cmd,
-       "debug ospfv2 lsa",
+       "debug (ospfv2) (lsa)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_LSA)
 {
     return ospf_debug(argv, argc, 0);
@@ -610,9 +610,9 @@ DEFUN (debug_ospf_lsa,
 
 ALIAS (debug_ospf_lsa,
        debug_ospf_lsa_sub_cmd,
-       "debug ospfv2 lsa (generate|flooding|install|refresh)",
+       "debug (ospfv2) (lsa) (generate|flooding|install|refresh)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_LSA
        OSPFv2_LSA_GEN
        OSPFv2_LSA_FLOOD
@@ -621,10 +621,10 @@ ALIAS (debug_ospf_lsa,
 
 DEFUN (no_debug_ospf_lsa,
        no_debug_ospf_lsa_cmd,
-       "no debug ospfv2 lsa",
+       "no debug (ospfv2) (lsa)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_LSA)
 {
     return ospf_debug(argv, argc, 2);
@@ -632,10 +632,10 @@ DEFUN (no_debug_ospf_lsa,
 
 ALIAS (no_debug_ospf_lsa,
        no_debug_ospf_lsa_sub_cmd,
-       "no debug ospfv2 lsa (generate|flooding|install|refresh)",
+       "no debug (ospfv2) (lsa) (generate|flooding|install|refresh)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_LSA
        OSPFv2_LSA_GEN
        OSPFv2_LSA_FLOOD
@@ -644,9 +644,9 @@ ALIAS (no_debug_ospf_lsa,
 
 DEFUN (debug_ospf_event,
        debug_ospf_event_cmd,
-       "debug ospfv2 event",
+       "debug (ospfv2) (event)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_EVT_INFO)
 {
     return ospf_debug(argv, argc, 0);
@@ -654,10 +654,10 @@ DEFUN (debug_ospf_event,
 
 DEFUN (no_debug_ospf_event,
        no_debug_ospf_event_cmd,
-       "no debug ospfv2 event",
+       "no debug (ospfv2) (event)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_EVT_INFO)
 {
     return ospf_debug(argv, argc, 2);
@@ -665,9 +665,9 @@ DEFUN (no_debug_ospf_event,
 
 DEFUN (debug_ospf_nssa,
        debug_ospf_nssa_cmd,
-       "debug ospfv2 nssa",
+       "debug (ospfv2) (nssa)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSSA_INFO)
 {
     return ospf_debug(argv, argc, 0);
@@ -675,10 +675,10 @@ DEFUN (debug_ospf_nssa,
 
 DEFUN (no_debug_ospf_nssa,
        no_debug_ospf_nssa_cmd,
-       "no debug ospfv2 nssa",
+       "no debug (ospfv2) (nssa)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_NSSA_INFO)
 {
     return ospf_debug(argv, argc, 2);
@@ -686,9 +686,9 @@ DEFUN (no_debug_ospf_nssa,
 
 DEFUN (debug_ospf_intf_redst,
        debug_ospf_intf_redst_cmd,
-       "debug ospfv2 (interface|redistribute)",
+       "debug (ospfv2) (interface|redistribute)",
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_INTF_INFO
        OSPFv2_REDIST_INFO)
 {
@@ -697,10 +697,10 @@ DEFUN (debug_ospf_intf_redst,
 
 DEFUN (no_debug_ospf_intf_redst,
        no_debug_ospf_intf_redst_cmd,
-       "no debug ospfv2 (interface|redistribute)",
+       "no debug (ospfv2) (interface|redistribute)",
        NO_STR
        DBG_STR
-       OSPF_STR
+       OSPFv2_STR
        OSPFv2_INTF_INFO
        OSPFv2_REDIST_INFO)
 {

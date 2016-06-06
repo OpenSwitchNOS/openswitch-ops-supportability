@@ -109,3 +109,8 @@
     feature_desc: "Physical interfaces"
     daemon:
         - [name: "ops-intfd", 'diag_dump': "y"]
+  -
+    feature_name: "zebra"
+    feature_desc: "Zebra Daemon"
+    daemon:
+        - [name: "ops-zebra", 'diag_dump': "y"]

@@ -35,8 +35,14 @@
 #ifndef __EVENTLOG_H_
 #define __EVENTLOG_H_
 
+#ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef FALSE
 #define FALSE 0
+#endif
+
 #define MESSAGE_OPS_EVT "50c0fa81c2a545ec982a54293f1b1945"
 #define MAX_CATEGORIES_PER_DAEMON 99
 #define KEY_VALUE_SIZE 128

@@ -90,6 +90,10 @@ categories:
   description: 'Events related to DHCP-TFTP Server'
   category_rank: 22
 
+- event_category: MSTP
+  description: 'Events related to multiple spanning-tree protocol'
+  category_rank: 23
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1574,3 +1578,163 @@ event_definitions:
     'Logs failure to restart DNSMASQ'
   event_description_template:
     'Failed to restart DNSMASQ {dnsmasq_command}'
+
+- event_name: MSTP_ENABLED
+  event_category: MSTP
+  event_ID : 23001
+  severity: LOG_INFO
+  keys: NA
+  description:
+    'This command enables the MSTP (Multiple Spanning-tree Protocol) feature in the device.'
+  event_description_template:
+    'MSTP Enabled'
+
+- event_name: MSTP_DISABLED
+  event_category: MSTP
+  event_ID : 23002
+  severity: LOG_INFO
+  keys: NA
+  description:
+    'This command disables the MSTP (Multiple Spanning-tree Protocol) feature in the device.'
+  event_description_template:
+    'MSTP Disabled'
+
+- event_name: MSTP_BAD_CONFIG
+  event_category: MSTP
+  event_ID : 23003
+  severity: LOG_WARN
+  keys: config_parameter, value
+  description:
+    'This log event informs the user that the MSTP config parameter is bad'
+  event_description_template:
+    '{config_parameter} should be {value}'
+
+- event_name: MSTP_BAD_BPDU
+  event_category: MSTP
+  event_ID : 23004
+  severity: LOG_WARN
+  keys: config_parameter, value
+  description:
+    'This log event informs the user that the Switch received a BPDU with a bad config'
+  event_description_template:
+    'BPDU has {config_parameter} from port {value}'
+
+- event_name: MSTP_BAD_DYNAMIC_REQ
+  event_category: MSTP
+  event_ID : 23005
+  severity: LOG_WARN
+  keys: reconfig_parameter
+  description:
+    'This log event informs the user that the MSTP reconfig parameter is bad'
+  event_description_template:
+    'Bad reconfiguration request: {reconfig_parameter}'
+
+- event_name: MSTP_NEW_ROOT
+  event_category: MSTP
+  event_ID : 23006
+  severity: LOG_INFO
+  keys: old_priority, old_mac, new_priority, new_mac
+  description:
+    'This log event informs the user that the MSTP root has changed'
+  event_description_template:
+    'Root changed from {old_priority}: {old_mac} to {new_priority}: {new_mac}'
+
+- event_name: MSTP_RX_STARVATION
+  event_category: MSTP
+  event_ID : 23007
+  severity: LOG_INFO
+  keys: proto, pkt_type, port, priority_mac
+  description:
+    'This log event informs the user that the Rx is starved in paticular port'
+  event_description_template:
+    '{proto} starved for {pkt_type} on port {port} from {priority_mac}'
+
+- event_name: MSTP_TO_INCONSISTENT
+  event_category: MSTP
+  event_ID : 23008
+  severity: LOG_INFO
+  keys: port, proto
+  description:
+    'This log event informs the user that the MSTP is in inconsistent state'
+  event_description_template:
+    'BPDU loss- port {port} moved to inconsistent state for {proto}'
+
+- event_name: MSTP_TC_RECV
+  event_category: MSTP
+  event_ID : 23009
+  severity: LOG_INFO
+  keys: port, proto, mac
+  description:
+    'This log event informs the user that the MSTP topology change is received'
+  event_description_template:
+    'Topology Change received on port {port} for {proto} from source: {mac}'
+
+- event_name: MSTP_TC_ORIGINATED
+  event_category: MSTP
+  event_ID : 23010
+  severity: LOG_INFO
+  keys: proto, port, state
+  description:
+    'This log event informs the user that the MSTP topology change is generated'
+  event_description_template:
+    '{proto} - Topology Change generated on port {port} going in to {state}'
+
+- event_name: MSTP_BPDU_RECVD_ON_EDGE_PORT
+  event_category: MSTP
+  event_ID : 23011
+  severity: LOG_INFO
+  keys: port
+  description:
+    'This log event informs the user that the BPDU received on admin edge port'
+  event_description_template:
+    'BPDU received on admin edge port {port}'
+
+- event_name: MSTP_CIST_PORT_BLOCK
+  event_category: MSTP
+  event_ID : 23012
+  severity: LOG_INFO
+  keys: port
+  description:
+    'This log event informs the user that the CIST port is blocked'
+  event_description_template:
+    'Port {port} blocked on CIST'
+
+- event_name: MSTP_CIST_PORT_UNBLOCK
+  event_category: MSTP
+  event_ID : 23013
+  severity: LOG_INFO
+  keys: port
+  description:
+    'This log event informs the user that the CIST port is unblocked'
+  event_description_template:
+    'Port {port} unblocked on CIST'
+
+- event_name: MSTP_MSTI_PORT_BLOCK
+  event_category: MSTP
+  event_ID : 23014
+  severity: LOG_INFO
+  keys: port, instance
+  description:
+    'This log event informs the user that the MSTI port is blocked'
+  event_description_template:
+    'Port {port} blocked on MST{instance}'
+
+- event_name: MSTP_MSTI_PORT_UNBLOCK
+  event_category: MSTP
+  event_ID : 23015
+  severity: LOG_INFO
+  keys: port, instance
+  description:
+    'This log event informs the user that the MSTI port is unblocked'
+  event_description_template:
+    'Port {port} unblocked on MST{instance}'
+
+- event_name: MSTP_NEW_ROOT_PORT
+  event_category: MSTP
+  event_ID : 23016
+  severity: LOG_INFO
+  keys: proto, old_port, new_port
+  description:
+    'This log event informs the user that the root port is changed'
+  event_description_template:
+    '{proto} Root Port changed from {old_port} to {new_port}'

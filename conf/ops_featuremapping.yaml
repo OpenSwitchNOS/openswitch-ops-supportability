@@ -26,7 +26,6 @@
     daemon:
         - [name: "ops-ospfd", 'diag_dump': "n"]
         - [name: "ops-bgpd", 'diag_dump': "n"]
-        - [name: "ops-zebra", 'diag_dump': "n"]
   -
     feature_name: "ospfv2"
     feature_desc: "Open Shortest Path First Version 2"
@@ -99,3 +98,8 @@
     feature_desc: "Dynamic Host Configuration & Trivial File Transfer Protocol Server"
     daemon:
         - [name: "ops_dhcp_tftp", 'diag_dump': "y"]
+  -
+    feature_name: "route-manager"
+    feature_desc: "Routing Information Base (RIB)/Route Manager"
+    daemon:
+        - [name: "ops-zebra", 'diag_dump': "y"]

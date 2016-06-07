@@ -31,7 +31,6 @@
     daemon:
         - [name: "ops-ospfd", 'diag_dump': "n"]
         - [name: "ops-bgpd", 'diag_dump': "n"]
-        - [name: "ops-zebra", 'diag_dump': "n"]
   -
     feature_name: "ospfv2"
     feature_desc: "Open Shortest Path First Version 2"
@@ -119,3 +118,8 @@
     feature_desc: "Physical interfaces"
     daemon:
         - [name: "ops-intfd", 'diag_dump': "y"]
+  -
+    feature_name: "route-manager"
+    feature_desc: "Routing Information Base (RIB)"
+    daemon:
+        - [name: "ops-zebra", 'diag_dump': "y"]

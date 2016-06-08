@@ -1669,9 +1669,20 @@ event_definitions:
   event_description_template:
     'BPDU loss- port {port} moved to inconsistent state for {proto}'
 
-- event_name: MSTP_TC_RECV
+- event_name: MSTP_OUT_INCONSISTENT
   event_category: MSTP
   event_ID : 23010
+  severity: LOG_INFO
+  keys: port, proto
+  description:
+    'This log event informs the user that the MSTP is out of inconsistent state'
+  event_description_template:
+    'Port {port} moved out of inconsistent state for {proto}'
+
+
+- event_name: MSTP_TC_RECV
+  event_category: MSTP
+  event_ID : 23011
   severity: LOG_INFO
   keys: port, proto, mac
   description:
@@ -1681,7 +1692,7 @@ event_definitions:
 
 - event_name: MSTP_TC_ORIGINATED
   event_category: MSTP
-  event_ID : 23011
+  event_ID : 23012
   severity: LOG_INFO
   keys: proto, port, state
   description:
@@ -1691,7 +1702,7 @@ event_definitions:
 
 - event_name: MSTP_BPDU_RECVD_ON_EDGE_PORT
   event_category: MSTP
-  event_ID : 23012
+  event_ID : 23013
   severity: LOG_INFO
   keys: port
   description:
@@ -1701,7 +1712,7 @@ event_definitions:
 
 - event_name: MSTP_CIST_PORT_BLOCK
   event_category: MSTP
-  event_ID : 23013
+  event_ID : 23014
   severity: LOG_INFO
   keys: port
   description:
@@ -1711,7 +1722,7 @@ event_definitions:
 
 - event_name: MSTP_CIST_PORT_UNBLOCK
   event_category: MSTP
-  event_ID : 23014
+  event_ID : 23015
   severity: LOG_INFO
   keys: port
   description:
@@ -1721,7 +1732,7 @@ event_definitions:
 
 - event_name: MSTP_MSTI_PORT_BLOCK
   event_category: MSTP
-  event_ID : 23015
+  event_ID : 23016
   severity: LOG_INFO
   keys: port, instance
   description:
@@ -1731,7 +1742,7 @@ event_definitions:
 
 - event_name: MSTP_MSTI_PORT_UNBLOCK
   event_category: MSTP
-  event_ID : 23016
+  event_ID : 23017
   severity: LOG_INFO
   keys: port, instance
   description:
@@ -1741,7 +1752,7 @@ event_definitions:
 
 - event_name: MSTP_NEW_ROOT_PORT
   event_category: MSTP
-  event_ID : 23017
+  event_ID : 23018
   severity: LOG_INFO
   keys: proto, old_port, new_port
   description:

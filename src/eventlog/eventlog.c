@@ -362,7 +362,10 @@ event_log_init(char *category_name)
         return -1;
     }
 
+    VLOG_INFO("Event Category Initialization called for %s", category_name);
+
     if(category_index > (MAX_CATEGORIES_PER_DAEMON)) {
+        VLOG_ERR("Category Index exceeded limit");
         return -1;
     }
     if(category_index) {
@@ -370,6 +373,7 @@ event_log_init(char *category_name)
          * was already done. If that is the case it will be present
          * in category table we maintain */
         if(event_category_search(category_name)) {
+            VLOG_ERR("No matching event category found %s", category_name);
             return -1;
         }
     }
@@ -379,6 +383,7 @@ event_log_init(char *category_name)
          */
         ret = create_event_table();
         if(ret < 0) {
+            VLOG_ERR("Event table creation failed");
             return -1;
         }
     }
@@ -391,6 +396,7 @@ event_log_init(char *category_name)
         asprintf(&category_table[category_index], "%s", category_name);
         category_index++;
     }
+    VLOG_DBG("Event log Initialization returning %d", ret);
     return ret;
 }
 

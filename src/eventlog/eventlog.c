@@ -362,7 +362,10 @@ event_log_init(char *category_name)
         return -1;
     }
 
+    VLOG_INFO("Event Category Initialization called for %s", category_name);
+
     if(category_index > (MAX_CATEGORIES_PER_DAEMON)) {
+        VLOG_ERR("Category Index exceeded limit");
         return -1;
     }
     if(category_index) {
@@ -370,6 +373,7 @@ event_log_init(char *category_name)
          * was already done. If that is the case it will be present
          * in category table we maintain */
         if(event_category_search(category_name)) {
+            VLOG_ERR("No matching event category found %s", category_name);
             return -1;
         }
     }
@@ -379,6 +383,7 @@ event_log_init(char *category_name)
          */
         ret = create_event_table();
         if(ret < 0) {
+            VLOG_ERR("Event table creation failed");
             return -1;
         }
     }
@@ -391,6 +396,7 @@ event_log_init(char *category_name)
         asprintf(&category_table[category_index], "%s", category_name);
         category_index++;
     }
+    VLOG_DBG("Event log Initialization returning %d", ret);
     return ret;
 }
 
@@ -407,6 +413,9 @@ char
     unsigned size_str2 = 0;
     char str[KEY_VALUE_SIZE] = {0,};
     char str2[KEY_VALUE_SIZE] = {0,};
+    if(s1 == NULL) {
+        return NULL;
+    }
     /* This memory is freed in log_event():line 622 */
     char *kv_pair = (char*)malloc(KEY_VALUE_SIZE);
     if(kv_pair == NULL) {
@@ -420,9 +429,7 @@ char
         str[size]='\0';
     }
     else {
-        va_end(arg);
-        free(kv_pair);
-        return NULL;
+        goto CLEANUP;
     }
     size = strlen(str);
     /* Add "=" to make "key=value" string */
@@ -430,20 +437,22 @@ char
         tmp = strncat(str, "=",1);
     }
     else {
-        va_end(arg);
-        free(kv_pair);
-        return NULL;
+        goto CLEANUP;
     }
     s1 = va_arg(arg, char*);
+    if(s1 == NULL) {
+        goto CLEANUP;
+    }
     vsnprintf(str2, KEY_VALUE_SIZE, s1, arg);
+    if(str2 == NULL) {
+        goto CLEANUP;
+    }
     size_str2 = strlen(str2);
     if( (size_str2 > 0) && (size_str2 < (KEY_VALUE_SIZE - (size+2)) ) ) {
         strncat(tmp, str2, size_str2);
     }
     else {
-        va_end(arg);
-        free(kv_pair);
-        return NULL;
+        goto CLEANUP;
     }
     size = strlen(tmp);
     if((size > 0) && (size < KEY_VALUE_SIZE)) {
@@ -451,6 +460,11 @@ char
     }
     va_end(arg);
     return kv_pair;
+
+CLEANUP:
+    va_end(arg);
+    free(kv_pair);
+    return NULL;
 }
 
 /* make_key_format
@@ -663,6 +677,7 @@ log_event(char *ev_name,...)
         if(ret != 0) {
             VLOG_ERR("sd_journal_send failed with %d", ret);
         }
+        va_end(arg);
         return -1;
     }
     str_size = strlen(ev_table[index].event_description);
@@ -705,12 +720,15 @@ log_event(char *ev_name,...)
             ev_table[index].event_id, ev_table[index].severity, evt_msg);
     if(ret < 0) {
         VLOG_ERR("Failed to allocate memory");
+        va_end(arg);
         return -1;
     }
     /* Convert severity string to corresponding severity value */
     level = severity_level(ev_table[index].severity);
     if(level < 0) {
         VLOG_ERR("Incorrect severity level");
+        free(message);
+        va_end(arg);
         return -1;
     }
     if(key_value_none) {
@@ -731,5 +749,6 @@ log_event(char *ev_name,...)
         VLOG_ERR("sd_journal_send failed with %d", ret);
     }
     free(message);
+    va_end(arg);
     return ret;
 }

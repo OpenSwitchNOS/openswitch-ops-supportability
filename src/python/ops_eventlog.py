@@ -17,7 +17,7 @@
 from systemd import journal
 import yaml
 import ovs.vlog
-
+import sys
 content = []
 category = []
 
@@ -104,12 +104,17 @@ def log_event(name, *arg):
             if len(arg):
                 desc = replace_str(arg, desc)
             found = 1
-            break;
+            break
     if found is NOT_FOUND:
 # This means supplied event name is not there in YAML, so return.
         vlog.err("Event not Found")
         return FAIL
     mesg = 'ops-evt|' + ev_id + '|' + severity + '|' + desc
+    daemon_name = str(sys.argv[0])
+    if "/" in daemon_name:
+        daemon_name = daemon_name.split("/")[-1]
+
     journal.send(
         mesg, MESSAGE_ID='50c0fa81c2a545ec982a54293f1b1945', PRIORITY=severity,
-        OPS_EVENT_ID=ev_id, OPS_EVENT_CATEGORY=categ)
+        OPS_EVENT_ID=ev_id,
+        OPS_EVENT_CATEGORY=categ, SYSLOG_IDENTIFIER=daemon_name)

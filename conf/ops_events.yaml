@@ -94,6 +94,11 @@ categories:
   description: 'Events related to multiple spanning-tree protocol'
   category_rank: 23
 
+- event_category: VLAN
+  description: 'Events related to Virtual Local Area Network'
+  category_rank: 24
+
+event_definitions:
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1759,3 +1764,63 @@ event_definitions:
     'This log event informs the user that the root port is changed'
   event_description_template:
     '{proto} Root Port changed from {old_port} to {new_port}'
+
+- event_name: HW_CREATE_VLAN_SUCCESS
+  event_category: VLAN
+  event_ID : 24001
+  severity: LOG_INFO
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is created in Hardware'
+  event_description_template:
+    'VLAN {vid} created in hardware'
+
+- event_name: HW_CREATE_VLAN_FAILURE
+  event_category: VLAN
+  event_ID : 24002
+  severity: LOG_ERR
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is not created in Hardware'
+  event_description_template:
+    'Failed to create VLAN {vid} in Hardware'
+
+- event_name: HW_DESTROY_VLAN_SUCCESS
+  event_category: VLAN
+  event_ID : 24003
+  severity: LOG_INFO
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is removed from Hardware'
+  event_description_template:
+    'VLAN {vid} removed from hardware'
+
+- event_name: HW_DESTROY_VLAN_FAILURE
+  event_category: VLAN
+  event_ID : 24004
+  severity: LOG_ERR
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is not removed from Hardware'
+  event_description_template:
+    'Failed to remove VLAN {vid} from hardware'
+
+- event_name: ALLOCATE_INTERNAL_VLAN
+  event_category: VLAN
+  event_ID : 24005
+  severity: LOG_INFO
+  keys: vid, port
+  description:
+    'This log event informs that internal VLAN is allocated to port'
+  event_description_template:
+    'Internal VLAN {vid} is allocated to port {port}'
+
+- event_name: ALLOCATE_INTERNAL_VLAN_ERR
+  event_category: VLAN
+  event_ID : 24006
+  severity: LOG_ERR
+  keys: port
+  description:
+    'This log event informs that internal VLAN is not allocated'
+  event_description_template:
+    'Failed to allocate internal VLAN to port ${port}'

@@ -90,6 +90,10 @@ categories:
   description: 'Events related to DHCP-TFTP Server'
   category_rank: 22
 
+- event_category: VLAN
+  description: 'Events related to Virtual Local Area Network'
+  category_rank: 23
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1584,3 +1588,63 @@ event_definitions:
     'Logs failure to restart DNSMASQ'
   event_description_template:
     'Failed to restart DNSMASQ {dnsmasq_command}'
+
+- event_name: HW_CREATE_VLAN_SUCCESS
+  event_category: VLAN
+  event_ID : 23001
+  severity: LOG_INFO
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is created in Hardware'
+  event_description_template:
+    'VLAN {vid} created in hardware'
+
+- event_name: HW_CREATE_VLAN_FAILURE
+  event_category: VLAN
+  event_ID : 23002
+  severity: LOG_ERR
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is not created in Hardware'
+  event_description_template:
+    'Failed to create VLAN {vid} in Hardware'
+
+- event_name: HW_DESTROY_VLAN_SUCCESS
+  event_category: VLAN
+  event_ID : 23003
+  severity: LOG_INFO
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is removed from Hardware'
+  event_description_template:
+    'VLAN {vid} removed from hardware'
+
+- event_name: HW_DESTROY_VLAN_FAILURE
+  event_category: VLAN
+  event_ID : 23004
+  severity: LOG_ERR
+  keys: vid
+  description:
+    'This log event informs the user that VLAN is not removed from Hardware'
+  event_description_template:
+    'Failed to remove VLAN {vid} from hardware'
+
+- event_name: ALLOCATE_INTERNAL_VLAN
+  event_category: VLAN
+  event_ID : 23005
+  severity: LOG_INFO
+  keys: vid, port
+  description:
+    'This log event informs that internal VLAN is allocated to port'
+  event_description_template:
+    'Internal VLAN {vid} is allocated to port {port}'
+
+- event_name: ALLOCATE_INTERNAL_VLAN_ERR
+  event_category: VLAN
+  event_ID : 23006
+  severity: LOG_ERR
+  keys: vid
+  description:
+    'This log event informs that internal VLAN is not allocated'
+  event_description_template:
+    'Failed to allocate internal VLAN {vid}'

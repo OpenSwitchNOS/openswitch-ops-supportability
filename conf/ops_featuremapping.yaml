@@ -119,3 +119,9 @@
     feature_desc: "Physical interfaces"
     daemon:
         - [name: "ops-intfd", 'diag_dump': "y"]
+  -
+    feature_name: "l2vlan"
+    feature_desc: "Layer2 VLAN"
+    daemon:
+        - [name: "ops-vland", 'diag_dump': "y"]
+        - [name: "ops-switchd", 'diag_dump': "y"]

@@ -234,7 +234,7 @@ syslog_remote_get_config(const char* remote_host,
                 else
                 {
                     /* Compare with default severity */
-                    if(strcmp_with_nullcheck("debug",severity))
+                    if(strcmp_with_nullcheck("info",severity))
                     {
                         continue;
                     }
@@ -244,7 +244,7 @@ syslog_remote_get_config(const char* remote_host,
             {
                 if( (row !=NULL) && row->severity != NULL)
                 {
-                    if(strcmp_with_nullcheck(row->severity,"debug"))
+                    if(strcmp_with_nullcheck(row->severity,"info"))
                     {
                         continue;
                     }

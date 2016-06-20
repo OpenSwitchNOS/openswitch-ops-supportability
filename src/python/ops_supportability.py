@@ -101,7 +101,7 @@ seqno = 0
 syslog_transport = ''
 syslog_remote = ''
 syslog_port_number = 0
-syslog_severity = 'debug'
+syslog_severity = 'info'
 
 
 def is_ipv6(address):
@@ -329,7 +329,7 @@ def supportability_reconfigure():
         if syslog_row is not None:
             # Set Default Severity
             if len(syslog_row.severity) == 0:
-                syslog_severity = "debug"
+                syslog_severity = "info"
             else:
                 syslog_severity = syslog_row.severity[0]
 

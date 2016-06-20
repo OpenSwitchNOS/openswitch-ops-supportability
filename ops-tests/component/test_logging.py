@@ -89,7 +89,7 @@ def test_logging_default(topology):
 
     # Send configuration for syslog
     _syslog_conf_no_conf(switch=sw1,
-                         cmp_str='*.debug @10.0.0.8:514',
+                         cmp_str='*.info @10.0.0.8:514',
                          rmt_host='10.0.0.8'
                          )
 
@@ -121,7 +121,7 @@ def test_logging_transport(topology):
 
     # Send configuration for syslog
     _syslog_conf_no_conf(switch=sw1,
-                         cmp_str='*.debug @@10.0.0.10:10942',
+                         cmp_str='*.info @@10.0.0.10:10942',
                          rmt_host='10.0.0.10',
                          trnsprt=' tcp 10942 ')
 

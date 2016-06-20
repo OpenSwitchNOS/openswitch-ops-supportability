@@ -1643,8 +1643,8 @@ event_definitions:
   event_category: VLAN
   event_ID : 23006
   severity: LOG_ERR
-  keys: vid
+  keys: port
   description:
     'This log event informs that internal VLAN is not allocated'
   event_description_template:
-    'Failed to allocate internal VLAN {vid}'
+    'Failed to allocate internal VLAN to port {port}'

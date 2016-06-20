@@ -42,7 +42,7 @@
 "Specify TCP port of remote syslog server(Default:1470)\n"
 #define SEVERITY_STR \
 "Forward syslog messages of specified severity and above"\
-"(Default:debug)\n"
+"(Default:info)\n"
 #define DEBUG_SVR_STR \
 "Forward syslog messages of severity 'debug(0)' and above(Default)\n"
 #define INFO_STR \

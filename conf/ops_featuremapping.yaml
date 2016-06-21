@@ -119,3 +119,8 @@
     feature_desc: "Physical interfaces"
     daemon:
         - [name: "ops-intfd", 'diag_dump': "y"]
+  -
+    feature_name: "passwdsrv"
+    feature_desc: "Password server"
+    daemon:
+        - [name: "ops-passwd-srv", 'diag_dump': "n"]

@@ -30,6 +30,8 @@ once the issues are fixed.
 from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 from time import sleep
+from os import path
+import pytest
 # from .helpers import wait_until_interface_up
 # from ipdb import set_trace
 
@@ -140,8 +142,8 @@ def _remote_syslog_test(remotes_config):
     """
     Helper function to perform test based on configuration provided
     """
-    script_loc = "../../../code_under_test/ops-supportability"
-    # script_loc = "../../../test"
+    # Work with the current directory
+    script_loc = path.dirname(path.abspath(__file__))
     global host_config_status
     for conn in remotes_config:
 
@@ -196,6 +198,7 @@ def _remote_syslog_test(remotes_config):
             return True
 
 
+@pytest.mark.timeout(1200)
 def test_udp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different udp syslog
@@ -282,6 +285,7 @@ def test_udp_connection(topology):
         assert False
 
 
+@pytest.mark.timeout(1200)
 def test_tcp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different tcp syslog
@@ -370,6 +374,7 @@ def test_tcp_connection(topology):
         assert False
 
 
+@pytest.mark.timeout(1200)
 def test_tcp_udp_combination(topology):
     """
     Verifies syslog messages transmission to 4 different syslog with

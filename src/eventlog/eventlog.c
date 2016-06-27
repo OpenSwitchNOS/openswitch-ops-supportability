@@ -33,13 +33,141 @@
 #include <systemd/sd-journal.h>
 #include <yaml.h>
 #include "openvswitch/vlog.h"
+#include <sys/time.h>       /* for setitimer */
+#include <signal.h>			/* for signal */
 
 VLOG_DEFINE_THIS_MODULE(eventlog);
 
 static event *ev_table = NULL;
 static char *category_table[MAX_CATEGORIES_PER_DAEMON];
 static int category_index = 0;
+static throttleEvent throttle_event[MAX_THROTTLE_TABLE_SIZE];
+static int init_flag = TRUE;
 
+/* Function       : timer_callback
+* Responsibility  : at the time of timer expiry initialize the throttle_event
+* Return          : nothing
+*/
+void
+timer_callback()
+{
+	unsigned int index = 0;
+    while (index < MAX_EVENT_TABLE_SIZE)
+    {
+        if( (throttled == TRUE) && index < MAX_THROTTLE_TABLE_SIZE)
+        {
+            if (throttle_event[index].counter < 0)
+	        {
+/*
+ *            Send info to Journal by Error Messgae ?? HOW ??
+ *            VLOG_ERR(" ### FOR throttle_event[index].event_id =
+ *            %d",throttle_event[index].event_id);
+ *
+ *            VLOG_ERR(" ### throttle_event[index].counter =
+ *            %d",throttle_event[index].counter);
+*/
+                VLOG_ERR(" ### FOR throttle_event[index].event_id =%d",
+                        throttle_event[index].event_id);
+                VLOG_ERR(" ### throttle_event[index].counter =%d",
+                        throttle_event[index].counter);
+            }
+         }
+         /* reset the counter for of Event_Table */
+         if (ev_table[index].event_id > 0)
+         {
+             ev_table[index].counter = MAX_HASHED_ENTRY_COUNTER;
+         }
+	  index++;
+    }
+    memset(&throttle_event, 0 , sizeof(throttle_event));
+    throttled = FALSE;
+}
+
+
+/* Function       : hashed_key_value
+* Responsibility  : generate the hashed key value for given string-msg,
+					This is Standard Algo -  K&R (1st ed) Algorith
+* Return          : return a long integer hashed key value
+*/
+unsigned long
+hashed_key_value(const char *msg)
+{
+	unsigned long hashed_value = 31;
+	unsigned int char_value =	0 ;
+	while ((char_value = *msg++))
+		hashed_value = hashed_value + char_value;
+	return hashed_value;
+}
+
+/* Function       : access_hash_table
+* Responsibility  : update entry in Hash_table and entry present already then
+					reduce the counter till MX_HASHED_ENTRY_COUNTER
+					and not throttle till that value.
+                    for Collision detection "Linear Probing" applied.
+* Return          : return TRUE  - Do not throttle event
+					return FALSE - thottle event
+*/
+unsigned int
+access_hash_table (unsigned long hashed_value, unsigned int hash_index,
+				   int event_id, int counter)
+{
+	if (throttle_event[hash_index].entry_flag == FALSE)
+	{
+		throttle_event[hash_index].entry_flag	= TRUE;
+		throttle_event[hash_index].hashed_value = hashed_value;
+		throttle_event[hash_index].event_id		= event_id;
+		throttle_event[hash_index].counter		= counter;
+		return TRUE;
+	}
+	else
+	{
+        /* Collision observed Linear Probing Applied*/
+        unsigned int loop_index = hash_index;
+        while ( throttle_event[loop_index].entry_flag == TRUE )
+		{
+            if (loop_index == MAX_THROTTLE_TABLE_SIZE )
+			{
+				loop_index = 0 ;
+			}
+            if (throttle_event[loop_index].hashed_value == hashed_value)
+            {
+			/* redcue the counter for hash_index and hashed_value */
+                --throttle_event[loop_index].counter;
+                if (throttle_event[loop_index].counter < 0)
+                {
+                    throttled = TRUE;
+                    return FALSE ;
+                }
+                else
+                {
+                    return TRUE ;
+                }
+            }
+            loop_index++;
+            if (loop_index == MAX_THROTTLE_TABLE_SIZE )
+            {
+                loop_index = 0 ;
+            }
+            if (loop_index == hash_index)
+            {
+                /* hash Table is full can;t accpet any new guest
+                 *  NEED suggestion to handle it. */
+                throttled = TRUE;
+                return FALSE ;
+            }
+        }
+		/* while loop expiry means empty entry in Hash Table found*/
+        if (throttle_event[loop_index].entry_flag == FALSE)
+        {
+            throttle_event[loop_index].entry_flag	= TRUE;
+            throttle_event[loop_index].hashed_value = hashed_value;
+            throttle_event[loop_index].event_id		= event_id;
+            throttle_event[loop_index].counter		= counter;
+            return TRUE;
+        }
+	} /* else */
+	return TRUE ;
+}
 
 /* Function        : strcmp_with_nullcheck
 * Responsibility  : Ensure arguments are not null before calling strcmp
@@ -86,6 +214,7 @@ assign_parsed_values(char *key, int *val, int *fnd, int *index)
 {
     int tmp = *index;
     int size = 0;
+    ev_table[tmp].counter = MAX_HASHED_ENTRY_COUNTER;
     switch(*val) {
 
         case 1:
@@ -397,6 +526,33 @@ event_log_init(char *category_name)
         category_index++;
     }
     VLOG_DBG("Event log Initialization returning %d", ret);
+
+    /* Timer Started */
+	if (init_flag == TRUE)
+    {
+        throttled = FALSE;
+        init_flag = FALSE;
+
+        /* Initialise structure "throttle_event" */
+		memset(&throttle_event, 0 , sizeof(throttle_event));
+
+		struct itimerval it_val;
+
+		if (signal(SIGALRM, (void (*)(int)) timer_callback) == SIG_ERR)
+        {
+			VLOG_ERR("Unable to catch SIGALRM");
+			return -1;
+		}
+		it_val.it_value.tv_sec  =  INTERVAL/1000;
+		it_val.it_value.tv_usec =  (INTERVAL*1000) % 1000000;
+		it_val.it_interval      =  it_val.it_value;
+
+		if (setitimer(ITIMER_REAL, &it_val, NULL) == -1)
+        {
+			VLOG_ERR("error calling setitimer()");
+			return -1;
+		}
+	}
     return ret;
 }
 
@@ -751,4 +907,140 @@ log_event(char *ev_name,...)
     free(message);
     va_end(arg);
     return ret;
+}
+
+/* log_event_throttle
+ * API for throttle logging event logs, in case lot's of events are logging
+ * this need the counter value, how many event-log you can accpet for logging
+ * after a permitted range of MAX_HASHED_ENTRY_COUNTER
+ * Returns -1 on failure & 0 on success
+ */
+int
+log_event_throttle(int counter, char *ev_name,...)
+{
+    int i = 0, index = 0, key_nums = 0, key_value_none = 0;
+    int ret = 0, str_size = 0;
+    va_list arg;
+    char key_value_pair[KEY_VALUE_SIZE] = {0,};
+    char all_key_value_pairs[(2*KEY_VALUE_SIZE)] = {0,};
+    char *tmp = NULL;
+    char *message = NULL;
+    char evt_msg[MAX_LOG_STR] = {0,};
+    int level = 0;
+    unsigned int throttle_flag = FALSE;
+    unsigned long hashed_value = 0;
+    unsigned int hash_index = 0;
+    if(ev_name == NULL) {
+        return -1;
+    }
+    va_start(arg, ev_name);
+    /* Search for the event in event table
+     * Fetch it's index */
+    index = event_search(ev_name);
+    if((index == (MAX_EVENT_TABLE_SIZE-1)) || (index < 0))
+    {
+        ret = sd_journal_send("ops-evt|Unknown Event Name %s", ev_name,
+                "MESSAGE_ID=%s", MESSAGE_OPS_EVT,
+                NULL);
+        if(ret != 0) {
+            VLOG_ERR("sd_journal_send failed with %d", ret);
+        }
+        va_end(arg);
+        return -1;
+    }
+    str_size = strlen(ev_table[index].event_description);
+    if(str_size < MAX_LOG_STR) {
+        strncpy(evt_msg, ev_table[index].event_description, (str_size+1));
+    }
+    /* Get the number of key's in the event */
+    key_nums = ev_table[index].num_of_keys;
+    while(i < key_nums)
+    {
+        tmp = va_arg(arg, char*);
+        if(tmp == NULL)
+        {
+            /* this means we don't have key-value pair at all!
+             * so let's break & call journal API with just message.
+             */
+            key_value_none = 1;
+            break;
+        }
+        str_size = strlen(tmp);
+        if(str_size < KEY_VALUE_SIZE) {
+            strncpy(key_value_pair, tmp, (str_size+1));
+        }
+        /* Populate the key with the value in message */
+        ret = populate_str(evt_msg, key_value_pair);
+        if(ret < 0) {
+            VLOG_ERR("Failure at populate_str()");
+            return -1;
+        }
+        /* Make all the key-value pair's in the form of
+         * key1=value1,key2=value,... format to pass to
+         * journal API */
+        strcat(key_value_pair, ",");
+        strncat(all_key_value_pairs, key_value_pair,
+        (sizeof(all_key_value_pairs)-strlen(all_key_value_pairs)-1));
+        i++;
+        free(tmp);
+    }
+    ret = asprintf(&message, "MESSAGE=ops-evt|%d|%s|%s",
+            ev_table[index].event_id, ev_table[index].severity, evt_msg);
+    if(ret < 0) {
+        VLOG_ERR("Failed to allocate memory");
+        va_end(arg);
+        return -1;
+    }
+	/* Throttling Logic Starts */
+
+    ev_table[index].counter = ev_table[index].counter - 1;
+	if (ev_table[index].counter < 0)
+	{
+	/* Permitted range over */
+        hashed_value = hashed_key_value(message);
+        hash_index  = hashed_value % MAX_THROTTLE_TABLE_SIZE;
+
+		throttle_flag = access_hash_table (hashed_value,
+										   hash_index,
+										   ev_table[index].event_id,
+										   counter );
+	}
+
+	if ( (ev_table[index].counter >= 0) || (throttle_flag == TRUE) )
+	{
+	/* follow the normal path */
+    /* Convert severity string to corresponding severity value */
+        level = severity_level(ev_table[index].severity);
+        if(level < 0) {
+            VLOG_ERR("Incorrect severity level");
+            free(message);
+            va_end(arg);
+            return -1;
+        }
+        if(key_value_none) {
+            ret = sd_journal_send(message, "PRIORITY=%d", level,
+                    "MESSAGE_ID=%s", MESSAGE_OPS_EVT,"OPS_EVENT_ID=%d",
+                    ev_table[index].event_id,"OPS_EVENT_CATEGORY=%s",
+                    ev_table[index].category, NULL);
+        }
+        else {
+            ret = sd_journal_send(message, "PRIORITY=%d", level,
+                   "MESSAGE_ID=%s", MESSAGE_OPS_EVT,"OPS_EVENT_ID=%d",
+                    ev_table[index].event_id, "OPS_EVENT_CATEGORY=%s",
+                    ev_table[index].category,
+                    all_key_value_pairs,
+                    NULL);
+        }
+        if(ret != 0) {
+            VLOG_ERR("sd_journal_send failed with %d", ret);
+        }
+        free(message);
+        va_end(arg);
+        return ret;
+	}
+	else
+	{
+	    /* handling thing because event_has been throttled */
+        return -1;
+	}
 }

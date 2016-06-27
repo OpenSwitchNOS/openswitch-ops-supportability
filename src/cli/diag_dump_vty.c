@@ -47,6 +47,7 @@ VLOG_DEFINE_THIS_MODULE(vtysh_diag);
 struct jsonrpc *client=NULL;
 struct vty *gVty = NULL;
 
+
 static int
 vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         int cmd_argc , struct vty *vty , int fd );
@@ -135,6 +136,8 @@ unsigned dd_alarm(unsigned seconds)
  */
 void diagdump_thread_cleanup_handler(void *arg )
 {
+   /* cli cleanup function for interrupt */
+   reset_page_break_on_interrupt();
    jsonrpc_close(client);
    client = NULL;
    dd_mutex_unlock( &gDiagDumpCleanupMutex );
@@ -265,7 +268,7 @@ vtysh_diag_dump_create_thread(char* daemon , char **cmd_type ,
             dd_mutex_unlock( &gDiagDumpCleanupMutex );
 
             vty_out(vty,"%s%s",CLI_STR_HYPHEN,VTY_NEWLINE);
-            vty_out(vty,"Daemon %s terminated due to user interrupt CTRL+ C %s",
+            vty_out(vty,"Daemon %s terminated due to user interrupt %s",
                 daemon,VTY_NEWLINE);
             vty_out(vty,"%s%s",CLI_STR_HYPHEN,VTY_NEWLINE);
                 gDiagDumpThreadCancelled = TRUE;
@@ -283,6 +286,7 @@ vtysh_diag_dump_create_thread(char* daemon , char **cmd_type ,
     }
     return 0;
 }
+
 /* Function       : diagdump_user_interrupt_handler
  * Resposibility  : ctrl c handler for diagDump
  * Return         : NULL
@@ -292,9 +296,9 @@ void diagdump_user_interrupt_handler(int signum)
     dd_mutex_lock( &gDiagDumpwaitMutex );
     pthread_cond_signal( &gDiagDumpWaitCond );
     dd_mutex_unlock( &gDiagDumpwaitMutex );
-
     gDiagDumpUserInterruptAlarm = FALSE;
 }
+
 /* Function       : diagdump_signal_handler
  * Resposibility  : signal handler for diagdump
  * Return         : NULL
@@ -314,6 +318,18 @@ diagdump_signal_handler(int sig, siginfo_t *siginfo, void *context)
     }
 }
 
+/* Function       : diagdump_zsignal_handler
+ * Resposibility  : signal handler for diagdump
+ * Return         : NULL
+ */
+void
+diagdump_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+    gDiagDumpUserInterrupt = TRUE ;
+    dd_mutex_lock( &gDiagDumpwaitMutex );
+    pthread_cond_signal( &gDiagDumpWaitCond );
+    dd_mutex_unlock( &gDiagDumpwaitMutex );
+}
 
 /*
  * Function       : vtysh_diag_read_pid_file
@@ -574,8 +590,8 @@ DEFUN (vtysh_diag_dump_show,
     char time_str[MAX_TIME_STR_LEN]={0};
     char write_buff[MAX_STR_BUFF_LEN]={0};
     char err_buf[MAX_STR_BUFF_LEN] = {0};
-    struct sigaction oldSignalHandler,newSignalHandler,
-                oldAlarmHandler,newAlarmHandler;
+    struct sigaction oldSignalHandler,newSignalHandler,oldZSignalHandler,
+                oldAlarmHandler,newAlarmHandler,newZSignalHandler;
     int return_val = CMD_SUCCESS;
     struct feature* feature_head = NULL;
 
@@ -588,11 +604,16 @@ DEFUN (vtysh_diag_dump_show,
     /*change the signal handler */
     memset (&oldSignalHandler, '\0', sizeof(oldSignalHandler));
     memset (&newSignalHandler, '\0', sizeof(newSignalHandler));
+    memset (&oldZSignalHandler, '\0', sizeof(oldZSignalHandler));
+    memset (&newZSignalHandler, '\0', sizeof(newZSignalHandler));
     memset (&oldAlarmHandler, '\0', sizeof(oldAlarmHandler));
     memset (&newAlarmHandler, '\0', sizeof(newAlarmHandler));
 
     newSignalHandler.sa_sigaction = diagdump_signal_handler;
     newSignalHandler.sa_flags = SA_SIGINFO;
+
+    newZSignalHandler.sa_sigaction = diagdump_Zsignal_handler;
+    newZSignalHandler.sa_flags = SA_SIGINFO;
 
     newAlarmHandler.sa_handler =  diagdump_user_interrupt_handler ;
 
@@ -614,8 +635,24 @@ DEFUN (vtysh_diag_dump_show,
       }
       return CMD_WARNING;
     }
-
-
+    if(sigaction(SIGTSTP, &newZSignalHandler, &oldZSignalHandler) != 0)
+    {
+      VLOG_ERR("Failed to change Ctrl Z handler");
+      vty_out(vty, "diag dump init failed %s" ,VTY_NEWLINE);
+      if(sigaction(SIGINT, &oldSignalHandler, NULL) != 0)
+      {
+         VLOG_ERR("Failed to change signal handler to old state");
+         exit(0); //should never hit this place
+         /* we changed the CLI behavior */
+      }
+      if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
+      {
+        VLOG_ERR("Failed to change Alarm handler to old state");
+        exit(0); //should never hit this place
+        /* we changed the CLI behavior */
+      }
+      return CMD_WARNING;
+    }
     fun_argv[1] = (char *)  argv[0];
     fun_argv[0] = DIAG_BASIC;
 
@@ -806,6 +843,12 @@ DEFUN (vtysh_diag_dump_show,
       VLOG_ERR("Failed to change signal handler to old state");
       exit(0); //should never hit this place
       /* we changed the CLI behavior */
+    }
+    if(sigaction(SIGTSTP, &oldZSignalHandler, NULL) != 0)
+    {
+        VLOG_ERR("Failed to change ctrl-z signal handler to old state");
+        exit(0); /* should never hit this place */
+        /* we changed the CLI behavior */
     }
     if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
     {

@@ -93,4 +93,8 @@ typedef struct
 
 int strcmp_with_nullcheck( const char * str1, const char * str2 );
 
+/* cli interrupt function */
+extern void reset_page_break_on_interrupt();
+
+
 #endif /* __DIAG_DUMP_VTY_H */

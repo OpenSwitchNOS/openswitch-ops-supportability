@@ -48,7 +48,9 @@
 #define EVENT_YAML_FILE "/etc/openswitch/supportability/ops_events.yaml"
 #define MAX_SEV_LEVELS 8
 #define EV_KV(...) key_value_string(__VA_ARGS__)
-
+#define MAX_THROTTLE_TABLE_SIZE 100
+#define INTERVAL 3000
+#define MAX_HASHED_ENTRY_COUNTER 50
 
 typedef struct {
     char *category;
@@ -56,10 +58,20 @@ typedef struct {
     char event_name[MAX_EVENT_NAME_SIZE];
     char severity[MAX_SEV_NAME_SIZE];
     int num_of_keys;
+    int counter;
     char event_description[MAX_LOG_STR];
     } event;
 
+typedef struct {
+    unsigned int entry_flag;
+    int counter;
+    unsigned long hashed_value;
+    int event_id;
+    } throttleEvent;
+
 extern int event_log_init(char *category);
 extern int log_event(char *ev_name,...);
+extern int log_event_throttle(int counter, char *ev_name,...);
 extern char *key_value_string(char *s1, ...);
+static unsigned int throttled ;
 #endif /* __EVENTLOG_H_ */

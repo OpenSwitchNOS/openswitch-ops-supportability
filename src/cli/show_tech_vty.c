@@ -70,6 +70,8 @@ pthread_mutex_t cleanupMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 extern pthread_mutex_t vtysh_ovsdb_mutex;
+extern int skip_further_execution;
+extern void reset_page_break_on_interrupt();
 
 /* Function       : st_mutex_lock
  * Resposibility  : wrapper for mutex lock sys call, to log failed state
@@ -196,7 +198,8 @@ exec_showtech_cmd_on_thread(const char* cmd)
  */
 void cmd_thread_cleanup_handler(void *arg )
 {
-   //VTYSH_OVSDB_UNLOCK;
+   reset_page_break_on_interrupt();
+    //VTYSH_OVSDB_UNLOCK;
    pthread_mutex_trylock(&vtysh_ovsdb_mutex); /* locks the mutex if thread don't
                                                  own it */
    pthread_mutex_unlock(&vtysh_ovsdb_mutex);
@@ -318,7 +321,7 @@ exec_showtech_cmd(const char* cmd)
         {
             vty_out(vty,"%s---------------------------------%s"
                 ,VTY_NEWLINE,VTY_NEWLINE);
-            vty_out(vty,"Command %s terminated due to user interrupt CTRL+ C %s",
+            vty_out(vty,"Command %s terminated due to user interrupt %s",
                    (char *)cmd,VTY_NEWLINE);
             vty_out(vty,"---------------------------------%s"
                 ,VTY_NEWLINE);
@@ -380,7 +383,6 @@ void user_interrupt_handler(int signum)
     st_mutex_lock( &waitMutex );
     pthread_cond_signal( &waitCond );
     st_mutex_unlock( &waitMutex );
-
     gUserInterruptAlarm = FALSE;
 }
 /* Function       : showtech_signal_handler
@@ -403,6 +405,20 @@ showtech_signal_handler(int sig, siginfo_t *siginfo, void *context)
     }
 }
 
+/* Function       : showtech_zsignal_handler
+ * Resposibility  : signal handler for showtech
+ * Return         : NULL
+ */
+void
+showtech_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+    gUserInterrupt = TRUE ;
+    //tigger the alarm only if it is not yet tiggered .
+    st_mutex_lock( &waitMutex );
+    pthread_cond_signal( &waitCond );
+    st_mutex_unlock( &waitMutex );
+}
+
 /* Function       : cli_show_tech
  * Resposibility  : Display Show Tech Information
  * Return         : 0 on success 1 otherwise
@@ -418,8 +434,8 @@ cli_show_tech(const char* feature,const char* sub_feature)
    time_t               showtech_start, showtech_end;
    char timebuf[32];
    double showtech_exec_time = 0.0;
-   struct sigaction oldSignalHandler,newSignalHandler,
-                oldAlarmHandler,newAlarmHandler;
+   struct sigaction oldSignalHandler,newSignalHandler,oldZSignalHandler,
+                newZSignalHandler,oldAlarmHandler,newAlarmHandler;
    int return_val = CMD_SUCCESS;
 
    /* init global var */
@@ -431,11 +447,16 @@ cli_show_tech(const char* feature,const char* sub_feature)
    /*change the signal handler */
    memset (&oldSignalHandler, '\0', sizeof(oldSignalHandler));
    memset (&newSignalHandler, '\0', sizeof(newSignalHandler));
+   memset (&oldZSignalHandler, '\0', sizeof(oldZSignalHandler));
+   memset (&newZSignalHandler, '\0', sizeof(newZSignalHandler));
    memset (&oldAlarmHandler, '\0', sizeof(oldAlarmHandler));
    memset (&newAlarmHandler, '\0', sizeof(newAlarmHandler));
 
    newSignalHandler.sa_sigaction = showtech_signal_handler;
    newSignalHandler.sa_flags = SA_SIGINFO;
+
+   newZSignalHandler.sa_sigaction = showtech_Zsignal_handler;
+   newZSignalHandler.sa_flags = SA_SIGINFO;
 
    newAlarmHandler.sa_handler =  user_interrupt_handler ;
 
@@ -457,7 +478,23 @@ cli_show_tech(const char* feature,const char* sub_feature)
       }
       return CMD_WARNING;
    }
-
+   if(sigaction(SIGTSTP, &newZSignalHandler, &oldZSignalHandler) != 0)
+    {
+      VLOG_ERR("Failed to change Ctrl Z handler");
+      vty_out(vty, "diag dump init failed %s" ,VTY_NEWLINE);
+      if(sigaction(SIGINT, &oldSignalHandler, NULL) != 0)
+      {
+         VLOG_ERR("Failed to change signal handler to old state");
+         exit(0); //should never hit this place
+         /* we changed the CLI behavior */
+      }
+      if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
+      {
+        VLOG_ERR("Failed to change Alarm handler to old state");
+        exit(0); //should never hit this place
+        /* we changed the CLI behavior */
+      }
+    }
    /* Retrive the Show Tech Configuration Header */
    head = get_showtech_config(NULL);
    iter = head;
@@ -537,7 +574,7 @@ cli_show_tech(const char* feature,const char* sub_feature)
                         ,VTY_NEWLINE);
 
                }
-               if(gUserInterrupt)
+               if(gUserInterrupt || skip_further_execution)
                {
                   iter_cli->command_failed = 0;
                   goto USER_INTERRUPT;
@@ -608,7 +645,7 @@ cli_show_tech(const char* feature,const char* sub_feature)
                iter_cli = iter_sub->p_clicmds;
                while (iter_cli)
                {
-                  if(gUserInterrupt)
+                  if(gUserInterrupt || skip_further_execution)
                   {
                      goto USER_INTERRUPT;
                   }
@@ -628,7 +665,7 @@ cli_show_tech(const char* feature,const char* sub_feature)
                      vty_out(vty,"*********************************%s"
                            ,VTY_NEWLINE);
                   }
-                  if(gUserInterrupt)
+                  if(gUserInterrupt || skip_further_execution)
                   {
                      iter_cli->command_failed = 0;
                      goto USER_INTERRUPT;
@@ -830,7 +867,13 @@ cli_show_tech(const char* feature,const char* sub_feature)
       exit(0); //should never hit this place
       /* we changed the CLI behavior */
    }
-   if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
+   if(sigaction(SIGTSTP, &oldZSignalHandler, NULL) != 0)
+    {
+      VLOG_ERR("Failed to change ctrl-z signal handler to old state");
+      exit(0); //should never hit this place
+      /* we changed the CLI behavior */
+    }
+    if(sigaction(SIGALRM, &oldAlarmHandler, NULL) != 0)
    {
       VLOG_ERR("Failed to change Alarm handler to old state");
       exit(0); //should never hit this place

@@ -1120,6 +1120,16 @@ event_definitions:
   event_description_template:
       'Vlaninterface vlan{vlan}, failed to create an l3 interface, error: {err}'
 
+- event_name: VLANINTERFACE_CREATE
+  event_category: VLANINTERFACE
+  event_ID : 18002
+  severity: LOG_INFO
+  keys: interface
+  description:
+       'logs to create vlan interface.'
+  event_description_template:
+       'Vlan Interface {interface}, created'
+
 - event_name: L3INTERFACE_CREATE
   event_category: L3INTERFACE
   event_ID : 19001

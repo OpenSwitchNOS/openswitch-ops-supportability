@@ -907,6 +907,20 @@ event_definitions:
   keys: lag_id
   event_description_template: 'Failed to create LAG {lag_id} '
 
+- event_name: MLAG_CREATED
+  event_category: LACP
+  event_ID: 15013
+  severity: LOG_INFO
+  keys: lag_id
+  event_description_template: 'LAG {lag_id} set as MLAG '
+
+- event_name: MLAG_INFO_INCOMPLETE
+  event_category: LACP
+  event_ID: 15014
+  severity: LOG_INFO
+  keys: lag_id, intf_id
+  event_description_template: 'LAG {lag_id} not sending LACPDUs through interface {intf_id} because MLAG information is not complete'
+
 - event_name: TRUNK_SET_SUCCEEDS
   event_category: LAG
   event_ID : 16001

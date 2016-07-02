@@ -119,3 +119,8 @@
     feature_desc: "Routing Information Base (RIB)"
     daemon:
         - [name: "ops-zebra", 'diag_dump': "y"]
+  -
+    feature_name: "password-server"
+    feature_desc: "Password Server"
+    daemon:
+        - [name: "ops-passwd-srv", 'diag_dump': "n"]

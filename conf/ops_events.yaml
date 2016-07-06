@@ -465,11 +465,11 @@ event_definitions:
   event_category: SUBINTERFACE
   event_ID : 10009
   severity: LOG_ERR
-  keys: interface, vlanid
+  keys: interface, vlanid, err
   description:
       'logs errors while destroying subinterface encapsulation dot1q.'
   event_description_template:
-      'Sub-Interface {interface}, failed to destroy subinterface encapsulation dot1q {vlanid}'
+      'Sub-Interface {interface}, failed to destroy subinterface encapsulation dot1q {vlanid} err: {err}'
 
 - event_name: SUBINTERFACE_L3INTF_CREATE_ERR
   event_category: SUBINTERFACE
@@ -485,11 +485,11 @@ event_definitions:
   event_category: SUBINTERFACE
   event_ID : 10011
   severity: LOG_ERR
-  keys: interface
+  keys: interface, err
   description:
       'logs errors while destroying subinterface.'
   event_description_template:
-      'Sub-Interface {interface}, failed to delete an l3 interface'
+      'Sub-Interface {interface}, failed to delete an l3 interface, err: {err}'
 
 - event_name: SUBINTERFACE_IPV6_UPDATE
   event_category: SUBINTERFACE
@@ -921,7 +921,7 @@ event_definitions:
   event_category: LAG
   event_ID : 16002
   severity: LOG_ERR
-  keys: unit, LAGID, rc, error
+  keys: unit, lag_id, rc, error
   description:
     'Logs the failure of trunk creation.'
   event_description_template:
@@ -931,7 +931,7 @@ event_definitions:
   event_category: LAG
   event_ID : 16003
   severity: LOG_ERR
-  keys: unit, LAGID, rc, error
+  keys: unit, lag_id, rc, error
   description:
     'Logs the failure of trunk destroy.'
   event_description_template:

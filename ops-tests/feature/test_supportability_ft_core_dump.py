@@ -128,6 +128,7 @@ def _check_event_log(switch, signal, daemon_name):
         return False
 
 
+@mark.gate
 @mark.platform_incompatible(['docker'])
 def test_core_dump(topology):
     """

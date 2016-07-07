@@ -23,6 +23,7 @@
 
 from re import search
 from re import compile as re_compile
+from pytest import mark
 
 TOPOLOGY = """
 # +-------+
@@ -266,6 +267,7 @@ def check_vlog_config_invalid_log_level(sw1, step):
     assert "Unknown command" in output
 
 
+@mark.gate
 def test_supportability_show_vlog(topology, step):
     sw1 = topology.get("sw1")
     assert sw1 is not None

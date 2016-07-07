@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from pytest import mark
+
 TOPOLOGY = """
 #
 # +-------+
@@ -130,6 +132,7 @@ def evtlogfeature_cli(sw1):
     assert "LLDP Enabled" or "LLDP Disabled" in output
 
 
+@mark.gate
 def test_ft_evtlog_feature(topology, step):
     sw1 = topology.get('sw1')
 

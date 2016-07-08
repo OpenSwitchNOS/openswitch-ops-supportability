@@ -104,11 +104,6 @@
     daemon:
         - [name: "ops-switchd", 'diag_dump': "y"]
   -
-    feature_name: "ops-aaautils"
-    feature_desc: "AAA utils"
-    daemon:
-        - [name: "ops_aaautilspamcfg", 'diag_dump': "y"]
-  -
     feature_name: "dhcp-tftp-server"
     feature_desc: "Dynamic Host Configuration & Trivial File Transfer Protocol Server"
     daemon:

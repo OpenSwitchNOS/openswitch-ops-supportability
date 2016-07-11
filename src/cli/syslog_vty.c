@@ -571,13 +571,12 @@ DEFUN (vtysh_config_syslog_tcp,
 DEFUN (vtysh_config_syslog_svrt,
        vtysh_config_syslog_svrt_cmd,
        "logging (A.B.C.D | X:X::X:X | WORD) severity"
-       " (debug|info|notice|warning|err|crit|alert|emerg)",
+       " (info|notice|warning|err|crit|alert|emerg)",
        LOGGING_STR
        HOST_IPv4
        HOST_IPv6
        HOSTNAME_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -593,7 +592,7 @@ DEFUN (vtysh_config_syslog_svrt,
 DEFUN (vtysh_config_syslog_udp_svrt,
        vtysh_config_syslog_udp_svrt_cmd,
        "logging (A.B.C.D | X:X::X:X | WORD) udp [<1-65535>]"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        LOGGING_STR
        HOST_IPv4
        HOST_IPv6
@@ -601,7 +600,6 @@ DEFUN (vtysh_config_syslog_udp_svrt,
        UDP_STR
        UDP_PORT_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -622,7 +620,7 @@ DEFUN (vtysh_config_syslog_udp_svrt,
 DEFUN (vtysh_config_syslog_tcp_svrt,
        vtysh_config_syslog_tcp_svrt_cmd,
        "logging (A.B.C.D | X:X::X:X | WORD) tcp [<1-65535>]"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        LOGGING_STR
        HOST_IPv4
        HOST_IPv6
@@ -630,7 +628,6 @@ DEFUN (vtysh_config_syslog_tcp_svrt,
        TCP_STR
        TCP_PORT_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -651,7 +648,7 @@ DEFUN (vtysh_config_syslog_tcp_svrt,
 DEFUN (vtysh_config_syslog_prot_svrt_noport,
        vtysh_config_syslog_prot_svrt_noport_cmd,
        "logging (A.B.C.D | X:X::X:X | WORD) (udp|tcp)"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        LOGGING_STR
        HOST_IPv4
        HOST_IPv6
@@ -659,7 +656,6 @@ DEFUN (vtysh_config_syslog_prot_svrt_noport,
        UDP_STR
        TCP_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -737,14 +733,13 @@ DEFUN (no_vtysh_config_syslog_tcp,
 DEFUN (no_vtysh_config_syslog_svrt,
        no_vtysh_config_syslog_svrt_cmd,
        "no logging (A.B.C.D | X:X::X:X | WORD)"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        NO_STR
        LOGGING_STR
        HOST_IPv4
        HOST_IPv6
        HOSTNAME_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -760,7 +755,7 @@ DEFUN (no_vtysh_config_syslog_svrt,
 DEFUN (no_vtysh_config_syslog_udp_svrt,
        no_vtysh_config_syslog_udp_svrt_cmd,
        "no logging (A.B.C.D | X:X::X:X | WORD) udp [<1-65535>]"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        NO_STR
        LOGGING_STR
        HOST_IPv4
@@ -769,7 +764,6 @@ DEFUN (no_vtysh_config_syslog_udp_svrt,
        UDP_STR
        UDP_PORT_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -790,7 +784,7 @@ DEFUN (no_vtysh_config_syslog_udp_svrt,
 DEFUN (no_vtysh_config_syslog_tcp_svrt,
        no_vtysh_config_syslog_tcp_svrt_cmd,
        "no logging (A.B.C.D | X:X::X:X | WORD) tcp [<1-65535>]"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        NO_STR
        LOGGING_STR
        HOST_IPv4
@@ -799,7 +793,6 @@ DEFUN (no_vtysh_config_syslog_tcp_svrt,
        TCP_STR
        TCP_PORT_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR
@@ -820,7 +813,7 @@ DEFUN (no_vtysh_config_syslog_tcp_svrt,
 DEFUN (no_vtysh_config_syslog_prot_svrt_noport,
        no_vtysh_config_syslog_prot_svrt_noport_cmd,
        "no logging (A.B.C.D | X:X::X:X | WORD) (udp|tcp)"
-       " severity (debug|info|notice|warning|err|crit|alert|emerg)",
+       " severity (info|notice|warning|err|crit|alert|emerg)",
        NO_STR
        LOGGING_STR
        HOST_IPv4
@@ -829,7 +822,6 @@ DEFUN (no_vtysh_config_syslog_prot_svrt_noport,
        UDP_STR
        TCP_STR
        SEVERITY_STR
-       DEBUG_SVR_STR
        INFO_STR
        NOTICE_STR
        WARNING_STR

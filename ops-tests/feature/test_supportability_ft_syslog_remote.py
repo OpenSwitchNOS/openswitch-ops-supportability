@@ -88,7 +88,8 @@ def _check_and_set_hostip(host, ip, port):
         host.libs.ip.interface(port, addr=ip, up=True)
 
 
-def _wait_until_interface_up(switch, portlbl, timeout=30, polling_frequency=1):
+def _wait_until_interface_up(
+        switch, portlbl, timeout=180, polling_frequency=1):
     """
     Wait until the interface, as mapped by the given portlbl, is marked as up.
 
@@ -154,7 +155,11 @@ def _remote_syslog_test(remotes_config):
             script = (script_loc + "/syslog_tcp_server.py")
             execscript = "/tmp/syslog_tcp_server.py"
 
+        conn['hs']('pkill -f /tmp/syslog_tcp_server.py')
+        conn['hs']('pkill -f /tmp/syslog_udp_server.py')
         conn['hs']('rm -f /tmp/syslog_out.sb')
+        conn['hs']('rm -f /tmp/syslog_tcp_server.py')
+        conn['hs']('rm -f /tmp/syslog_udp_server.py')
 
         if host_config_status == 0:
             _check_and_set_hostip(conn['hs'], conn['hs_addr'], conn['int'])
@@ -167,35 +172,53 @@ def _remote_syslog_test(remotes_config):
             "python " + execscript + " " +
             conn['rmt_addr'] + " " + conn['port'] + "&"
         )
-        print(conn['hs']('ps -aux'))
+        print(conn['hs']('ps -e | grep ' + execscript))
         with conn['sw'].libs.vtysh.Configure() as ctx:
             ctx.logging(remote_host=conn['rmt_addr'],
                         transport=" " + conn['trans'] + " " + conn["port"])
 
     # host_config_status = 1
-    remotes_config[0]['sw']("systemctl restart ops-fand", shell="bash")
-    remotes_config[0]['sw']("systemctl restart ops-fand", shell="bash")
+    remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
     sleep(2)
+    remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
+    sleep(2)
+    remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
+    sleep(2)
+    remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
+    sleep(2)
+    remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
     # set_trace()
+    test_status = True
     for conn in remotes_config:
-        print(conn['hs']("ip addr"))
-        print(conn['hs']("ls -Shila /tmp"))
-        print(conn['hs']("ps -aux"))
-        remote_log = conn['hs']("cat /tmp/syslog_out.sb")
-        with conn['sw'].libs.vtysh.Configure() as ctx:
-            ctx.no_logging(remote_host=conn['rmt_addr'],
-                           transport=" " + conn['trans'] + " " + conn["port"])
         if(conn['trans'] == 'udp'):
             execscript = "/tmp/syslog_udp_server.py"
         elif(conn['trans'] == 'tcp'):
             execscript = "/tmp/syslog_tcp_server.py"
 
+        print(conn['hs']("ip addr"))
+        print(conn['hs']("ls -Shila /tmp"))
+        print(conn['hs']("ps -e | grep " + execscript))
+
+        remote_log = conn['hs']("cat /tmp/syslog_out.sb")
+        try:
+            log_size_str = conn['hs']('stat -c%s /tmp/syslog_out.sb')
+            print ("Log file size : " + log_size_str)
+            log_size = int(log_size_str)
+        except:
+            print("Exception hit on finding log file size ")
+            log_size = 0
+        with conn['sw'].libs.vtysh.Configure() as ctx:
+            ctx.no_logging(remote_host=conn['rmt_addr'],
+                           transport=" " + conn['trans'] + " " + conn["port"])
         conn['hs']("pkill -f " + execscript)
         print(remote_log)
-        if "switch systemd" not in remote_log:
-            return False
-        else:
-            return True
+
+        print(conn['sw']('ping ' + conn['rmt_addr']))
+        if log_size <= 0:
+            print ('Failed once')
+            test_status = False
+
+    return test_status
 
 
 @mark.gate

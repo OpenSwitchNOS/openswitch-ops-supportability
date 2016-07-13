@@ -307,14 +307,19 @@ void
 diagdump_signal_handler(int sig, siginfo_t *siginfo, void *context)
 {
     struct vty * vty = gVty;
-    gDiagDumpUserInterrupt = TRUE ;
-    /*tigger the alarm only if it is not yet tiggered .*/
-    vty_out(vty,"USER INTERRUPT:Diag dump will be terminated in 10 secs%s"
-          ,VTY_NEWLINE);
-    if(!gDiagDumpUserInterruptAlarm)
+
+    /* handle only one signal at a time */
+    if(!gDiagDumpUserInterrupt)
     {
-        gDiagDumpUserInterruptAlarm = TRUE;
-        dd_alarm(USER_INT_ALARM);
+        gDiagDumpUserInterrupt = TRUE ;
+        /*tigger the alarm only if it is not yet tiggered .*/
+        vty_out(vty,"USER INTERRUPT:Diag dump will be terminated in 10 secs%s"
+              ,VTY_NEWLINE);
+        if(!gDiagDumpUserInterruptAlarm)
+        {
+            gDiagDumpUserInterruptAlarm = TRUE;
+            dd_alarm(USER_INT_ALARM);
+        }
     }
 }
 
@@ -325,10 +330,14 @@ diagdump_signal_handler(int sig, siginfo_t *siginfo, void *context)
 void
 diagdump_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
 {
-    gDiagDumpUserInterrupt = TRUE ;
-    dd_mutex_lock( &gDiagDumpwaitMutex );
-    pthread_cond_signal( &gDiagDumpWaitCond );
-    dd_mutex_unlock( &gDiagDumpwaitMutex );
+    /* handle only one signal at a time */
+    if(!gDiagDumpUserInterrupt)
+    {
+        gDiagDumpUserInterrupt = TRUE ;
+        dd_mutex_lock( &gDiagDumpwaitMutex );
+        pthread_cond_signal( &gDiagDumpWaitCond );
+        dd_mutex_unlock( &gDiagDumpwaitMutex );
+    }
 }
 
 /*

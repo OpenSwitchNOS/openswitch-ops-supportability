@@ -396,16 +396,19 @@ void user_interrupt_handler(int signum)
 void
 showtech_signal_handler(int sig, siginfo_t *siginfo, void *context)
 {
-    gUserInterrupt = TRUE ;
-    //tigger the alarm only if it is not yet tiggered .
-    if(!gUserInterruptAlarm)
+    if(!gUserInterrupt)
     {
-        gUserInterruptAlarm = TRUE;
-        vty_out(vty,"USER INTERRUPT:Show tech will be terminated with in 10 sec %s"
-               ,VTY_NEWLINE);
-        gUserInterruptVtyType = vty->type ;
-        vty->type = VTY_FILE;
-        st_alarm(USER_INT_ALARM);
+        /* process only one signal */
+        gUserInterrupt = TRUE ;
+        if(!gUserInterruptAlarm)
+        {
+            gUserInterruptAlarm = TRUE;
+            vty_out(vty,"USER INTERRUPT:Show tech will be terminated with in 10 sec %s"
+                   ,VTY_NEWLINE);
+            gUserInterruptVtyType = vty->type ;
+            vty->type = VTY_FILE;
+            st_alarm(USER_INT_ALARM);
+        }
     }
 }
 
@@ -416,11 +419,14 @@ showtech_signal_handler(int sig, siginfo_t *siginfo, void *context)
 void
 showtech_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
 {
-    gUserInterrupt = TRUE ;
-    //tigger the alarm only if it is not yet tiggered .
-    st_mutex_lock( &waitMutex );
-    pthread_cond_signal( &waitCond );
-    st_mutex_unlock( &waitMutex );
+    if(!gUserInterrupt)
+    {
+        /* process only one signal */
+        gUserInterrupt = TRUE ;
+        st_mutex_lock( &waitMutex );
+        pthread_cond_signal( &waitCond );
+        st_mutex_unlock( &waitMutex );
+    }
 }
 
 /* Function       : cli_show_tech

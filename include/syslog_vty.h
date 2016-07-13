@@ -44,9 +44,9 @@
 "Forward syslog messages of specified severity and above"\
 "(Default:info)\n"
 #define DEBUG_SVR_STR \
-"Forward syslog messages of severity 'debug(0)' and above(Default)\n"
+"Forward syslog messages of severity 'debug(0)' and above\n"
 #define INFO_STR \
-"Forward syslog messages of severity 'info(1)' and above\n"
+"Forward syslog messages of severity 'info(1)' and above(Default)\n"
 #define NOTICE_STR \
 "Forward syslog messages of severity 'notice(2)' and above\n"
 #define WARNING_STR \

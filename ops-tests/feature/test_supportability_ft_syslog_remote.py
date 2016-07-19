@@ -61,10 +61,10 @@ TOPOLOGY = """
 [type=host image="lepinkainen/ubuntu-python-base:latest" name="Host 4"] hs4
 
 # Links
-sw1:1 -- hs1:1
-sw1:2 -- hs2:1
-sw1:3 -- hs3:1
-sw1:4 -- hs4:1
+sw1:porta -- hs1:porta
+sw1:portb -- hs2:porta
+sw1:portc -- hs3:porta
+sw1:portd -- hs4:porta
 """
 
 
@@ -156,36 +156,48 @@ def _remote_syslog_test(remotes_config):
             execscript = "/tmp/syslog_tcp_server.py"
 
         conn['hs']('pkill -f /tmp/syslog_tcp_server.py')
+        sleep(1)
         conn['hs']('pkill -f /tmp/syslog_udp_server.py')
+        sleep(1)
         conn['hs']('rm -f /tmp/syslog_out.sb')
+        sleep(1)
         conn['hs']('rm -f /tmp/syslog_tcp_server.py')
+        sleep(1)
         conn['hs']('rm -f /tmp/syslog_udp_server.py')
+        sleep(1)
+        try:
+            conn['hs']('ip addr flush eth1')
+            sleep(1)
+            conn['hs'].libs.ip.interface(conn['int'],
+                                         addr=conn['hs_addr'],
+                                         up=True)
+        except:
+            print('Exception hit when tried to assign ip address to host')
 
-        if host_config_status == 0:
-            _check_and_set_hostip(conn['hs'], conn['hs_addr'], conn['int'])
-
+        conn['hs']('echo "# " > ' + execscript)
         with open(script, "r") as fi:
             for line in fi:
                 conn['hs']('echo "' + line + '" >> ' + execscript)
-
         conn['hs'](
             "python " + execscript + " " +
             conn['rmt_addr'] + " " + conn['port'] + "&"
-        )
-        print(conn['hs']('ps -e | grep ' + execscript))
+            )
+        sleep(1)
+        remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+        sleep(1)
+        remote_log_2 = conn['hs']("touch /tmp/temp.sb")
         with conn['sw'].libs.vtysh.Configure() as ctx:
             ctx.logging(remote_host=conn['rmt_addr'],
                         transport=" " + conn['trans'] + " " + conn["port"])
 
-    # host_config_status = 1
     remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
-    sleep(2)
+    sleep(1)
     remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
-    sleep(2)
+    sleep(1)
     remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
-    sleep(2)
+    sleep(1)
     remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
-    sleep(2)
+    sleep(1)
     remotes_config[0]['sw']('logger "Syslog Test Information"', shell="bash")
     # set_trace()
     test_status = True
@@ -194,40 +206,59 @@ def _remote_syslog_test(remotes_config):
             execscript = "/tmp/syslog_udp_server.py"
         elif(conn['trans'] == 'tcp'):
             execscript = "/tmp/syslog_tcp_server.py"
+        iter = 0
+        while iter < 10:
+            remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+            iter += 1
+            sleep(1)
 
-        print(conn['hs']("ip addr"))
-        print(conn['hs']("ls -Shila /tmp"))
-        print(conn['hs']("ps -e | grep " + execscript))
-
-        remote_log = conn['hs']("cat /tmp/syslog_out.sb")
         try:
             log_size_str = conn['hs']('stat -c%s /tmp/syslog_out.sb')
-            print ("Log file size : " + log_size_str)
+            iter = 0
+            while (iter < 10):
+                if log_size_str:
+                    break
+                log_size_str = conn['hs']("stat -c%s /tmp/syslog_out.sb")
+                iter += 1
+                sleep(1)
+
+            print("Log file size : " + log_size_str)
             log_size = int(log_size_str)
         except:
             print("Exception hit on finding log file size ")
             log_size = 0
+
         with conn['sw'].libs.vtysh.Configure() as ctx:
             ctx.no_logging(remote_host=conn['rmt_addr'],
                            transport=" " + conn['trans'] + " " + conn["port"])
-        conn['hs']("pkill -f " + execscript)
-        print(remote_log)
 
-        print(conn['sw']('ping ' + conn['rmt_addr']))
+        conn['hs']("pkill -f " + execscript)
         if log_size <= 0:
-            print ('Failed once')
+            print('Failed once')
             test_status = False
+            print(conn['hs']("ip addr"))
+            print(conn['hs']("cat /tmp/syslog_out.sb"))
+            print(conn['hs']("ls -Shila /tmp"))
+            print(conn['hs']("ps -e | grep " + execscript))
+            print(conn['sw']('ping ' + conn['rmt_addr']))
+            print(str(conn['sw'].libs.vtysh.show_running_config()))
+            iter = 0
+            while iter < 15:
+                remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+                iter += 1
+                sleep(1)
+        print(remote_log_2)
 
     return test_status
 
 
-@pytest.mark.timeout(1200)
+@pytest.mark.timeout(1800)
 def test_udp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different udp syslog
     remote servers
     """
-    no_of_retries = 3
+    no_of_retries = 1
     current_iteration = 0
 
     sw1 = topology.get('sw1')
@@ -246,7 +277,7 @@ def test_udp_connection(topology):
         {
             "hs": hs1,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.10.2/24",
             "rmt_addr": "10.0.10.2",
             "trans": "udp",
@@ -255,7 +286,7 @@ def test_udp_connection(topology):
         {
             "hs": hs2,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.20.2/24",
             "rmt_addr": "10.0.20.2",
             "trans": "udp",
@@ -264,7 +295,7 @@ def test_udp_connection(topology):
         {
             "hs": hs3,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.30.2/24",
             "rmt_addr": "10.0.30.2",
             "trans": "udp",
@@ -273,7 +304,7 @@ def test_udp_connection(topology):
         {
             "hs": hs4,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.40.2/24",
             "rmt_addr": "10.0.40.2",
             "trans": "udp",
@@ -281,19 +312,19 @@ def test_udp_connection(topology):
         }]
     switch_configs = [
         {
-            "int": "1",
+            "int": "porta",
             "ip": "10.0.10.1/24"
         },
         {
-            "int": "2",
+            "int": "portb",
             "ip": "10.0.20.1/24"
         },
         {
-            "int": "3",
+            "int": "portc",
             "ip": "10.0.30.1/24"
         },
         {
-            "int": "4",
+            "int": "portd",
             "ip": "10.0.40.1/24"
         }]
     _switchconf(sw1, switch_configs)
@@ -308,13 +339,13 @@ def test_udp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1200)
+@pytest.mark.timeout(1800)
 def test_tcp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different tcp syslog
     remote servers
     """
-    no_of_retries = 3
+    no_of_retries = 1
     current_iteration = 0
 
     sw1 = topology.get('sw1')
@@ -333,7 +364,7 @@ def test_tcp_connection(topology):
         {
             "hs": hs1,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.10.2/24",
             "rmt_addr": "10.0.10.2",
             "trans": "tcp",
@@ -342,7 +373,7 @@ def test_tcp_connection(topology):
         {
             "hs": hs2,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.20.2/24",
             "rmt_addr": "10.0.20.2",
             "trans": "tcp",
@@ -351,7 +382,7 @@ def test_tcp_connection(topology):
         {
             "hs": hs3,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.30.2/24",
             "rmt_addr": "10.0.30.2",
             "trans": "tcp",
@@ -360,7 +391,7 @@ def test_tcp_connection(topology):
         {
             "hs": hs4,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.40.2/24",
             "rmt_addr": "10.0.40.2",
             "trans": "tcp",
@@ -368,19 +399,19 @@ def test_tcp_connection(topology):
         }]
     switch_configs = [
         {
-            "int": "1",
+            "int": "porta",
             "ip": "10.0.10.1/24"
         },
         {
-            "int": "2",
+            "int": "portb",
             "ip": "10.0.20.1/24"
         },
         {
-            "int": "3",
+            "int": "portc",
             "ip": "10.0.30.1/24"
         },
         {
-            "int": "4",
+            "int": "portd",
             "ip": "10.0.40.1/24"
         }]
 
@@ -397,13 +428,13 @@ def test_tcp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1200)
+@pytest.mark.timeout(1800)
 def test_tcp_udp_combination(topology):
     """
     Verifies syslog messages transmission to 4 different syslog with
     combination of tcp and upd based servers
     """
-    no_of_retries = 3
+    no_of_retries = 1
     current_iteration = 0
 
     sw1 = topology.get('sw1')
@@ -422,7 +453,7 @@ def test_tcp_udp_combination(topology):
         {
             "hs": hs1,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.10.2/24",
             "rmt_addr": "10.0.10.2",
             "trans": "tcp",
@@ -431,7 +462,7 @@ def test_tcp_udp_combination(topology):
         {
             "hs": hs2,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.20.2/24",
             "rmt_addr": "10.0.20.2",
             "trans": "tcp",
@@ -440,7 +471,7 @@ def test_tcp_udp_combination(topology):
         {
             "hs": hs3,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.30.2/24",
             "rmt_addr": "10.0.30.2",
             "trans": "udp",
@@ -449,7 +480,7 @@ def test_tcp_udp_combination(topology):
         {
             "hs": hs4,
             "sw": sw1,
-            "int": "1",
+            "int": "porta",
             "hs_addr": "10.0.40.2/24",
             "rmt_addr": "10.0.40.2",
             "trans": "udp",
@@ -457,19 +488,19 @@ def test_tcp_udp_combination(topology):
         }]
     switch_configs = [
         {
-            "int": "1",
+            "int": "porta",
             "ip": "10.0.10.1/24"
         },
         {
-            "int": "2",
+            "int": "portb",
             "ip": "10.0.20.1/24"
         },
         {
-            "int": "3",
+            "int": "portc",
             "ip": "10.0.30.1/24"
         },
         {
-            "int": "4",
+            "int": "portd",
             "ip": "10.0.40.1/24"
         }]
 

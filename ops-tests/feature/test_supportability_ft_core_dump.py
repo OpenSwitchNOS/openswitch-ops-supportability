@@ -121,8 +121,8 @@ def _check_event_log(switch, signal, daemon_name):
         (daemon_name, strsignal[signal])
     )
     evnt_string = switch(find_event, shell='bash')
-    print(evnt_string)
-    if "crashed" in evnt_string and "grep" not in evnt_string:
+    print("Event Str Beg " + evnt_string + "Event Str End")
+    if "crashed" in evnt_string and "ops-evt" in evnt_string:
         return True
     else:
         return False
@@ -180,6 +180,7 @@ def test_core_dump(topology):
         if daemon_name in scd[i]['daemon_name']:
             show_cor_dump_found = 1
             instance_id_value = scd[i]['instance_id']
+            print("Show core dump passed")
             break
         i += 1
 
@@ -193,14 +194,20 @@ def test_core_dump(topology):
     assert hs1 is not None
 
     # Configure IP and bring UP host 1 interfaces
-    # hs1.libs.ip.interface('1', addr='0.0.0.0/24', up=True)
-    hs1.libs.ip.interface('1', addr='10.0.10.1/24', up=True)
+    try:
+        hs1.libs.ip.interface('1', addr='10.0.10.1/24', up=True)
 
-    # Configure IP and bring UP switch 1 interfaces
-    with sw1.libs.vtysh.ConfigInterfaceMgmt() as ctx:
-        ctx.ip_static('10.0.10.2/24')
+        # Configure IP and bring UP switch 1 interfaces
+        with sw1.libs.vtysh.ConfigInterfaceMgmt() as ctx:
+            ctx.ip_static('10.0.10.2/24')
+    except:
+        print("Exception while setting the ip")
 
+    sw1.libs.vtysh.show_running_config()
     sleep(25)
+    ping = hs1.libs.ping.ping(1, '10.0.10.2')
+    print("ping-transmitted : " + str(ping['transmitted']))
+    print("ping-received : " + str(ping['received']))
 
     hs1('chmod 777 /var/lib/tftpboot', shell='bash')
     hs1('touch /var/lib/tftpboot/abc.xz', shell='bash')
@@ -213,12 +220,21 @@ def test_core_dump(topology):
         '.*.xz',
         shell='bash')
 
-    core_dump_size_switch_int = int(core_dump_size_switch)
+    print("size_begin " + core_dump_size_switch + " size_end")
+    cddata = core_dump_size_switch.splitlines()
+    print("cddata : " + str(len(cddata)))
+
+    for data in cddata:
+        print("cd " + data)
+
+    # Workaround for framework echo after crash issue
+
+    core_dump_size_switch_int = int(cddata[len(cddata)-1])
 
     assert core_dump_size_switch_int
     assert instance_id_value
 
-    scd = sw1.libs.vtysh.copy_core_dump(deamonname=daemon_name,
+    scd = sw1.libs.vtysh.copy_core_dump(daemonname=daemon_name,
                                         instance_id=instance_id_value,
                                         transport='tftp',
                                         serveraddress='10.0.10.1',
@@ -226,6 +242,9 @@ def test_core_dump(topology):
     length_of_result = len(scd)
     if length_of_result < 1:
         assert False
+
+    print("status : " + scd['status'])
+    print("reason : " + scd['reason'])
 
     core_dump_copied = 0
     if scd['status'] == 'success':

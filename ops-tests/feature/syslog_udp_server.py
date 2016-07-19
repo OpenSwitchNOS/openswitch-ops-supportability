@@ -17,6 +17,7 @@
 
 import socket
 import sys
+import time
 from os import fsync
 
 # Usage : python syslog_udp_server.py <IP-ADDRESS> <PORT_NUMBER>
@@ -32,6 +33,8 @@ else:
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind((UDP_IP, UDP_PORT))
+
+print('UDP Server started on %s' % (time.time()))
 
 f = open('/tmp/syslog_out.sb', 'w')
 i = 0

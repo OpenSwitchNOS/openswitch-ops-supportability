@@ -17,6 +17,7 @@
 
 import socket
 import sys
+import time
 from os import fsync
 
 # Usage : python syslog_tcp_server.py <IP-ADDRESS> <PORT_NUMBER>
@@ -36,7 +37,7 @@ sock.listen(5)
 print('listening on %s:%s' % (TCP_IP, TCP_PORT))
 while True:
     conn, addr = sock.accept()
-    print('New Connection Established')
+    print('New TCP Connection Established on %s' % (time.time()))
     try:
         f = open('/tmp/syslog_out.sb', 'w')
         while True:

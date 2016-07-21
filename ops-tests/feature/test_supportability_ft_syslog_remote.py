@@ -155,10 +155,6 @@ def _remote_syslog_test(remotes_config):
             script = (script_loc + "/syslog_tcp_server.py")
             execscript = "/tmp/syslog_tcp_server.py"
 
-        conn['hs']('pkill -f /tmp/syslog_tcp_server.py')
-        sleep(1)
-        conn['hs']('pkill -f /tmp/syslog_udp_server.py')
-        sleep(1)
         conn['hs']('rm -f /tmp/syslog_out.sb')
         sleep(1)
         conn['hs']('rm -f /tmp/syslog_tcp_server.py')
@@ -183,9 +179,9 @@ def _remote_syslog_test(remotes_config):
             conn['rmt_addr'] + " " + conn['port'] + "&"
             )
         sleep(1)
-        remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+        clean_buffer = conn['hs']("touch /tmp/temp.sb")
         sleep(1)
-        remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+        clean_buffer = conn['hs']("touch /tmp/temp.sb")
         with conn['sw'].libs.vtysh.Configure() as ctx:
             ctx.logging(remote_host=conn['rmt_addr'],
                         transport=" " + conn['trans'] + " " + conn["port"])
@@ -208,7 +204,7 @@ def _remote_syslog_test(remotes_config):
             execscript = "/tmp/syslog_tcp_server.py"
         iter = 0
         while iter < 10:
-            remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+            clean_buffer = conn['hs']("touch /tmp/temp.sb")
             iter += 1
             sleep(1)
 
@@ -232,7 +228,13 @@ def _remote_syslog_test(remotes_config):
             ctx.no_logging(remote_host=conn['rmt_addr'],
                            transport=" " + conn['trans'] + " " + conn["port"])
 
-        conn['hs']("pkill -f " + execscript)
+        try:
+            conn['hs']("pkill -f " + execscript)
+        except:
+            print("Exception hit on killing the remote script")
+
+        clean_buffer = conn['hs']("touch /tmp/temp.sb")
+        clean_buffer = conn['hs']("touch /tmp/temp.sb")
         if log_size <= 0:
             print('Failed once')
             test_status = False
@@ -244,10 +246,10 @@ def _remote_syslog_test(remotes_config):
             print(str(conn['sw'].libs.vtysh.show_running_config()))
             iter = 0
             while iter < 15:
-                remote_log_2 = conn['hs']("touch /tmp/temp.sb")
+                clean_buffer = conn['hs']("touch /tmp/temp.sb")
                 iter += 1
                 sleep(1)
-        print(remote_log_2)
+        print(clean_buffer)
 
     return test_status
 

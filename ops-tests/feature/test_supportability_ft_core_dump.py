@@ -42,8 +42,11 @@ TOPOLOGY = """
 [type=openswitch name="Switch 1"] sw1
 [type=host name="Host 1"] hs1
 
-#Links
-hs1:1 -- sw1:1
+# Ports
+[force_name=oobm] sw1:sp1
+
+# Links
+sw1:sp1 -- hs1:if01
 """
 
 # Helper Functions
@@ -129,6 +132,7 @@ def _check_event_log(switch, signal, daemon_name):
 
 
 @mark.gate
+@mark.timeout(1800)
 @mark.platform_incompatible(['docker'])
 def test_core_dump(topology):
     """
@@ -152,6 +156,12 @@ def test_core_dump(topology):
 
     retval = _check_event_log(sw1, signal, daemon_name)
 
+    iter = 0
+    while iter < 5:
+        clean_buffer = sw1("touch /tmp/temp.sb", shell='bash')
+        iter += 1
+        sleep(1)
+
     while retry_instance < no_of_retries:
         if retval:
             break
@@ -163,13 +173,21 @@ def test_core_dump(topology):
 
     if retry_instance == no_of_retries:
         print("Event Log not found for crash event")
+        print(clean_buffer)
         assert False
     else:
         assert True
 
+    print("Crash Event Log passed")
     # Verify that the show core dump displays the new core dump
-    sleep(2)
+    iter = 0
+    while iter < 5:
+        clean_buffer = sw1("touch /tmp/temp.sb", shell='bash')
+        iter += 1
+        sleep(1)
+    sleep(5)
     scd = sw1.libs.vtysh.show_core_dump()
+    print(str(scd))
     no_of_core_dumps = len(scd)
     if no_of_core_dumps < 1:
         assert False
@@ -196,17 +214,18 @@ def test_core_dump(topology):
 
     # Configure IP and bring UP host 1 interfaces
     try:
-        hs1.libs.ip.interface('1', addr='10.0.10.1/24', up=True)
+        hs1('ip addr flush eth1')
+        hs1.libs.ip.interface('if01', addr='10.0.12.1/24', up=True)
 
         # Configure IP and bring UP switch 1 interfaces
         with sw1.libs.vtysh.ConfigInterfaceMgmt() as ctx:
-            ctx.ip_static('10.0.10.2/24')
+            ctx.ip_static('10.0.12.2/24')
     except:
         print("Exception while setting the ip")
 
-    sw1.libs.vtysh.show_running_config()
+    print(str(sw1.libs.vtysh.show_running_config()))
     sleep(25)
-    ping = hs1.libs.ping.ping(1, '10.0.10.2')
+    ping = hs1.libs.ping.ping(1, '10.0.12.2')
     print("ping-transmitted : " + str(ping['transmitted']))
     print("ping-received : " + str(ping['received']))
 
@@ -238,7 +257,7 @@ def test_core_dump(topology):
     scd = sw1.libs.vtysh.copy_core_dump(daemonname=daemon_name,
                                         instance_id=instance_id_value,
                                         transport='tftp',
-                                        serveraddress='10.0.10.1',
+                                        serveraddress='10.0.12.1',
                                         filename='abc.xz')
     length_of_result = len(scd)
     if length_of_result < 1:

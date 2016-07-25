@@ -25,10 +25,7 @@
 #define __DIAG_DUMP_VTY_H
 
 #include "vtysh/command.h"
-#include "dirs.h"
 #include "util.h"
-#include "daemon.h"
-#include "unixctl.h"
 #include "diag_dump.h"
 #include "feature_mapping.h"
 #include "supportability_utils.h"
@@ -57,14 +54,7 @@ typedef struct
 #define DIAG_DUMP_DIR              "/tmp/ops-diag"
 #define FILE_PATH_LEN_MAX          256
 #define MAX_TIME_STR_LEN           256
-#define MAX_CLI_STR_LEN            256
 #define DIAG_CMD_LEN_MAX           50
-#define MAX_STR_BUFF_LEN           512
-
-#define MAX_PID                    65536
-#define MIN_PID                    1
-#define MAX_PID_LEN                5
-#define MIN_PID_LEN                1
 
 #define DIAG_DUMP_STR              "Display diagnostic dump\n"
 #define DIAG_DUMP_LIST_STR         "Display supported features list\n"

@@ -23,10 +23,27 @@
  ***************************************************************************/
 
 
+#include <errno.h>
+#include "jsonrpc.h"
+#include "openvswitch/vlog.h"
+#include "util.h"
+#include "unixctl.h"
+#include "dirs.h"
+
 #include "supportability_utils.h"
 #include "supportability_vty.h"
 
 #define REGEX_COMP_ERR        1000
+#define MAX_PID               65536
+#define MIN_PID               1
+#define MAX_PID_LEN           5
+#define MIN_PID_LEN           1
+
+
+VLOG_DEFINE_THIS_MODULE (supportability_utils_debug);
+
+
+static int read_pid_file (char *pidfile);
 
 
 /* Function        : strncmp_with_nullcheck
@@ -284,4 +301,129 @@ validate_cli_args(const char * arg , const char * regex)
     rc = regexec (&r,arg,n_matches, m, 0);
     regfree (&r);
     return rc;
+}
+
+/*
+ * Function       : read_pid_file
+ * Responsibility : read pid file
+ *
+ * Parameters
+ *                : pidfile
+ *
+ * Returns        : Negative integer value on failure
+ *                  Positive integer value on success
+ *
+ * Note : read_pidfile() API is does same thing but it opens a file in "r+"
+ *        mode. read_pidfile() API will success only if user has "rw"permission.
+ *        If user has "r" permission then read_pidfile() API fails.
+ */
+
+static int
+read_pid_file (char *pidfile)
+{
+    FILE *fp = NULL;
+    int pid = 0;
+    int rc = 0;
+    char err_buf[MAX_STR_BUFF_LEN] = {0};
+
+    if(pidfile == NULL) {
+        VLOG_ERR("Invalid parameter pidfile");
+        return -1;
+    }
+
+    fp = fopen(pidfile,"r");
+    if (fp == NULL) {
+        strerror_r (errno,err_buf,sizeof(err_buf));
+        STR_SAFE(err_buf);
+        VLOG_ERR("Failed to open pidfile:%s , error:%s",pidfile,err_buf);
+        return -1;
+    }
+
+    rc = fscanf(fp, "%d", &pid);
+    fclose(fp);
+
+    /*
+     * valid pid range : 1 to 65536
+     * digit count range of valid pid : 1 to 5
+     */
+
+    if ((( rc >= MIN_PID_LEN ) && ( rc <= MAX_PID_LEN )) &&
+            (( pid >= MIN_PID ) && ( pid <= MAX_PID ))) {
+        return pid;
+    }
+    else {
+        VLOG_ERR("Pid value is not in range : (%d-%d), pid : %d",
+                MIN_PID , MAX_PID , pid);
+        return -1;
+    }
+}
+
+/*
+ * Function       : connect_to_daemon
+ * Responsibility : populates jsonrpc client structure for a daemon
+ * Parameters     : target  - daemon name
+ * Returns        : jsonrpc client on success
+ *                  NULL on failure
+ *
+ */
+
+struct jsonrpc*
+connect_to_daemon(const char *target) {
+    struct jsonrpc *client=NULL;
+    char *socket_name=NULL;
+    int error=0;
+    char * rundir = NULL;
+    char *pidfile_name = NULL;
+    pid_t pid=-1;
+
+    if (!target) {
+        VLOG_ERR("target is null");
+        return NULL;
+    }
+
+    rundir = (char*) ovs_rundir();
+    if (!rundir) {
+        VLOG_ERR("rundir is null");
+        return NULL;
+    }
+
+    if (target[0] != '/') {
+
+        pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
+        if (!pidfile_name) {
+            VLOG_ERR("pidfile_name is null");
+            return NULL;
+        }
+
+        pid = read_pid_file(pidfile_name);
+        if (pid < 0) {
+            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
+            free(pidfile_name);
+            return NULL;
+        }
+        free(pidfile_name);
+        socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
+                (long int) pid);
+        if (!socket_name) {
+            VLOG_ERR("socket_name is null");
+            return NULL;
+        }
+
+    } else {
+        socket_name = xstrdup(target);
+        if (!socket_name) {
+            VLOG_ERR("socket_name is null, target:%s",target);
+            return NULL;
+        }
+    }
+
+    error = unixctl_client_create(socket_name, &client);
+    if (error) {
+        VLOG_ERR("cannot connect to %s,error=%d", socket_name,error);
+        free(socket_name);
+        return NULL;
+    }
+    free(socket_name);
+
+    return client;
 }

@@ -28,11 +28,8 @@
 #include "vtysh/vtysh.h"
 #include "vtysh/vtysh_user.h"
 #include "vtysh/memory.h"
-#include "dirs.h"
-#include "util.h"
-#include "daemon.h"
-#include "unixctl.h"
 #include "dynamic-string.h"
+#include "util.h"
 
 #define SHOW_VLOG_STR            "Display all vlogs\n"
 #define SHOW_VLOG_CONFIG_STR     "Display vlog configurations\n"

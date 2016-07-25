@@ -32,10 +32,7 @@
 #ifndef __DIAG_DUMP_H_
 #define __DIAG_DUMP_H_
 
-#include "dirs.h"
 #include "util.h"
-#include "daemon.h"
-#include "unixctl.h"
 
 #define DIAG_DUMP_BASIC_CMD     "dumpdiagbasic"
 #define DIAG_DUMP_ADVANCED_CMD  "dumpdiagadvanced"

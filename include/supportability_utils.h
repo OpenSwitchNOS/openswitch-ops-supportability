@@ -32,6 +32,8 @@
 #define  STR_SAFE(X)\
         if (sizeof(X) >=  1 )   X[ sizeof(X) - 1 ] =  '\0' ;
 
+#define MAX_STR_BUFF_LEN           512
+
 /* compile the regular expression for the given pattern */
 int
 compile_corefile_pattern (regex_t * regexst, const char * pattern);
@@ -69,5 +71,8 @@ strnlwr(char *str, int size);
 int
 validate_cli_args(const char * arg , const char * regex);
 
+/* populates jsonrpc client structure for a daemon */
+struct jsonrpc*
+connect_to_daemon(const char *target);
 
 #endif /* _SUPPORTABILITY_UTILS_H_ */

@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <string.h>
 #include "openvswitch/vlog.h"
+#include "unixctl.h"
 #include "diag_dump_vty.h"
 #include "jsonrpc.h"
 #include <pthread.h>
@@ -58,10 +59,6 @@ vtysh_diag_dump_create_thread( char* daemon , char **cmd_type ,
 
 static void *
 vtysh_diag_dump_thread( void* arg);
-
-static struct jsonrpc *
-vtysh_diag_connect_to_target(const char *target);
-
 
 static void
 vtysh_diag_list_features (struct feature* head ,  struct vty *vty);
@@ -339,62 +336,6 @@ diagdump_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
         dd_mutex_unlock( &gDiagDumpwaitMutex );
     }
 }
-
-/*
- * Function       : vtysh_diag_read_pid_file
- * Responsibility : read pid file
- *
- * Parameters
- *                : pidfile
- *
- * Returns        : Negative integer value on failure
- *                  Positive integer value on success
- *
- * Note : read_pidfile() API is does same thing but it opens a file in "r+"
- *        mode. read_pidfile() API will success only if user has "rw"permission.
- *        If user has "r" permission then read_pidfile() API fails.
- */
-
-static int
-vtysh_diag_read_pid_file (char *pidfile)
-{
-    FILE *fp = NULL;
-    int pid = 0;
-    int rc = 0;
-    char err_buf[MAX_STR_BUFF_LEN] = {0};
-
-    if(pidfile == NULL) {
-        VLOG_ERR("Invalid parameter pidfile");
-        return -1;
-    }
-
-    fp = fopen(pidfile,"r");
-    if (fp == NULL) {
-        strerror_r (errno,err_buf,sizeof(err_buf));
-        STR_SAFE(err_buf);
-        VLOG_ERR("Failed to open pidfile:%s , error:%s",pidfile,err_buf);
-        return -1;
-    }
-
-    rc = fscanf(fp, "%d", &pid);
-    fclose(fp);
-
-    /*
-     * valid pid range : 1 to 65536
-     * digit count range of valid pid : 1 to 5
-     */
-
-    if ((( rc >= MIN_PID_LEN ) && ( rc <= MAX_PID_LEN )) &&
-            (( pid >= MIN_PID ) && ( pid <= MAX_PID ))) {
-        return pid;
-    }
-    else {
-        VLOG_ERR("Pid value is not in range : (%d-%d), pid : %d",
-                MIN_PID , MAX_PID , pid);
-        return -1;
-    }
-}
-
 
 /*
  * Function       : vtysh_diag_list_features
@@ -883,78 +824,6 @@ DEFUN (vtysh_diag_dump_show,
 }
 
 /*
- * Function       : vtysh_diag_connect_to_target
- * Responsibility : populates jsonrpc client structure for a daemon
- * Parameters     : target  - daemon name
- * Returns        : jsonrpc client on success
- *                  NULL on failure
- *
- */
-
-static struct jsonrpc *
-vtysh_diag_connect_to_target(const char *target)
-{
-    char *socket_name=NULL;
-    int error=0;
-    char * rundir = NULL;
-    char *pidfile_name = NULL;
-    pid_t pid=-1;
-
-    if (!target)
-    {
-        VLOG_ERR("target is null");
-        return NULL;
-    }
-
-    rundir = (char*) ovs_rundir();
-    if (!rundir)
-    {
-        VLOG_ERR("rundir is null");
-        return NULL;
-    }
-
-    if (target[0] != '/') {
-
-        pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
-        if (!pidfile_name) {
-            VLOG_ERR("pidfile_name is null");
-            return NULL;
-        }
-
-        pid = vtysh_diag_read_pid_file(pidfile_name);
-        if (pid < 0) {
-            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
-            free(pidfile_name);
-            return NULL;
-        }
-        free(pidfile_name);
-        socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
-                (long int) pid);
-        if (!socket_name) {
-            VLOG_ERR("socket_name is null");
-            return NULL;
-        }
-
-    } else {
-        socket_name = xstrdup(target);
-        if (!socket_name) {
-            VLOG_ERR("socket_name is null, target:%s",target);
-            return NULL;
-        }
-    }
-
-    error = unixctl_client_create(socket_name, &client);
-    if (error) {
-        VLOG_ERR("cannot connect to %s,error=%d", socket_name,error);
-        free(socket_name);
-        return NULL;
-    }
-    free(socket_name);
-
-    return client;
-}
-
-/*
  * Function       : vtysh_diag_dump_daemon
  * Responsibility : send request to dump diagnostic info using unixctl and
  *                  print result to console or file .
@@ -1009,7 +878,7 @@ vtysh_diag_dump_daemon( char* daemon , char **cmd_type ,
         return CMD_WARNING;
     }
 
-    if (!vtysh_diag_connect_to_target(daemon)) {
+    if (!(client = connect_to_daemon(daemon))) {
         VLOG_ERR("%s transaction error.client is null ", daemon);
         vty_out(vty,"failed to connect daemon %s %s",daemon,VTY_NEWLINE);
         return CMD_WARNING;

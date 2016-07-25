@@ -26,6 +26,7 @@
 #include "vtysh/command.h"
 #include "vtysh/vtysh.h"
 #include "vtysh/vtysh_user.h"
+#include "unixctl.h"
 #include "smap.h"
 #include "vtysh/memory.h"
 #include "openvswitch/vlog.h"
@@ -66,9 +67,6 @@ static int
 vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type ,
       int cmd_argc , int request);
 
-static struct jsonrpc *
-vtysh_vlog_connect_to_target(const char *target);
-
 static struct feature *feature_head =NULL;
 
 /*flag to check before parsing yaml file */
@@ -76,73 +74,6 @@ static int initialized =0;
 
 static int flag = 0;
 
-
-/*
- * Function       : vtysh_vlog_connect_to_target
- * Responsibility : populates jsonrpc client structure for a daemon
- * Parameters     : target  - daemon name
- * Returns        : jsonrpc client on sucess
- *                   NULL on Failure
- */
-
-   static struct jsonrpc *
-vtysh_vlog_connect_to_target(const char *target)
-{
-   struct jsonrpc *client=NULL;
-   char *socket_name=NULL;
-   int error=0;
-   char * rundir = NULL;
-   char *pidfile_name = NULL;
-   pid_t pid = -1;
-
-   if (!target) {
-      VLOG_ERR("target is null");
-      return NULL;
-   }
-
-   rundir = (char*)ovs_rundir();
-
-   if(!rundir) {
-      VLOG_ERR("rundir is null");
-      return NULL;
-   }
-
-   if (target[0] != '/') {
-      pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
-      if (!pidfile_name) {
-         VLOG_ERR("pidfile_name is null");
-         return NULL;
-      }
-      /*read the pid*/
-      pid = read_pidfile(pidfile_name);
-      if (pid < 0) {
-         free(pidfile_name);
-         return NULL;
-      }
-
-      free(pidfile_name);
-      socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
-            (long int) pid);
-      if (!socket_name) {
-         VLOG_ERR("socket_name is null");
-         return NULL;
-      }
-   }
-   else {
-      socket_name = xstrdup(target);
-      if (!socket_name) {
-         VLOG_ERR("socket_name is null, target:%s",target);
-         return NULL;
-      }
-   }
-   /*connects to a unixctl server socket*/
-   error = unixctl_client_create(socket_name, &client);
-   if (error) {
-      VLOG_ERR("cannot connect to %s,error=%d", socket_name,error);
-   }
-   free(socket_name);
-   return client;
-}
 
 /*
  * Function       : vtysh_vlog_interface_daemon
@@ -174,7 +105,7 @@ vtysh_vlog_interface_daemon(char *feature,char *daemon ,char **cmd_type,
    }
 
    /*connect vtysh to the daemon*/
-   client = vtysh_vlog_connect_to_target(daemon);
+   client = connect_to_daemon(daemon);
    if(!client) {
       return CMD_WARNING;
    }

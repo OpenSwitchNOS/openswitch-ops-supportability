@@ -40,6 +40,7 @@
 #include "jsonrpc.h"
 #include "ospf_debug_vty.h"
 #include "supportability_utils.h"
+#include "unixctl.h"
 
 VLOG_DEFINE_THIS_MODULE (vtysh_ospf_debug);
 
@@ -47,147 +48,7 @@ static struct feature* feature_head;
 static char initialized = 0; /* flag to check before parseing yaml file */
 
 static int
-vtysh_ospf_read_pid_file (char *pidfile);
-
-static struct jsonrpc *
-vtysh_ospf_connect_to_target(const char *target);
-
-static int
 ospf_debug(const char **argv, int argc, int flag);
-
-/*
- * Function       : vtysh_ospf_read_pid_file
- * Responsibility : read pid file
- * Parameters     : pidfile
- * Returns        : Negative integer value on failure
- *                  Positive integer value on success
- *
- * Note : read_pidfile() API is does same thing but it opens a file in "r+"
- *        mode.read_pidfile() API will success only if user has "rw" permission.
- *        If user has "r" permission then read_pidfile() API fails.
- */
-
-static int
-vtysh_ospf_read_pid_file (char *pidfile)
-{
-    FILE *fp = NULL;
-    int pid = 0;
-    int rc = 0;
-    char err_buf[MAX_CLI_STR_LEN] = {0};
-
-    if (pidfile == NULL)
-    {
-        VLOG_ERR("Invalid parameter pidfile");
-        return -1;
-    }
-
-    fp = fopen(pidfile,"r");
-    if (fp == NULL)
-    {
-        strerror_r (errno,err_buf,sizeof(err_buf));
-        STR_SAFE(err_buf);
-        VLOG_ERR("Failed to open pidfile:%s , error:%s",pidfile,err_buf);
-        return -1;
-    }
-
-    rc = fscanf(fp, "%d", &pid);
-    fclose(fp);
-
-    /*
-     * valid pid range : 1 to 65536
-     * digit count range of valid pid : 1 to 5
-     */
-
-    if ((( rc >= MIN_PID_LEN ) && ( rc <= MAX_PID_LEN )) &&
-            (( pid >= MIN_PID ) && ( pid <= MAX_PID ))) {
-        return pid;
-    }
-    else
-    {
-        VLOG_ERR("Pid value is not in range : (%d-%d), pid : %d",
-                MIN_PID , MAX_PID , pid);
-        return -1;
-    }
-}
-
-/*
- * Function       : vtysh_ospf_connect_to_target
- * Responsibility : populates jsonrpc client structure for a daemon
- * Parameters     : target  - daemon name
- * Returns        : jsonrpc client on success
- *                  NULL on failure
- */
-
-static struct jsonrpc *
-vtysh_ospf_connect_to_target(const char *target)
-{
-    struct jsonrpc *client=NULL;
-    char *socket_name=NULL;
-    int error=0;
-    char * rundir = NULL;
-    char *pidfile_name = NULL;
-    pid_t pid=-1;
-
-    if (!target)
-    {
-        VLOG_ERR("target is null");
-        return NULL;
-    }
-
-    rundir = (char*) ovs_rundir();
-    if (!rundir)
-    {
-        VLOG_ERR("rundir is null");
-        return NULL;
-    }
-
-    if (target[0] != '/')
-    {
-        pidfile_name = xasprintf("%s/%s.pid", rundir, target);
-        if (!pidfile_name)
-        {
-            VLOG_ERR("pidfile_name is null");
-            return NULL;
-        }
-
-        pid = vtysh_ospf_read_pid_file(pidfile_name);
-        if (pid < 0)
-        {
-            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
-            free(pidfile_name);
-            return NULL;
-        }
-
-        free(pidfile_name);
-        socket_name = xasprintf("%s/%s.%ld.ctl", rundir, target,
-                (long int) pid);
-        if (!socket_name)
-        {
-            VLOG_ERR("socket_name is null");
-            return NULL;
-        }
-
-    }
-    else
-    {
-        socket_name = xstrdup(target);
-        if (!socket_name)
-        {
-            VLOG_ERR("socket_name is null, target:%s", target);
-            return NULL;
-        }
-    }
-
-    error = unixctl_client_create(socket_name, &client);
-    if (error)
-    {
-        VLOG_ERR("cannot connect to %s,error=%d", socket_name, error);
-        free(socket_name);
-        return NULL;
-    }
-    free(socket_name);
-    return client;
-}
 
 /*
  * Function       : vtysh_set_ospf_debug
@@ -217,7 +78,7 @@ vtysh_set_ospf_debug(char* daemon, char **cmd_type, int cmd_argc,
         return CMD_WARNING;
     }
 
-    client = vtysh_ospf_connect_to_target(daemon);
+    client = connect_to_daemon(daemon);
     if (!client)
     {
         VLOG_ERR("%s transaction error.client is null ", daemon);

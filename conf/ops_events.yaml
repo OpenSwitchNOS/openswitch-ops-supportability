@@ -491,6 +491,14 @@ event_definitions:
   event_description_template:
       'Sub-Interface {interface}, failed to delete an l3 interface'
 
+- event_name: SUBINTERFACE_IPV6_UPDATE
+  event_category: SUBINTERFACE
+  event_ID : 10012
+  severity: LOG_INFO
+  keys: interface, value
+  event_description_template:
+      'Sub-Interface {interface}, configured with ipv6 address {value}'
+
 - event_name: OSPFv2_ROUTE
   event_category: OSPFv2
   event_ID : 11001

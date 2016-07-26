@@ -387,34 +387,24 @@ connect_to_daemon(const char *target) {
         return NULL;
     }
 
-    if (target[0] != '/') {
+    pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
+    if (!pidfile_name) {
+        VLOG_ERR("pidfile_name is null");
+        return NULL;
+    }
 
-        pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
-        if (!pidfile_name) {
-            VLOG_ERR("pidfile_name is null");
-            return NULL;
-        }
-
-        pid = read_pid_file(pidfile_name);
-        if (pid < 0) {
-            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
-            free(pidfile_name);
-            return NULL;
-        }
+    pid = read_pid_file(pidfile_name);
+    if (pid < 0) {
+        VLOG_ERR("cannot read pidfile :%s", pidfile_name);
         free(pidfile_name);
-        socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
-                (long int) pid);
-        if (!socket_name) {
-            VLOG_ERR("socket_name is null");
-            return NULL;
-        }
-
-    } else {
-        socket_name = xstrdup(target);
-        if (!socket_name) {
-            VLOG_ERR("socket_name is null, target:%s",target);
-            return NULL;
-        }
+        return NULL;
+    }
+    free(pidfile_name);
+    socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
+            (long int) pid);
+    if (!socket_name) {
+        VLOG_ERR("socket_name is null");
+        return NULL;
     }
 
     error = unixctl_client_create(socket_name, &client);

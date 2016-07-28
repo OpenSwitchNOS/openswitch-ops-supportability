@@ -13,7 +13,6 @@
       - "show ntp status"
       - "show events"
       - "show core-dump"
-      - "show vlog config"
 
 # Show Tech NTP Feature Definition
   feature:

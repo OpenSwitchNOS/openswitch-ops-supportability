@@ -55,10 +55,16 @@ def check_show_tech_feature(sw1):
     print("1.3 Running Show tech Feature Test ")
     print("############################################\n")
 
-    # Run Show Tech basic Command
+    outputfile = str(uuid.uuid4()) + ".txt"
+
+    # Run Show Tech basic Command and store output to file
     sw1._timeout = 360
-    output = sw1("show tech basic")
+    output = sw1("show tech basic localfile " + outputfile)
     sw1._timeout = -1
+    # Read the file and check the output
+    output = sw1("cat /tmp/" + outputfile +
+                 " | grep 'Show Tech commands executed successfully'",
+                 shell="bash")
     assert "Show Tech commands executed successfully" in output
 
 
@@ -84,7 +90,9 @@ def check_show_tech_to_file(sw1):
     output = sw1("show tech localfile " + outputfile)
     sw1._timeout = -1
     # Read the file and check the output
-    output = sw1("cat /tmp/" + outputfile, shell="bash")
+    output = sw1("cat /tmp/" + outputfile +
+                 " | grep 'Show Tech commands executed successfully'",
+                 shell="bash")
     assert "Show Tech commands executed successfully" in output
 
 
@@ -251,7 +259,8 @@ def test_showtech(topology, step):
     step("Positive TestCases")
     check_show_tech_list(sw1)
 
-    check_show_tech(sw1)
+    # removing show tech test case since it is redundant to show tech localfile
+    # check_show_tech(sw1)
 
     check_show_tech_feature(sw1)
 
@@ -278,8 +287,8 @@ def test_showtech(topology, step):
 
     show_tech_config_duplicate_entries_test(sw1)
 
-    check_show_tech_feature_ntp(sw1)
+    # check_show_tech_feature_ntp(sw1)
 
-    show_tech_feature_version_test(sw1)
+    # show_tech_feature_version_test(sw1)
 
     check_show_tech_feature_unicast_routing(sw1)

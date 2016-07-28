@@ -22,7 +22,12 @@
  * Source file for the supportability common utils
  ***************************************************************************/
 
-
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "supportability_utils.h"
 #include "supportability_vty.h"
 
@@ -284,4 +289,56 @@ validate_cli_args(const char * arg , const char * regex)
     rc = regexec (&r,arg,n_matches, m, 0);
     regfree (&r);
     return rc;
+}
+
+/*
+ * Function       : proc_daemon_pid
+ * Responsibility : provides pid for a given daemon name
+ * Parameters
+ *                : name - regular expression to validate user input
+ *
+ * Returns        : pid value ( > 0 ) of given daemon on success
+ *                  Negative value on failure
+ */
+
+pid_t proc_daemon_pid(const char* daemon_name)
+{
+    DIR* dir;
+    struct dirent* ent;
+    long  pid , lpid;
+    char buf[PROC_FILE_MAX_LEN] = {0,};
+    char pname[DAEMON_NAME_MAX_LEN] = {0,};
+    char state;
+    FILE *fp=NULL;
+
+    if ( daemon_name == NULL )
+        return -1;
+
+    if (!(dir = opendir("/proc"))) {
+        return -1;
+    }
+
+    while((ent = readdir(dir)) != NULL) {
+        lpid = atol(ent->d_name);
+        if(lpid < 0)
+            continue;
+        snprintf(buf, sizeof(buf), "/proc/%ld/stat", lpid);
+        fp = fopen(buf, "r");
+        if (fp) {
+            if ( (fscanf(fp, "%ld (%[^)]) %c", &pid, pname, &state)) != 3 ){
+                fclose(fp);
+                closedir(dir);
+                return -1;
+            }
+            if (!strcmp_with_nullcheck(pname, daemon_name)) {
+                fclose(fp);
+                closedir(dir);
+                return (pid_t)lpid;
+            }
+            fclose(fp);
+        }
+    }
+
+    closedir(dir);
+    return -1;
 }

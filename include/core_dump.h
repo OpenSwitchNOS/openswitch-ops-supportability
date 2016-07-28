@@ -50,10 +50,7 @@ e.g.     "/var/lib/systemd/coredump\
 #define INDEX_STR_SIZE        4
 #define SRC_DATE_STR_LEN      8
 #define SRC_TIME_STR_LEN      6
-#define SRC_SIGNAL_STR_LEN    2
 #define DEAMON_NAME_SIZE      256
-#define REGEX_COMP_ERR        1000
-#define CORE_LOC_CONFIG       300
 #define CORE_FILE_NAME        600
 #define MIN_SIZE              6
 #define INSTANCE_ID_SIZE      8

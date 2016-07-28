@@ -27,12 +27,25 @@
 #include <string.h>
 #include <regex.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
+#include "jsonrpc.h"
+#include "openvswitch/vlog.h"
+#include "util.h"
+#include "unixctl.h"
+#include "dirs.h"
+
 #define FREE(X)                  if(X) { free(X); X=NULL;}
 
 #define  STR_SAFE(X)\
         if (sizeof(X) >=  1 )   X[ sizeof(X) - 1 ] =  '\0' ;
 
 #define MAX_STR_BUFF_LEN           512
+#define PROC_FILE_MAX_LEN       512
+#define DAEMON_NAME_MAX_LEN     256
 
 /* compile the regular expression for the given pattern */
 int
@@ -75,4 +88,7 @@ validate_cli_args(const char * arg , const char * regex);
 struct jsonrpc*
 connect_to_daemon(const char *target);
 
+/* get pid value from a daemon name ( using /proc file) */
+pid_t
+proc_daemon_pid(const char* name);
 #endif /* _SUPPORTABILITY_UTILS_H_ */

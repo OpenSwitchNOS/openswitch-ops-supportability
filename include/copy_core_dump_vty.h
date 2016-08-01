@@ -66,7 +66,7 @@ void cli_post_init(void);
 /* corefile instance id is pid . It's range is 1 - 65536 ( 2^16) */
 #define COREFILE_INSTANCE_REGEX "^([0-9]){1,5}$"
 
-#define DAEMON_CORE_PATTERN     "*\\.xz"
+#define DAEMON_CORE_PATTERN     "*"
 #define KERNEL_CORE_PATTERN     "vmcore.[0-9][0-9][0-9][0-9][0-9][0-9][0-9]\
 [0-9].[0-9][0-9][0-9][0-9][0-9][0-9].tar.gz"
 

@@ -45,12 +45,16 @@ Function : convert_to_date_and_time
 Responsibility  : Convert Unix time to Date and Time Formate {Date: 2016-03-28 <%Y-%m-%d> & Time : 09:59:59 <%H:%M:%S>}
 */
 void
-convert_to_date_and_time(char *buf_date, char * buf_time, int buf_date_size, int buf_time_size, const char *str)
+convert_to_date_and_time(char *buf_date,
+        char * buf_time, int buf_date_size,
+        int buf_time_size, const char *str,
+        int is_microres)
 {
     int strl = 0;
     char timestring[TIME_STR_SIZE] = {0,};
     char datestring[DATE_STR_SIZE] = {0,};
     time_t t_t = 0;
+    long long int time_res = 0;
     struct tm *tmp = NULL;
     strl = strlen(str);
 
@@ -58,7 +62,16 @@ convert_to_date_and_time(char *buf_date, char * buf_time, int buf_date_size, int
     if(strl>=MIN_SIZE) {
 
         /*convert basetime string in to integer*/
-        t_t = atoi(str);
+        time_res = atoll(str);
+        if(is_microres)
+        {
+            /* Time is specified in micro second resolution, convert to sec*/
+            t_t = (time_t) (time_res / MICRO_SEC_IN_SEC);
+        }
+        else
+        {
+            t_t =(time_t) time_res;
+        }
         /*convert in to local time using localtime() API from time.h*/
         tmp = localtime(&t_t);
 
@@ -86,6 +99,7 @@ extract_info (
     int strsize = 0;
     int matchstatus;
     int result;
+    int is_microres = 0;
     char date_string[DATE_STR_SIZE]={0};
     char time_string[TIME_STR_SIZE]={0};
     /* contains the matches found. */
@@ -99,13 +113,31 @@ extract_info (
     if (type == TYPE_DAEMON)
     {
 
-
+        /* In case if fetching extended attributes failed, then we will use
+           the information stored in the file name */
+        matchstatus = regexec (regexst, filename, TOTAL_INFO, match_found, 0);
         /* Get Daemon Name */
         result = getxattr(filename, "user.coredump.comm",cd->daemon_name,DEAMON_NAME_SIZE );
 
         if (result == -1)
         {
-            return -1;
+            /* Failed to get daemon name from extended attributes, hence try to get
+               it from the file name */
+            if(matchstatus)
+            {
+                return -1;
+            }
+            else
+            {
+                if (match_found[1].rm_so == -1)
+                {
+                    return -1;
+                }
+                result = match_found[1].rm_eo - match_found[1].rm_so;
+                strncpy (cd->daemon_name,(filename+match_found[1].rm_so),DEAMON_NAME_SIZE);
+                cd->daemon_name[result] = 0;
+                cd->daemon_name[DEAMON_NAME_SIZE] = 0;
+            }
         }
         else if (result > DEAMON_NAME_SIZE)
         {
@@ -116,12 +148,12 @@ extract_info (
             cd->daemon_name[result] = 0;
         }
 
+
         /* Get crash signal, to generate the crash message/reason */
         result = getxattr(filename, "user.coredump.signal", cd->crash_signal,SIGNAL_STR_SIZE);
-
         if (result == -1)
         {
-            return -1;
+           cd->crash_signal[0] = 0;
         }
         else if (result > SIGNAL_STR_SIZE)
         {
@@ -132,12 +164,27 @@ extract_info (
             cd->crash_signal[result] = 0;
         }
 
+
         /* Get PID, used as instance_id */
         result = getxattr(filename, "user.coredump.pid", cd->crash_instance_id, INSTANCE_ID_SIZE);
 
         if(result == -1)
         {
-            return -1;
+            if(matchstatus)
+            {
+                return -1;
+            }
+            if (match_found[4].rm_so == -1)
+            {
+                cd->crash_instance_id[0] = 0;
+            }
+            else
+            {
+                result = match_found[4].rm_eo - match_found[4].rm_so;
+                strncpy (cd->crash_instance_id,(filename+match_found[4].rm_so),INSTANCE_ID_SIZE);
+                cd->crash_instance_id[result] = 0;
+                cd->crash_instance_id[INSTANCE_ID_SIZE] = 0;
+            }
         }
         else if (result > INSTANCE_ID_SIZE)
         {
@@ -154,7 +201,24 @@ extract_info (
 
         if (result == -1)
         {
-            return -1;
+            if(matchstatus)
+            {
+                return -1;
+            }
+            if (match_found[5].rm_so == -1)
+            {
+                /* Timestamp not available */
+                result = 0;
+                value[result] = 0;
+            }
+            else
+            {
+                result = match_found[5].rm_eo - match_found[5].rm_so;
+                strncpy (value,(filename+match_found[5].rm_so),SIZE_DATE_AND_TIME);
+                value[result] = 0;
+                value[SIZE_DATE_AND_TIME] = 0;
+                is_microres = 1;
+            }
         }
         else if (result > SIZE_DATE_AND_TIME)
         {
@@ -165,16 +229,24 @@ extract_info (
             value[result] = 0;
         }
 
+        if (result == 0)
+        {
+            /* Timestamp not available */
+            cd->crash_date[0] = 0;
+            cd->crash_time[0] = 0;
+        }
+        else
+        {
 
+            convert_to_date_and_time(date_string,time_string,DATE_STR_SIZE,
+                    TIME_STR_SIZE,value,is_microres);
 
-        convert_to_date_and_time(date_string,time_string,DATE_STR_SIZE,TIME_STR_SIZE,value);
+            strncpy(cd->crash_date,date_string,(DATE_STR_SIZE-1));
+            cd->crash_date[DATE_STR_SIZE] = 0;
 
-        strncpy(cd->crash_date,date_string,(DATE_STR_SIZE-1));
-        cd->crash_date[DATE_STR_SIZE] = 0;
-
-        strncpy(cd->crash_time,time_string,(TIME_STR_SIZE-1));
-        cd->crash_time[TIME_STR_SIZE] = 0;
-
+            strncpy(cd->crash_time,time_string,(TIME_STR_SIZE-1));
+            cd->crash_time[TIME_STR_SIZE] = 0;
+        }
     }
     else if (type == TYPE_KERNEL)
     {

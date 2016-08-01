@@ -28,15 +28,20 @@
 
 
 
-#define GB_PATTERN    "%s/core*.xz"
-#define CORE_FILE_PATTERN "core.*\\.xz"
+#define GB_PATTERN    "%s/core.*"
+#define CORE_FILE_PATTERN \
+"core\\.(.*)\\.([0-9]+)\\.([0-9a-f]{1,64})\\.([0-9]{1,8})\\.([0-9]{1,16})"
+
 #define KERN_GB_PATTERN \
    "vmcore.[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9]" \
 "[0-9][0-9][0-9].tar.gz"
 
 /* systemd uses hardcoded path to store core files
 e.g.     "/var/lib/systemd/coredump\
-/core.vtysh.0.68b62225067c4523af7d4d38e723da39.682.1459547856000000.xz" */
+/core.vtysh.0.68b62225067c4523af7d4d38e723da39.682.1459547856000000.xz"
+OR
+/core.vtysh.0.eb5ed4346e5f40d8a942b3549ffd55b3.6173.991256265000000"
+*/
 
 #define DAEMON_CORE_PATH        "\\/var\\/diagnostics\\/coredump"
 #define KERNEL_CORE_PATH        "\\/var\\/diagnostics\\/coredump"
@@ -58,6 +63,7 @@ e.g.     "/var/lib/systemd/coredump\
 #define MIN_SIZE              6
 #define INSTANCE_ID_SIZE      8
 #define SIZE_DATE_AND_TIME    20
+#define MICRO_SEC_IN_SEC      1000000
 /*  we have 5 information to extract from file name.
  *  They are  daemonname,time,date, index and signal.
  *  Together with the full match

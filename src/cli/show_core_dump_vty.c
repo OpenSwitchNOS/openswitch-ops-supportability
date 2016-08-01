@@ -54,19 +54,16 @@ signal_desc(const char *sig_char , char *sig_str , unsigned int size)
 {
     int sig_int = 0;
     char *sig_desc = NULL;
-    if (!( sig_char && sig_str ))
-    {
-        return 1;
-    }
 
-    sig_int = atoi( sig_char );
-    if (( sig_int  < SIGHUP  ) &&  ( sig_int > SIGRTMAX ))
+    if(sig_char && sig_str && sig_char[0] != 0)
     {
-        return 2;
+        sig_int = atoi( sig_char );
+        if (( sig_int  >= SIGHUP  ) &&  ( sig_int <= SIGRTMAX ))
+        {
+            sig_desc = strsignal(sig_int);
+        }
     }
-
-    sig_desc = strsignal(sig_int);
-    strncpy (sig_str ,sig_desc ? sig_desc : " " , size);
+    strncpy (sig_str ,sig_desc ? sig_desc : "    " , size);
     if ( size > 0 )
     {
         sig_str[size-1] = '\0' ;
@@ -88,8 +85,6 @@ cli_show_core_dump(void)
 
     int header_p = 0;
     int num_of_core =0;
-
-
 
     /* Prepare the regular expression to parse information from the
        core files */
@@ -149,11 +144,12 @@ cli_show_core_dump(void)
                 header_p = 1;
             }
             num_of_core++;
+            memset(sig_desc,0,SIGNAL_DESC_STR_LEN);
             signal_desc(cd.crash_signal ,sig_desc,sizeof(sig_desc));
             vty_out(vty,"%-20.20s  %-12.12s  %-30.30s %-11.11s%-10.10s%s"
                     ,cd.daemon_name,cd.crash_instance_id,sig_desc,
                     cd.crash_date,cd.crash_time,VTY_NEWLINE);
-        }
+       }
     }
 
 

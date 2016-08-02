@@ -118,6 +118,12 @@ def unixctl_exit(conn, unused_argv, unused_aux):
     exiting = True
     conn.reply(None)
 
+def catalog_update():
+    '''
+        This will update the catatlog list, all newly created Message ID
+    '''
+        supportability_run_command('journalctl --update-catalog')
+
 
 # ------------------- post_crash_processing() -----------------
 # Performs post crash task
@@ -474,6 +480,7 @@ def main():
             crashprocessing_poll(poller)
             poller.block()
 
+    catalog_update()
     # Daemon Exit.
     unixctl_server.close()
     idl.close()

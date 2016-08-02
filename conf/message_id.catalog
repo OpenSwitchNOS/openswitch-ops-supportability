@@ -1,0 +1,4 @@
+-- 50c0fa81c2a545ec982a54293f1b1945
+Subject: A message is logged in journal as Openswitch event-log
+Defined-By: systemd
+Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel

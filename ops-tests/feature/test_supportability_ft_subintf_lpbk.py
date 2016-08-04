@@ -52,8 +52,8 @@ def loopback_interface_events_test(dut, step):
     with dut.libs.vtysh.ConfigInterfaceLoopback('10') as ctx:
         ctx.ip_address("10.1.1.1/24")
 
-    lo_exp_out = "Loopback Interface lo10, created"
-    ip_exp_out = "Loopback Interface lo10, configured with ip address " \
+    lo_exp_out = "Loopback Interface loopback10, created"
+    ip_exp_out = "Loopback Interface loopback10, configured with ip address " \
                  "10.1.1.1/24"
     out = dut('show events')
     lines = out.splitlines()
@@ -70,7 +70,7 @@ def loopback_interface_events_test(dut, step):
     with dut.libs.vtysh.ConfigInterfaceLoopback('10') as ctx:
         ctx.no_ip_address("10.1.1.1/24")
 
-    ipdl_exp_out = "Loopback Interface lo10, ipv4 address deleted"
+    ipdl_exp_out = "Loopback Interface loopback10, ipv4 address deleted"
     out = dut('show events')
     lines = out.splitlines()
     for line in lines:
@@ -83,7 +83,7 @@ def loopback_interface_events_test(dut, step):
     with dut.libs.vtysh.ConfigInterfaceLoopback('10') as ctx:
         ctx.ipv6_address("abcf::12/64")
 
-    ipv6_exp_out = "Loopback Interface lo10, configured with ip " \
+    ipv6_exp_out = "Loopback Interface loopback10, configured with ip " \
                    "address abcf::12/64"
     out = dut('show events')
     lines = out.splitlines()
@@ -96,7 +96,7 @@ def loopback_interface_events_test(dut, step):
     step("Unconfigure IPv6 address from the loopback interface")
     with dut.libs.vtysh.ConfigInterfaceLoopback('10') as ctx:
         ctx.no_ipv6_address("abcf::12/64")
-    ipv6dl_exp_out = "Loopback Interface lo10, ipv6 address deleted"
+    ipv6dl_exp_out = "Loopback Interface loopback10, ipv6 address deleted"
     out = dut('show events')
     lines = out.splitlines()
     for line in lines:
@@ -108,7 +108,7 @@ def loopback_interface_events_test(dut, step):
     step("Delete the loopback interface")
     with dut.libs.vtysh.Configure() as ctx:
         ctx.no_interface_loopback("10")
-    lodl_exp_out = "Loopback Interface lo10, deleted"
+    lodl_exp_out = "Loopback Interface loopback10, deleted"
     out = dut('show events')
     lines = out.splitlines()
     for line in lines:
@@ -361,7 +361,7 @@ def show_tech_loopback(dut, step):
     with dut.libs.vtysh.ConfigInterfaceLoopback('10') as ctx:
         ctx.ip_address("5.5.5.5/24")
     step("Verify loopback interface information in \"show tech\"")
-    lo_tech_exp = ["Interface lo10 is up", "IPv4 address 5.5.5.5/24"]
+    lo_tech_exp = ["Interface loopback10 is up", "IPv4 address 5.5.5.5/24"]
     out = dut("show tech loopback")
     lines = out.splitlines()
     for line in lines:

@@ -173,7 +173,7 @@ def sub_interface_events_test(dut, step):
     with dut.libs.vtysh.ConfigInterface('10.10') as ctx:
         ctx.ipv6_address("abcd::201/64")
 
-    ipv6_exp_out = "Sub-Interface 10.10, configured with ip " \
+    ipv6_exp_out = "Sub-Interface 10.10, configured with ipv6 " \
                    "address abcd::201/64"
     out = dut('show events')
     lines = out.splitlines()

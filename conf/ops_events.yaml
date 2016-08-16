@@ -907,6 +907,34 @@ event_definitions:
   keys: lag_id
   event_description_template: 'Failed to create LAG {lag_id} '
 
+- event_name: LACP_FALLBACK_MODE_SET
+  event_category: LACP
+  event_ID: 15015
+  severity: LOG_ERR
+  keys: lag_id, lacp_fallback_mode
+  event_description_template: 'LACP fallback mode set to {lacp_fallback_mode} for lag {lag_id} '
+
+- event_name: LACP_FALLBACK_TIMEOUT_SET
+  event_category: LACP
+  event_ID: 15016
+  severity: LOG_ERR
+  keys: lag_id, lacp_fallback_timeout
+  event_description_template: 'LACP fallback timeout set to {lacp_fallback_timeout} for lag {lag_id} '
+
+- event_name: LACP_FALLBACK_TIMEOUT_EXPIRED
+  event_category: LACP
+  event_ID: 15017
+  severity: LOG_ERR
+  keys: lag_id, lacp_fallback_timeout
+  event_description_template: 'LACP fallback timeout {lacp_fallback_timeout} expired for lag {lag_id} '
+
+- event_name: LACP_INTERACE_FALLBACK
+  event_category: LACP
+  event_ID: 15018
+  severity: LOG_ERR
+  keys: lag_id, intf_id
+  event_description_template: 'Interface {intf_id} enabled by fallback for lag {lag_id} '
+
 - event_name: TRUNK_SET_SUCCEEDS
   event_category: LAG
   event_ID : 16001

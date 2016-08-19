@@ -24,6 +24,7 @@
 
 
 #include <errno.h>
+#include <unistd.h>
 #include "jsonrpc.h"
 #include "openvswitch/vlog.h"
 #include "util.h"
@@ -387,24 +388,28 @@ connect_to_daemon(const char *target) {
         return NULL;
     }
 
-    pidfile_name = xasprintf("%s/%s.pid", rundir ,target);
-    if (!pidfile_name) {
-        VLOG_ERR("pidfile_name is null");
-        return NULL;
-    }
+    socket_name = xasprintf("%s/%s.ctl", rundir, target);
+    if (access(socket_name, W_OK) != 0) {
+        free(socket_name);
+        pidfile_name = xasprintf("%s/%s.pid", rundir, target);
+        if (!pidfile_name) {
+            VLOG_ERR("pidfile_name is null");
+            return NULL;
+        }
 
-    pid = read_pid_file(pidfile_name);
-    if (pid < 0) {
-        VLOG_ERR("cannot read pidfile :%s", pidfile_name);
+        pid = read_pid_file(pidfile_name);
+        if (pid < 0) {
+            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
+            free(pidfile_name);
+            return NULL;
+        }
         free(pidfile_name);
-        return NULL;
-    }
-    free(pidfile_name);
-    socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
-            (long int) pid);
-    if (!socket_name) {
-        VLOG_ERR("socket_name is null");
-        return NULL;
+        socket_name = xasprintf("%s/%s.%ld.ctl", rundir , target,
+                (long int) pid);
+        if (!socket_name) {
+            VLOG_ERR("socket_name is null");
+            return NULL;
+        }
     }
 
     error = unixctl_client_create(socket_name, &client);

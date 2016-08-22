@@ -98,6 +98,14 @@ categories:
   description: 'Events related to Virtual Local Area Network'
   category_rank: 24
 
+- event_category: CPU-RX
+  description: 'Events related to CPU Routing'
+  category_rank: 25
+
+- event_category: BFD
+  description: 'Events related to Bidirectional Forwarding Detection'
+  category_rank: 26
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1841,3 +1849,53 @@ event_definitions:
     'This log event informs that internal VLAN is not allocated'
   event_description_template:
     'Failed to allocate internal VLAN to port {port}'
+
+- event_name: CPU_RX_FP_ERR
+  event_category: CPU-RX
+  event_ID : 25001
+  severity: LOG_ERR
+  keys: action, err
+  description:
+    'Logs errors for field group creation.'
+  event_description_template:
+    'Failed to {action} error : {err}'
+
+- event_name: CPU_RX_FP_SUCCESS
+  event_category: CPU-RX
+  event_ID : 25002
+  severity: LOG_INFO
+  keys: group_id
+  description:
+    'Logs errors for field group creation.'
+  event_description_template:
+    'Field group created: group_id={group_id}'
+
+- event_name: BFD_FP_ERR
+  event_category: BFD
+  event_ID : 26001
+  severity: LOG_ERR
+  keys: action, rule, err
+  description:
+    'Logs errors for BFD FP creation/installation.'
+  event_description_template:
+    'Failed to {action} {rule} error : {err}'
+
+- event_name: BFD_SINGLE_HOP_FP_SUCCESS
+  event_category: BFD
+  event_ID : 26002
+  severity: LOG_INFO
+  keys: group_id, fp_id
+  description:
+    'Logs errors for BFD single hop FP creation/installation.'
+  event_description_template:
+    'BFD Single hop field entry added: group_id={group_id} fp_id={fp_id}'
+
+- event_name: BFD_Multi_HOP_FP_SUCCESS
+  event_category: BFD
+  event_ID : 26003
+  severity: LOG_INFO
+  keys: group_id, fp_id
+  description:
+    'Logs errors for BFD multi hop FP creation/installation.'
+  event_description_template:
+    'BFD Multi hop field entry added: group_id={group_id} fp_id={fp_id}'

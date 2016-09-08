@@ -31,7 +31,7 @@ from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 from time import sleep
 from os import path
-import pytest
+from pytest import mark
 # from .helpers import wait_until_interface_up
 # from ipdb import set_trace
 
@@ -229,6 +229,26 @@ def _remote_syslog_test(remotes_config):
                            transport=" " + conn['trans'] + " " + conn["port"])
 
         try:
+            log_size_str = conn['hs']('stat -c%s /tmp/syslog_out.sb')
+            iter = 0
+            while (iter < 10):
+                if log_size_str:
+                    break
+                log_size_str = conn['hs']("stat -c%s /tmp/syslog_out.sb")
+                iter += 1
+                sleep(1)
+
+            print("Log file size : " + log_size_str)
+            log_size = int(log_size_str)
+        except:
+            print("Exception hit on finding log file size ")
+            log_size = 0
+
+        with conn['sw'].libs.vtysh.Configure() as ctx:
+            ctx.no_logging(remote_host=conn['rmt_addr'],
+                           transport=" " + conn['trans'] + " " + conn["port"])
+
+        try:
             conn['hs']("pkill -f " + execscript)
         except:
             print("Exception hit on killing the remote script")
@@ -254,7 +274,8 @@ def _remote_syslog_test(remotes_config):
     return test_status
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_udp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different udp syslog
@@ -341,7 +362,8 @@ def test_udp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_tcp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different tcp syslog
@@ -430,7 +452,8 @@ def test_tcp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_tcp_udp_combination(topology):
     """
     Verifies syslog messages transmission to 4 different syslog with

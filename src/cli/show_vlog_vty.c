@@ -508,6 +508,28 @@ DEFUN_NOLOCK (cli_config_feature_set_vlog,
 
 
 
+DEFUN_NOLOCK (cli_config_feature_set_vlog,
+      cli_config_vlog_feature_set_cmd,
+      "vlog feature NAME (syslog | file | all) " \
+      "(emer | err | warn | info | dbg | off)",
+      VLOG_CONFIG
+      VLOG_CONFIG_FEATURE
+      SHOW_VLOG_FEATURE_NAME
+      VLOG_LOG_DEST_SYSLOG
+      VLOG_LOG_DEST_FILE
+      VLOG_LOG_DEST_ALL
+      VLOG_LOG_LEVEL_EMER
+      VLOG_LOG_LEVEL_ERR
+      VLOG_LOG_LEVEL_WARN
+      VLOG_LOG_LEVEL_INFO
+      VLOG_LOG_LEVEL_DBG
+      VLOG_LOG_LEVEL_OFF)
+{
+   return cli_config_vlog_set(FEATURE,argv[0],argv[1],argv[2]);
+}
+
+
+
 
 /*Action routine for show vlog features list*/
 
@@ -561,13 +583,14 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
             , &module_length);
       if (return_value < 0) {
          strerror_r (errno,err_buf,sizeof(err_buf));
-         VLOG_ERR("Failed to read module name field: %s\n",err_buf);
-         continue;
+         VLOG_DBG("Failed to read module name field: %s\n",err_buf);
       }
 
-      module = get_value(module_name);
-      if(module==NULL) {
-         VLOG_ERR("failed to read module-value from module field");
+      if(module_name != NULL){
+         module = get_value(module_name);
+         if(module==NULL) {
+            VLOG_DBG("failed to read module-value from module field");
+         }
       }
 
       return_value = sd_journal_get_data(journal_handle
@@ -577,22 +600,23 @@ cli_show_vlog(sd_journal *journal_handle,const char *argv,int filter)
       /*message_data is local for iter loop , no need to free it*/
       if (return_value < 0) {
          strerror_r (errno,err_buf,sizeof(err_buf));
-         VLOG_ERR("Failed to read message field: %s\n",err_buf);
-         continue;
+         VLOG_DBG("Failed to read message field: %s\n",err_buf);
       }
 
       ++vlog_count;
       /*read the log message from journal*/
-      msg = get_value(message_data);
-      if(msg == NULL) {
-         VLOG_ERR("failed to read msg from message field");
-         continue;
+      if(message_data != NULL){
+         msg = get_value(message_data);
+         if(msg == NULL) {
+            VLOG_DBG("failed to read msg from message field");
+         }
       }
       /*duplicate the log message and search for ovs logs*/
-      msg_str = xstrdup(msg);
-      if(msg_str == NULL) {
-         VLOG_ERR("failed to duplicate the message");
-         continue;
+      if(msg != NULL){
+         msg_str = xstrdup(msg);
+         if(msg_str == NULL) {
+            VLOG_DBG("failed to duplicate the message");
+         }
       }
       /*show vlog daemon*/
       if(argv != NULL && module != NULL && msg_str != NULL){

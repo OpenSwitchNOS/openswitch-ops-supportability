@@ -251,6 +251,7 @@ def check_show_tech_feature_unicast_routing(sw1):
         assert command in output, "Failed to run 'show tech ucast-routing"
 
 
+@mark.gate
 def test_showtech(topology, step):
     sw1 = topology.get('sw1')
 

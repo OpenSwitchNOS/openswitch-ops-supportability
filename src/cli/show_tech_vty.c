@@ -429,6 +429,20 @@ showtech_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
     }
 }
 
+/* Function       : showtech_zsignal_handler
+ * Resposibility  : signal handler for showtech
+ * Return         : NULL
+ */
+void
+showtech_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+    gUserInterrupt = TRUE ;
+    //tigger the alarm only if it is not yet tiggered .
+    st_mutex_lock( &waitMutex );
+    pthread_cond_signal( &waitCond );
+    st_mutex_unlock( &waitMutex );
+}
+
 /* Function       : cli_show_tech
  * Resposibility  : Display Show Tech Information
  * Return         : 0 on success 1 otherwise

@@ -75,4 +75,8 @@ validate_cli_args(const char * arg , const char * regex);
 struct jsonrpc*
 connect_to_daemon(const char *target);
 
+/* validate cli arguments using regular expression */
+int
+validate_cli_args(const char * arg , const char * regex);
+
 #endif /* _SUPPORTABILITY_UTILS_H_ */

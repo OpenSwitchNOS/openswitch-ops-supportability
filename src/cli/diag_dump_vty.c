@@ -318,7 +318,20 @@ diagdump_signal_handler(int sig, siginfo_t *siginfo, void *context)
             dd_alarm(USER_INT_ALARM);
         }
     }
+  }
+/* Function       : diagdump_zsignal_handler
+ * Resposibility  : signal handler for diagdump
+ * Return         : NULL
+ */
+void
+diagdump_Zsignal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+    gDiagDumpUserInterrupt = TRUE ;
+    dd_mutex_lock( &gDiagDumpwaitMutex );
+    pthread_cond_signal( &gDiagDumpWaitCond );
+    dd_mutex_unlock( &gDiagDumpwaitMutex );
 }
+
 
 /* Function       : diagdump_zsignal_handler
  * Resposibility  : signal handler for diagdump
@@ -810,6 +823,14 @@ DEFUN (vtysh_diag_dump_show,
     {
       VLOG_ERR("thread has been cancelled");
     }
+    if  (( return_val == CMD_SUCCESS ) && (argc >= 2)) {
+        vty_out(vty,"%s diagnostic-dump is collected at %s %s",
+                argv[0],file_path,VTY_NEWLINE);
+    }
+
+    CLOSE(fd);
+    return return_val;
+#undef WRITE_ERR_HANDLE_LOG
 
     if  (( return_val == CMD_SUCCESS ) && (argc >= 2)) {
         vty_out(vty,"%s diagnostic-dump is collected at %s %s",

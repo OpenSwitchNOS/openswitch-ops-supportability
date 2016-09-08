@@ -55,6 +55,7 @@ typedef struct
 #define FILE_PATH_LEN_MAX          256
 #define MAX_TIME_STR_LEN           256
 #define DIAG_CMD_LEN_MAX           50
+#define MAX_STR_BUFF_LEN           512
 
 #define DIAG_DUMP_STR              "Display diagnostic dump\n"
 #define DIAG_DUMP_LIST_STR         "Display supported features list\n"

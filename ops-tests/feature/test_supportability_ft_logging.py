@@ -77,6 +77,7 @@ def _syslog_conf_no_conf(switch,
         assert False
 
 
+@mark.gate
 @mark.test_id(33000)
 def test_logging_default(topology):
     """
@@ -94,6 +95,7 @@ def test_logging_default(topology):
                          )
 
 
+@mark.gate
 @mark.test_id(33001)
 def test_logging_severity(topology):
     """
@@ -110,6 +112,7 @@ def test_logging_severity(topology):
                          svrty=' severity err ')
 
 
+@mark.gate
 @mark.test_id(33002)
 def test_logging_transport(topology):
     """
@@ -126,6 +129,7 @@ def test_logging_transport(topology):
                          trnsprt=' tcp 10942 ')
 
 
+@mark.gate
 @mark.test_id(33003)
 def test_logging_transport_and_severity(topology):
     """

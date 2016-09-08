@@ -282,7 +282,7 @@ def supportability_init(remote):
     # than current machine id
     machine_id = ""
     with open("/etc/machine-id", "r") as f:
-        machine_id = f.readline()
+        machine_id = f.readline().strip()
     if len(machine_id) > 0:
         current_machine_id = machine_id
         subfolders = ["logs"]

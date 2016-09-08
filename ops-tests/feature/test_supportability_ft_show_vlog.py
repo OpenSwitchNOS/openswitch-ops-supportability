@@ -33,6 +33,7 @@ List of Test Cases
 from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 from time import sleep
+from pytest import mark
 
 
 TOPOLOGY = """
@@ -48,6 +49,7 @@ TOPOLOGY = """
 """
 
 
+@mark.gate
 def test_show_vlog_config(topology):
     """
     Test that a show vlog configuration is functional with a OpenSwitch switch.
@@ -68,6 +70,7 @@ def test_show_vlog_config(topology):
         print('show vlog config test failed')
 
 
+@mark.gate
 def test_show_vlog_daemon(topology):
     """
     Test the show vlog daemon
@@ -84,6 +87,7 @@ def test_show_vlog_daemon(topology):
         print('show vlog daemon test failed')
 
 
+@mark.gate
 def test_show_vlog_severity(topology):
     """
     Test the severity of show vlog
@@ -100,6 +104,7 @@ def test_show_vlog_severity(topology):
         print('show vlog severity test failed')
 
 
+@mark.gate
 def test_show_vlog_config_daemon(topology):
     """
     Test the show vlog config daemon
@@ -124,6 +129,7 @@ def test_show_vlog_config_daemon(topology):
         print('show vlog config daemon test failed')
 
 
+@mark.gate
 def test_show_vlog_config_feature(topology):
     """
     Test the show vlog config feature
@@ -148,6 +154,7 @@ def test_show_vlog_config_feature(topology):
         print('show vlog config feature test failed')
 
 
+@mark.gate
 def test_show_vlog_config_list(topology):
     """
     Test the show vlog config list
@@ -165,6 +172,7 @@ def test_show_vlog_config_list(topology):
         print('show vlog config list failed')
 
 
+@mark.gate
 def test_show_vlog_invalid_daemon(topology):
     """
     Test the show vlog daemon passing invalid daemon as argument
@@ -182,6 +190,7 @@ def test_show_vlog_invalid_daemon(topology):
         print('show vlog invalid daemon test failed')
 
 
+@mark.gate
 def test_show_vlog_invalid_severity_level(topology):
     """
     Test the show vlog severity level passing invalid severity as \
@@ -200,6 +209,7 @@ def test_show_vlog_invalid_severity_level(topology):
         print('show vlog invalid severity test failed')
 
 
+@mark.gate
 def test_show_vlog_daemon_severity(topology):
     """
     Test the show vlog daemon {daemon} severity {severity}
@@ -217,6 +227,7 @@ def test_show_vlog_daemon_severity(topology):
         print('show vlog daemon with severity test failed')
 
 
+@mark.gate
 def test_show_vlog_severity_daemon(topology):
     """
     Test the show vlog severity {severity} daemon {daemon}
@@ -233,6 +244,7 @@ def test_show_vlog_severity_daemon(topology):
         print('show vlog severity with daemon test failed')
 
 
+@mark.gate
 def test_show_vlog_subcommand(topology):
     """
     Test the show vlog subcommand

@@ -9,6 +9,8 @@
       - "show system"
       - "show interface mgmt"
       - "show interface dom"
+      - "show interface"
+      - "show interface transceiver"
       - "show vlan"
       - "show ntp status"
       - "show events"
@@ -304,6 +306,18 @@
     feature_name: tftp-server
     cli_cmds:
       - "show tftp-server"
+
+# Show Tech SNMP Feature Configurations
+  feature:
+  -
+    feature_desc: "SNMP"
+    feature_name: snmp
+    cli_cmds:
+     - "show snmp agent-port"
+     - "show snmp community"
+     - "show snmp system"
+     - "show snmp trap"
+     - "show snmpv3 users"
 
 # Show Tech SFTP Server Feature Definition
   feature:

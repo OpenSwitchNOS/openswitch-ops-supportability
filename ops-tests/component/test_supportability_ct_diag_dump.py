@@ -19,6 +19,7 @@
 
 from re import match, I
 from time import sleep
+from pytest import mark
 
 # Topology definition. the topology contains two back to back switches
 # having four links between them.
@@ -356,6 +357,7 @@ def check_corrupted_yaml_file(step, sw1):
     # check_unknown_command(output)
 
 
+@mark.gate
 def test_supportability_diag_dump(topology, step):
     sw1 = topology.get("sw1")
     assert sw1 is not None

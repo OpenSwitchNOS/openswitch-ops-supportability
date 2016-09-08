@@ -31,7 +31,7 @@ from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 from time import sleep
 from os import path
-import pytest
+from pytest import mark
 # from .helpers import wait_until_interface_up
 # from ipdb import set_trace
 
@@ -254,7 +254,8 @@ def _remote_syslog_test(remotes_config):
     return test_status
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_udp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different udp syslog
@@ -341,7 +342,8 @@ def test_udp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_tcp_connection(topology):
     """
     Verifies syslog messages transmission to 4 different tcp syslog
@@ -430,7 +432,8 @@ def test_tcp_connection(topology):
         assert False
 
 
-@pytest.mark.timeout(1800)
+@mark.gate
+@mark.timeout(1800)
 def test_tcp_udp_combination(topology):
     """
     Verifies syslog messages transmission to 4 different syslog with

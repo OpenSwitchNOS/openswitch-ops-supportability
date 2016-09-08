@@ -28,8 +28,11 @@
 #include "vtysh/vtysh.h"
 #include "vtysh/vtysh_user.h"
 #include "vtysh/memory.h"
-#include "dynamic-string.h"
+#include "dirs.h"
 #include "util.h"
+#include "daemon.h"
+#include "unixctl.h"
+#include "dynamic-string.h"
 
 #define DBG_CMD_LEN_MAX    50
 
@@ -37,6 +40,7 @@
     "Error in retrieving the mapping of feature names to daemon names"
 #define DBG_STR            "Debug Configuration\n"
 #define SHOW_DBG_STR       "Debugging Configuration\n"
+#define OSPF_STR           "OSPF information\n"
 #define OSPFv2_STR           "OSPFv2 information\n"
 #define OSPFv2_PACKETS       "OSPFv2 packets\n"
 #define OSPFv2_HELLO         "OSPFv2 Hello\n"

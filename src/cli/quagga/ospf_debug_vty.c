@@ -42,13 +42,158 @@
 #include "supportability_utils.h"
 #include "unixctl.h"
 
+#define MAX_PID               65536
+#define MIN_PID               1
+#define MAX_PID_LEN           5
+#define MIN_PID_LEN           1
+
 VLOG_DEFINE_THIS_MODULE (vtysh_ospf_debug);
 
 static struct feature* feature_head;
 static char initialized = 0; /* flag to check before parseing yaml file */
 
 static int
+vtysh_ospf_read_pid_file (char *pidfile);
+
+static struct jsonrpc *
+vtysh_ospf_connect_to_target(const char *target);
+
+static int
 ospf_debug(const char **argv, int argc, int flag);
+
+/*
+ * Function       : vtysh_ospf_read_pid_file
+ * Responsibility : read pid file
+ * Parameters     : pidfile
+ * Returns        : Negative integer value on failure
+ *                  Positive integer value on success
+ *
+ * Note : read_pidfile() API is does same thing but it opens a file in "r+"
+ *        mode.read_pidfile() API will success only if user has "rw" permission.
+ *        If user has "r" permission then read_pidfile() API fails.
+ */
+
+static int
+vtysh_ospf_read_pid_file (char *pidfile)
+{
+    FILE *fp = NULL;
+    int pid = 0;
+    int rc = 0;
+    char err_buf[MAX_CLI_STR_LEN] = {0};
+
+    if (pidfile == NULL)
+    {
+        VLOG_ERR("Invalid parameter pidfile");
+        return -1;
+    }
+
+    fp = fopen(pidfile,"r");
+    if (fp == NULL)
+    {
+        strerror_r (errno,err_buf,sizeof(err_buf));
+        STR_SAFE(err_buf);
+        VLOG_ERR("Failed to open pidfile:%s , error:%s",pidfile,err_buf);
+        return -1;
+    }
+
+    rc = fscanf(fp, "%d", &pid);
+    fclose(fp);
+
+    /*
+     * valid pid range : 1 to 65536
+     * digit count range of valid pid : 1 to 5
+     */
+
+    if ((( rc >= MIN_PID_LEN ) && ( rc <= MAX_PID_LEN )) &&
+            (( pid >= MIN_PID ) && ( pid <= MAX_PID ))) {
+        return pid;
+    }
+    else
+    {
+        VLOG_ERR("Pid value is not in range : (%d-%d), pid : %d",
+                MIN_PID , MAX_PID , pid);
+        return -1;
+    }
+}
+
+/*
+ * Function       : vtysh_ospf_connect_to_target
+ * Responsibility : populates jsonrpc client structure for a daemon
+ * Parameters     : target  - daemon name
+ * Returns        : jsonrpc client on success
+ *                  NULL on failure
+ */
+
+static struct jsonrpc *
+vtysh_ospf_connect_to_target(const char *target)
+{
+    struct jsonrpc *client=NULL;
+    char *socket_name=NULL;
+    int error=0;
+    char * rundir = NULL;
+    char *pidfile_name = NULL;
+    pid_t pid=-1;
+
+    if (!target)
+    {
+        VLOG_ERR("target is null");
+        return NULL;
+    }
+
+    rundir = (char*) ovs_rundir();
+    if (!rundir)
+    {
+        VLOG_ERR("rundir is null");
+        return NULL;
+    }
+
+    if (target[0] != '/')
+    {
+        pidfile_name = xasprintf("%s/%s.pid", rundir, target);
+        if (!pidfile_name)
+        {
+            VLOG_ERR("pidfile_name is null");
+            return NULL;
+        }
+
+        pid = vtysh_ospf_read_pid_file(pidfile_name);
+        if (pid < 0)
+        {
+            VLOG_ERR("cannot read pidfile :%s", pidfile_name);
+            free(pidfile_name);
+            return NULL;
+        }
+
+        free(pidfile_name);
+        socket_name = xasprintf("%s/%s.%ld.ctl", rundir, target,
+                (long int) pid);
+        if (!socket_name)
+        {
+            VLOG_ERR("socket_name is null");
+            return NULL;
+        }
+
+    }
+    else
+    {
+        socket_name = xstrdup(target);
+        if (!socket_name)
+        {
+            VLOG_ERR("socket_name is null, target:%s", target);
+            return NULL;
+        }
+    }
+
+    error = unixctl_client_create(socket_name, &client);
+    if (error)
+    {
+        VLOG_ERR("cannot connect to %s,error=%d", socket_name, error);
+        free(socket_name);
+        return NULL;
+    }
+    free(socket_name);
+    return client;
+}
 
 /*
  * Function       : vtysh_set_ospf_debug
@@ -78,7 +223,7 @@ vtysh_set_ospf_debug(char* daemon, char **cmd_type, int cmd_argc,
         return CMD_WARNING;
     }
 
-    client = connect_to_daemon(daemon);
+    client = vtysh_ospf_connect_to_target(daemon);
     if (!client)
     {
         VLOG_ERR("%s transaction error.client is null ", daemon);
@@ -145,10 +290,10 @@ vtysh_set_ospf_debug(char* daemon, char **cmd_type, int cmd_argc,
 
 DEFUN (show_debugging_info,
        show_debugging_info_cmd,
-       "show debugging (ospfv2)",
+       "show debugging ospfv2",
        SHOW_STR
        SHOW_DBG_STR
-       OSPFv2_STR)
+       OSPF_STR)
 {
     int fun_argc = argc, flag = -1;
     int fd = -1;
@@ -278,9 +423,9 @@ ospf_debug(const char **argv, int argc, int flag)
 
 DEFUN (debug_ospf_packet,
        debug_ospf_packet_all_cmd,
-       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all)",
+       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -294,9 +439,9 @@ DEFUN (debug_ospf_packet,
 
 ALIAS (debug_ospf_packet,
        debug_ospf_packet_send_recv_cmd,
-       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
+       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -310,9 +455,9 @@ ALIAS (debug_ospf_packet,
 
 ALIAS (debug_ospf_packet,
        debug_ospf_packet_send_recv_detail_cmd,
-       "debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
+       "debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -326,10 +471,10 @@ ALIAS (debug_ospf_packet,
 
 DEFUN (no_debug_ospf_packet,
        no_debug_ospf_packet_all_cmd,
-       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all)",
+       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -343,10 +488,10 @@ DEFUN (no_debug_ospf_packet,
 
 ALIAS (no_debug_ospf_packet,
        no_debug_ospf_packet_send_recv_cmd,
-       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
+       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv|detail)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -360,10 +505,10 @@ ALIAS (no_debug_ospf_packet,
 
 ALIAS (no_debug_ospf_packet,
        no_debug_ospf_packet_send_recv_detail_cmd,
-       "no debug (ospfv2) (packet) (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
+       "no debug ospfv2 packet (hello|dd|ls-request|ls-update|ls-ack|all) (send|recv) detail",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_PACKETS
        OSPFv2_HELLO
        OSPFv2_DB_DESC
@@ -379,7 +524,7 @@ DEFUN (debug_ospf_ism,
        debug_ospf_ism_cmd,
        "debug (ospfv2) (ism)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_ISM)
 {
     return ospf_debug(argv, argc, 0);
@@ -387,9 +532,9 @@ DEFUN (debug_ospf_ism,
 
 ALIAS (debug_ospf_ism,
        debug_ospf_ism_sub_cmd,
-       "debug (ospfv2) (ism) (status|events|timers)",
+       "debug ospfv2 ism (status|events|timers)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_ISM
        OSPFv2_ISM_STAT_INFO
        OSPFv2_ISM_EVT_INFO
@@ -400,7 +545,7 @@ DEFUN (no_debug_ospf_ism,
        "no debug (ospfv2) (ism)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_ISM)
 {
     return ospf_debug(argv, argc, 2);
@@ -408,10 +553,10 @@ DEFUN (no_debug_ospf_ism,
 
 ALIAS (no_debug_ospf_ism,
        no_debug_ospf_ism_sub_cmd,
-       "no debug (ospfv2) (ism) (status|events|timers)",
+       "no debug ospfv2 ism (status|events|timers)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_ISM
        OSPFv2_ISM_STAT_INFO
        OSPFv2_ISM_EVT_INFO
@@ -419,9 +564,9 @@ ALIAS (no_debug_ospf_ism,
 
 DEFUN (debug_ospf_nsm,
        debug_ospf_nsm_cmd,
-       "debug (ospfv2) (nsm)",
+       "debug ospfv2 nsm",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSM)
 {
     return ospf_debug(argv, argc, 0);
@@ -429,9 +574,9 @@ DEFUN (debug_ospf_nsm,
 
 ALIAS (debug_ospf_nsm,
        debug_ospf_nsm_sub_cmd,
-       "debug (ospfv2) (nsm) (status|events|timers)",
+       "debug ospfv2 nsm (status|events|timers)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSM
        OSPFv2_NSM_STAT_INFO
        OSPFv2_NSM_EVT_INFO
@@ -439,10 +584,10 @@ ALIAS (debug_ospf_nsm,
 
 DEFUN (no_debug_ospf_nsm,
        no_debug_ospf_nsm_cmd,
-       "no debug (ospfv2) (nsm)",
+       "no debug ospfv2 nsm",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSM)
 {
     return ospf_debug(argv, argc, 2);
@@ -450,10 +595,10 @@ DEFUN (no_debug_ospf_nsm,
 
 ALIAS (no_debug_ospf_nsm,
        no_debug_ospf_nsm_sub_cmd,
-       "no debug (ospfv2) (nsm) (status|events|timers)",
+       "no debug ospfv2 nsm (status|events|timers)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSM
        OSPFv2_NSM_STAT_INFO
        OSPFv2_NSM_EVT_INFO
@@ -461,9 +606,9 @@ ALIAS (no_debug_ospf_nsm,
 
 DEFUN (debug_ospf_lsa,
        debug_ospf_lsa_cmd,
-       "debug (ospfv2) (lsa)",
+       "debug ospfv2 lsa",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_LSA)
 {
     return ospf_debug(argv, argc, 0);
@@ -471,9 +616,9 @@ DEFUN (debug_ospf_lsa,
 
 ALIAS (debug_ospf_lsa,
        debug_ospf_lsa_sub_cmd,
-       "debug (ospfv2) (lsa) (generate|flooding|install|refresh)",
+       "debug ospfv2 lsa (generate|flooding|install|refresh)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_LSA
        OSPFv2_LSA_GEN
        OSPFv2_LSA_FLOOD
@@ -482,10 +627,10 @@ ALIAS (debug_ospf_lsa,
 
 DEFUN (no_debug_ospf_lsa,
        no_debug_ospf_lsa_cmd,
-       "no debug (ospfv2) (lsa)",
+       "no debug ospfv2 lsa",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_LSA)
 {
     return ospf_debug(argv, argc, 2);
@@ -493,10 +638,10 @@ DEFUN (no_debug_ospf_lsa,
 
 ALIAS (no_debug_ospf_lsa,
        no_debug_ospf_lsa_sub_cmd,
-       "no debug (ospfv2) (lsa) (generate|flooding|install|refresh)",
+       "no debug ospfv2 lsa (generate|flooding|install|refresh)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_LSA
        OSPFv2_LSA_GEN
        OSPFv2_LSA_FLOOD
@@ -505,9 +650,9 @@ ALIAS (no_debug_ospf_lsa,
 
 DEFUN (debug_ospf_event,
        debug_ospf_event_cmd,
-       "debug (ospfv2) (event)",
+       "debug ospfv2 event",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_EVT_INFO)
 {
     return ospf_debug(argv, argc, 0);
@@ -515,10 +660,10 @@ DEFUN (debug_ospf_event,
 
 DEFUN (no_debug_ospf_event,
        no_debug_ospf_event_cmd,
-       "no debug (ospfv2) (event)",
+       "no debug ospfv2 event",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_EVT_INFO)
 {
     return ospf_debug(argv, argc, 2);
@@ -526,9 +671,9 @@ DEFUN (no_debug_ospf_event,
 
 DEFUN (debug_ospf_nssa,
        debug_ospf_nssa_cmd,
-       "debug (ospfv2) (nssa)",
+       "debug ospfv2 nssa",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSSA_INFO)
 {
     return ospf_debug(argv, argc, 0);
@@ -536,10 +681,10 @@ DEFUN (debug_ospf_nssa,
 
 DEFUN (no_debug_ospf_nssa,
        no_debug_ospf_nssa_cmd,
-       "no debug (ospfv2) (nssa)",
+       "no debug ospfv2 nssa",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_NSSA_INFO)
 {
     return ospf_debug(argv, argc, 2);
@@ -547,9 +692,9 @@ DEFUN (no_debug_ospf_nssa,
 
 DEFUN (debug_ospf_intf_redst,
        debug_ospf_intf_redst_cmd,
-       "debug (ospfv2) (interface|redistribute)",
+       "debug ospfv2 (interface|redistribute)",
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_INTF_INFO
        OSPFv2_REDIST_INFO)
 {
@@ -558,10 +703,10 @@ DEFUN (debug_ospf_intf_redst,
 
 DEFUN (no_debug_ospf_intf_redst,
        no_debug_ospf_intf_redst_cmd,
-       "no debug (ospfv2) (interface|redistribute)",
+       "no debug ospfv2 (interface|redistribute)",
        NO_STR
        DBG_STR
-       OSPFv2_STR
+       OSPF_STR
        OSPFv2_INTF_INFO
        OSPFv2_REDIST_INFO)
 {

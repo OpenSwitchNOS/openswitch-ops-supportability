@@ -193,8 +193,7 @@ cli_show_events(sd_journal *journal_handle,int reverse, int filter)
               ,(const void **)&message_data
               , &data_length);
       if (return_value < 0) {
-          VLOG_ERR("Failed to read message field: %s\n", strerror(-return_value));
-          continue;
+          VLOG_DBG("Failed to read message field: %s\n", strerror(-return_value));
       }
 
       return_value = sd_journal_get_data(journal_handle
@@ -202,8 +201,7 @@ cli_show_events(sd_journal *journal_handle,int reverse, int filter)
               ,(const void **)&module_name
               , &module_length);
       if (return_value < 0) {
-          VLOG_ERR("Failed to read module name field: %s\n", strerror(-return_value));
-          continue;
+          VLOG_DBG("Failed to read module name field: %s\n", strerror(-return_value));
       }
 
       return_value = sd_journal_get_data(journal_handle
@@ -211,38 +209,39 @@ cli_show_events(sd_journal *journal_handle,int reverse, int filter)
               ,(const void **)&timestamp
               , &timestamp_length);
       if (return_value < 0) {
-          VLOG_ERR("Failed to read timestamp field: %s\n", strerror(-return_value));
-          continue;
+          VLOG_DBG("Failed to read timestamp field: %s\n", strerror(-return_value));
       }
 
       ++events_display_count;
 
       /*to get the values from fields using get_value() API*/
+      if(message_data != NULL){
+         msg = get_value(message_data);
 
-      msg = get_value(message_data);
-
-      if(msg!=NULL) {
-          message = strchr(msg,ch);
-      }
-      else {
-          VLOG_ERR("failed to read message-value from message field");
-          message =NULL;
-      }
-
-      module = get_value(module_name);
-
-      if(module==NULL) {
-          VLOG_ERR("failed to read module-value from module field");
+         if(msg!=NULL) {
+            message = strchr(msg,ch);
+         }
+         else {
+            VLOG_DBG("failed to read message-value from message field");
+            message =NULL;
+         }
       }
 
-      tm = get_value(timestamp);
-
-      if(tm!=NULL) {
+      if(module_name != NULL){
+         module = get_value(module_name);
+         if(module==NULL) {
+            VLOG_DBG("failed to read module-value from module field");
+         }
+      }
+      if(timestamp != NULL){
+         tm = get_value(timestamp);
+         if(tm!=NULL) {
           /*convert real timestamp to unix timestamp */
-          convert_to_datetime(tm_buf,BUF_SIZE,tm);
-      }
-      else {
-          VLOG_ERR("failed to read time-value from time field");
+            convert_to_datetime(tm_buf,BUF_SIZE,tm);
+         }
+         else {
+            VLOG_DBG("failed to read time-value from time field");
+         }
       }
 
       vty_out(vty,"%s|%s%s%s",tm_buf,module,message,VTY_NEWLINE);

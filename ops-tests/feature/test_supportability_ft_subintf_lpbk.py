@@ -24,6 +24,8 @@ is tested for loopback interface information.
 
 from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
+import pytest
+from pytest import mark
 
 
 TOPOLOGY = """
@@ -386,7 +388,7 @@ def show_tech_loopback(dut, step):
     assert (success == 2), "loopback interface information were not " \
                            "removed from show tech loopback"
 
-
+@mark.skipif(True, reason="Disabling test_portd_events as interface is not getting created in CT env")
 def test_portd_events(topology, step):
     """
     Test case to verify the event logs in "show events" command

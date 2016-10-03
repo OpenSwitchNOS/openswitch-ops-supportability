@@ -106,6 +106,10 @@ categories:
   description: 'Events related to Bidirectional Forwarding Detection'
   category_rank: 26
 
+- event_category: AAA
+  description: 'Events related to AAA'
+  category_rank: 27
+
 event_definitions:
 #- event_name: XYZ_UP
 #  event_category: ABC
@@ -1909,3 +1913,33 @@ event_definitions:
     'Logs errors for BFD multi hop FP creation/installation.'
   event_description_template:
     'BFD Multi hop field entry added: group_id={group_id} fp_id={fp_id}'
+
+- event_name: AAA_CONFIG
+  event_category: AAA
+  event_ID : 27001
+  severity: LOG_INFO
+  keys: type, event
+  description:
+    'Logs AAA Authentication/Authorization/fail-through'
+  event_description_template:
+    'AAA {type} update : {event}'
+
+- event_name: TACACS
+  event_category: AAA
+  event_ID : 27002
+  severity: LOG_INFO
+  keys: type, action, event
+  description:
+    'Logs TACACS+ server update, server group update and global default update'
+  event_description_template:
+    'TACACS {type} {action} : {event}'
+
+- event_name: RADIUS
+  event_category: AAA
+  event_ID : 27003
+  severity: LOG_INFO
+  keys: type, action, event
+  description:
+    'Logs RADIUS server update, server group update and global default update'
+  event_description_template:
+    'RADIUS {type} {action} : {event}'

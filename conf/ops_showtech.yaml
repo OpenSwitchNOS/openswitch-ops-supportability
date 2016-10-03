@@ -351,7 +351,10 @@
     feature_name: aaa
     cli_cmds:
       - "show aaa authentication"
-
+      - "show aaa authorization"
+      - "show aaa server-groups"
+      - "show tacacs-server"
+      - "show radius-server"
 
 # Show Tech VLAN Feature Definition
   feature:

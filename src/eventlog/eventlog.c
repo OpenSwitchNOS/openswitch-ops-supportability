@@ -213,7 +213,7 @@ parse_yaml_for_category(char *category)
                     val_flag = 0;
 
                 }
-                if((evt_flag) && (!strcmp(key, category)))
+                if((evt_flag) && (!strcmp_with_nullcheck(key, category)))
                 {
                     found = 1;
                     category_found = 1;
@@ -221,60 +221,54 @@ parse_yaml_for_category(char *category)
                     if((size > 0) && (size < MAX_EVENT_NAME_SIZE)) {
                         strncpy(ev_table[index].event_name, buf, (size+1));
                     }
+                    ret = asprintf(&ev_table[index].category, "%s", category);
+                    if(ret < 0) {
+                        yaml_token_delete(&token);
+                        fclose(fh);
+                        VLOG_ERR("Failed to allocate memory");
+                        return -1;
+                    }
                 }
                 if(found)
                 {
                     assign_parsed_values(key, &val_flag, &found, &index);
-                    ret = asprintf(&ev_table[index].category, "%s", category);
-                    if(ret < 0) {
-                        fclose(fh);
-                        return -1;
-                        VLOG_ERR("Failed to allocate memory");
-                    }
                 }
                 if(!strcmp_with_nullcheck(key, "event_definitions"))
                 {
                     def_flag=1;
-                    continue;
                 }
                 else if((!strcmp_with_nullcheck(key, "event_name"))
                      && (def_flag))
                 {
                     val_flag=1;
-                    continue;
 
                 }
                 else if((!strcmp_with_nullcheck(key, "event_category"))
                     && (def_flag))
                 {
                     evt_flag =1;
-                    continue;
                 }
                 else if((!strcmp_with_nullcheck(key, "event_ID"))
                     && (def_flag))
                 {
                     val_flag=2;
-                    continue;
 
                 }
                 else if((!strcmp_with_nullcheck(key, "severity"))
                     && (evt_flag))
                 {
                     val_flag=3;
-                    continue;
                 }
                 else if((!strcmp_with_nullcheck(key, "keys"))
                     && (evt_flag))
                 {
                     val_flag=4;
-                    continue;
 
                 }
                 else if((!strcmp_with_nullcheck(key, "event_description_template"))
                     && (evt_flag))
                 {
                     val_flag =5;
-                    continue;
                 }
                 break;
 
@@ -284,6 +278,7 @@ parse_yaml_for_category(char *category)
                 yaml_token_delete(&token);
             }
         }
+    yaml_token_delete(&token);
     yaml_parser_delete(&parser);
     fclose(fh);
     return category_found;
@@ -602,7 +597,7 @@ int
 event_search(char *fmt)
 {
     int i = 0;
-    if(fmt == NULL) {
+    if(fmt == NULL || ev_table == NULL) {
         return -1;
     }
     /* Loop till we either match event name or
